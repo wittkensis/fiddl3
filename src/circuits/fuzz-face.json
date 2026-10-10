@@ -1,0 +1,2327 @@
+{
+ "id": "fuzz-face",
+ "name": "Fuzz Face",
+ "subtitle": "Synthrotek Fuzz Face clone · 2 PNP transistors · positive ground",
+ "kind": "effect",
+ "mine": true,
+ "defaultInput": "pluck",
+ "keyIdea": {
+  "eli5": "Two transistor valves, set to rest a little off-center, square off the wave unevenly. A feedback wire from Q2 back to Q1 works like a thermostat for both.",
+  "detail": "Turn the bias trim and you hear fat fuzz turn into sputter, because the wave runs out of room on one side first."
+ },
+ "summary": "Guitar in, square-ish fuzz out. Q1 amplifies, Q2 amplifies again until it slams into its rails, and the emitter cap sets how much gain that takes.",
+ "rails": {
+  "top": {
+   "label": "+9 V = ground (chassis)",
+   "sign": "+",
+   "ground": true,
+   "eli5": "Red is the battery's + side, and on this pedal it IS ground: the 0 V floor, wired to the metal box.",
+   "detail": "This is positive ground. PNP transistors take their power from the minus side, so the + side becomes the reference."
+  },
+  "bottom": {
+   "label": "−9 V (battery −)",
+   "sign": "-",
+   "ground": false,
+   "eli5": "Blue is the battery's − side: on this pedal it is the 'power' rail, 9 V below ground.",
+   "detail": "The collector resistors and the bias trim hang down to it."
+  }
+ },
+ "groundNote": {
+  "eli5": "On the Fuzz Face the + rail IS ground, and it is wired to the metal box (the chassis). That is called positive ground.",
+  "detail": "Your meter shows negative voltages when you measure from ground. A daisy-chained pedal supply shares the other polarity, which shorts the battery path, so use a battery or an isolated supply."
+ },
+ "source": {
+  "label": "Synthrotek Fuzz Face clone schematic",
+  "url": "https://www.synthrotek.com/products/effect-pedal-circuits/fuzz-face-clone/fuzz-face-schematic/"
+ },
+ "sim": {
+  "label": "Falstad: common-emitter stage (the Fuzz Face building block)",
+  "url": "https://www.falstad.com/circuit/circuitjs.html?startCircuit=ceamp.txt"
+ },
+ "notes": [
+  "Positive ground: with PNP transistors, the battery's + side is the circuit's ground and is tied to the box. A shared negative-ground pedal supply would short it, so use a battery or an isolated supply.",
+  "Synthrotek notes that their BOM values differ from the drawn schematic (parts availability). The roles are the same.",
+  "Put it first in the chain. A buffer before it kills the 'roll back the guitar volume to clean up' trick."
+ ],
+ "honestyNote": {
+  "eli5": "The fuzz comes from waveshaping curves (a lookup that bends the wave), not from simulating transistors. That gets the character right and the details approximate."
+ },
+ "blocks": [
+  {
+   "id": "input",
+   "title": "INPUT",
+   "job": {
+    "eli5": "Lets the guitar's wiggles in, but keeps the guitar from messing with where Q1 rests."
+   },
+   "stage": {
+    "kind": "hp",
+    "params": {
+     "freq": 70
+    }
+   },
+   "wire": {
+    "eli5": "The guitar's wiggles, now riding at Q1's resting level instead of the guitar's."
+   }
+  },
+  {
+   "id": "q1",
+   "title": "GAIN STAGE 1 · Q1",
+   "job": {
+    "eli5": "First amplifier: makes the small guitar signal big enough to overload Q2."
+   },
+   "stage": {
+    "kind": "shaper",
+    "params": {
+     "curve": "soft",
+     "drive": 2.2,
+     "bias": 0.2,
+     "level": 0.6
+    }
+   },
+   "wire": {
+    "eli5": "A bigger, upside-down copy of the guitar, straight into Q2 with no capacitor in between.",
+    "detail": "Because there is no capacitor, Q1 and Q2 share one resting point. The feedback loop holds that point steady."
+   }
+  },
+  {
+   "id": "q2",
+   "title": "GAIN STAGE 2 · Q2 (CLIPS)",
+   "job": {
+    "eli5": "Second amplifier, pushed past its limits: the wave smacks into the rails and gets squared off. That is the fuzz."
+   },
+   "stage": {
+    "kind": "shaper",
+    "params": {
+     "curve": "fuzz",
+     "drive": 10,
+     "bias": 0,
+     "level": 0.5
+    }
+   },
+   "wire": {
+    "eli5": "The squared-off fuzz wave, still sitting on Q2's resting voltage."
+   }
+  },
+  {
+   "id": "feedback",
+   "title": "FEEDBACK + FUZZ",
+   "job": {
+    "eli5": "A loop from Q2 back to Q1 keeps both resting points steady, and the Fuzz knob decides how much boost Q2 gets."
+   },
+   "stage": null,
+   "onBypass": [
+    {
+     "stage": "q2",
+     "param": "bias",
+     "value": -0.85
+    },
+    {
+     "stage": "q2",
+     "param": "drive",
+     "scale": 0.4
+    }
+   ]
+  },
+  {
+   "id": "output",
+   "title": "OUTPUT",
+   "job": {
+    "eli5": "A door blocks the steady push from your amp, and the Level knob sets how loud."
+   },
+   "stage": {
+    "kind": "gain",
+    "params": {
+     "gain": 0.8
+    }
+   },
+   "wire": {
+    "eli5": "Finished fuzz at the level you picked, heading to the footswitch and out."
+   }
+  },
+  {
+   "id": "bypass",
+   "title": "FOOTSWITCH + LED",
+   "side": true,
+   "stage": null,
+   "job": {
+    "eli5": "A three-way switch that either sends the guitar through the fuzz or around it, and lights the LED when the fuzz is on."
+   },
+   "onBypass": []
+  },
+  {
+   "id": "power",
+   "title": "POWER (9 V)",
+   "side": true,
+   "stage": null,
+   "job": {
+    "eli5": "The battery, wired 'upside down' for PNP transistors: its + side is ground."
+   },
+   "onBypass": [
+    {
+     "stage": "q1",
+     "param": "level",
+     "value": 0
+    },
+    {
+     "stage": "q2",
+     "param": "level",
+     "value": 0
+    }
+   ]
+  }
+ ],
+ "parts": [
+  {
+   "id": "jin",
+   "ref": "IN",
+   "kind": "JACK",
+   "label": "Input jack (stereo)",
+   "term": "stereo jack used as a power switch",
+   "block": "input",
+   "place": "series",
+   "job": {
+    "eli5": "Where the guitar plugs in. Its extra contact doubles as the power switch.",
+    "detail": "A mono guitar plug connects the jack's ring to its sleeve, which completes the battery's path. Unplug and the pedal sleeps."
+   },
+   "connects": [
+    "c1",
+    "r0",
+    "fsw",
+    "bat"
+   ],
+   "order": {
+    "eli5": "First thing the signal touches, by definition."
+   },
+   "breaks": {
+    "eli5": "No signal in, and no power either: the plug is the on switch."
+   },
+   "onRemove": [
+    {
+     "stage": "q1",
+     "param": "drive",
+     "value": 0
+    }
+   ],
+   "lugs": {
+    "kind": "jack3",
+    "bp": "xin",
+    "eli5": "A stereo jack used as the power switch: plug in a mono cable and its sleeve bridges ring to sleeve, which turns the pedal on.",
+    "detail": "The ring lug trick: the battery's return goes to the ring lug. A mono plug's long sleeve touches both ring and sleeve contacts, closing the battery circuit. Unplug the guitar and the pedal stops drawing power.",
+    "standard": "Standard part: a ¼ inch stereo (TRS) jack, used this way in nearly every battery pedal.",
+    "lugs": [
+     {
+      "pin": "T",
+      "name": "tip",
+      "role": "audio",
+      "eli5": "Your guitar's signal."
+     },
+     {
+      "pin": "R",
+      "name": "ring",
+      "role": "power",
+      "eli5": "The battery's return path, waiting for a plug to complete it."
+     },
+     {
+      "pin": "S",
+      "name": "sleeve",
+      "role": "ground",
+      "eli5": "Ground and the cable shield."
+     }
+    ]
+   }
+  },
+  {
+   "id": "r0",
+   "ref": "R0 2.2M",
+   "kind": "R",
+   "label": "Input pulldown resistor",
+   "term": "pulldown resistor (anti-pop)",
+   "block": "input",
+   "place": "up",
+   "job": {
+    "eli5": "A slow leak that keeps the input capacitor emptied, so stomping the switch doesn't pop.",
+    "detail": "It gives the input a gentle path to ground while the pedal is bypassed."
+   },
+   "connects": [
+    "jin",
+    "c1"
+   ],
+   "order": {
+    "eli5": "From the input to ground, before the footswitch."
+   },
+   "breaks": {
+    "eli5": "A loud pop through your amp each time you stomp."
+   },
+   "silentNote": "Pops are a switching event; the model doesn't simulate the switch, so you won't hear this.",
+   "tune": {
+    "unit": "Ω",
+    "nominal": 2200000.0,
+    "series": "E12",
+    "min": 100000.0,
+    "max": 10000000.0,
+    "higher": "Bigger pulldown: an even gentler leak to ground. Switch pops can creep back.",
+    "lower": "Smaller: it starts to drain your guitar's signal and the fuzz gets thinner and quieter.",
+    "tooFar": "Too small (under about 100k) and it loads the pickup: dull and weak. Leave it out and the input cap charges up and pops when you stomp.",
+    "targets": [],
+    "fund": "resistance",
+    "real": "You would hear this on the real board as a pop (or no pop) when you stomp the switch. This sketch does not model it."
+   }
+  },
+  {
+   "id": "c1",
+   "ref": "C1 2.2µ",
+   "kind": "CP",
+   "label": "Input coupling cap",
+   "term": "coupling capacitor",
+   "block": "input",
+   "place": "series",
+   "job": {
+    "eli5": "A door that lets the guitar's wiggles through but blocks the steady push.",
+    "detail": "It keeps the guitar pickup from dragging Q1's carefully set resting voltage around."
+   },
+   "connects": [
+    "jin",
+    "q1",
+    "fsw"
+   ],
+   "order": {
+    "eli5": "Between the outside world and Q1's base (its control pin). Anything wired straight to the base changes where Q1 rests."
+   },
+   "breaks": {
+    "eli5": "The pickup becomes part of Q1's balance, and the fuzz turns sputtery or dies."
+   },
+   "onRemove": [
+    {
+     "stage": "q2",
+     "param": "bias",
+     "value": -0.8
+    }
+   ],
+   "tune": {
+    "unit": "F",
+    "nominal": 2.2e-06,
+    "series": "E6",
+    "min": 1e-08,
+    "max": 4.7e-05,
+    "higher": "Bigger door cap: more bass gets in, so the fuzz turns fat and woolly.",
+    "lower": "Smaller: only the highs get through, so it turns thin and spitty, like a treble booster.",
+    "tooFar": "Too big and low notes turn to farty mush; too small (a few nF) and almost nothing but fizz gets in.",
+    "targets": [
+     {
+      "stage": "input",
+      "param": "freq",
+      "exp": -1,
+      "min": 8,
+      "max": 4000
+     }
+    ],
+    "fund": "capacitance"
+   }
+  },
+  {
+   "id": "q1",
+   "ref": "Q1",
+   "kind": "QP",
+   "label": "Q1 · PNP transistor",
+   "term": "PNP transistor, common-emitter amplifier",
+   "block": "q1",
+   "place": "active",
+   "job": {
+    "eli5": "A valve: a tiny wiggle at its base (control pin) makes a big wiggle in the current through it.",
+    "detail": "PNP means it works 'upside down', so its power comes from the minus side. That is why this pedal uses positive ground."
+   },
+   "connects": [
+    "c1",
+    "rc1",
+    "q2",
+    "rfb"
+   ],
+   "order": {
+    "eli5": "Its output (collector) feeds Q2's base directly, with no capacitor.",
+    "detail": "So both transistors share one resting point, and the feedback loop sets it."
+   },
+   "breaks": {
+    "eli5": "Half the boost is gone. You get a weak, thin booster, not a fuzz."
+   },
+   "onRemove": [
+    {
+     "stage": "q1",
+     "bypass": true
+    },
+    {
+     "stage": "q2",
+     "param": "drive",
+     "scale": 0.25
+    }
+   ],
+   "tune": {
+    "choices": [
+     {
+      "id": "lo",
+      "label": "low gain (hFE ≈ 70)",
+      "eli5": "A lazy valve: smoother, quieter, cleans up easily.",
+      "effects": [
+       {
+        "stage": "q1",
+        "param": "drive",
+        "scale": 0.7
+       }
+      ]
+     },
+     {
+      "id": "mid",
+      "label": "medium (hFE ≈ 100)",
+      "eli5": "The classic range most builders aim for in Q1.",
+      "effects": []
+     },
+     {
+      "id": "hi",
+      "label": "high gain (hFE ≈ 150)",
+      "eli5": "Pushes Q2 harder: hotter, louder, more compressed.",
+      "effects": [
+       {
+        "stage": "q1",
+        "param": "drive",
+        "scale": 1.4
+       },
+       {
+        "stage": "q2",
+        "param": "drive",
+        "scale": 1.15
+       }
+      ]
+     },
+     {
+      "id": "si",
+      "label": "silicon (BC108-style)",
+      "eli5": "Silicon swap: much more gain, brighter and harsher, the 70s Fuzz Face sound.",
+      "effects": [
+       {
+        "stage": "q1",
+        "param": "drive",
+        "scale": 1.9
+       },
+       {
+        "stage": "q2",
+        "param": "drive",
+        "scale": 1.5
+       }
+      ]
+     }
+    ],
+    "default": "mid",
+    "tooFar": "Too much gain in Q1 and the circuit can squeal or gate; germanium parts also drift with temperature.",
+    "fund": "current"
+   },
+   "lugs": {
+    "kind": "transistor",
+    "bp": "q1",
+    "eli5": "A transistor is a valve with three legs: a tiny flow into the base controls a big flow between collector and emitter.",
+    "detail": "Germanium PNP transistors like the AC128 run 'upside down' compared with silicon NPNs: current flows out of the collector toward the negative rail.",
+    "standard": "Standard part. Pin order varies by maker and package: always check the datasheet or a meter.",
+    "lugs": [
+     {
+      "pin": "E",
+      "name": "emitter",
+      "role": "ground",
+      "eli5": "The exit. The arrow on the symbol sits here."
+     },
+     {
+      "pin": "B",
+      "name": "base",
+      "role": "control",
+      "eli5": "The control pin: a tiny current here opens the valve."
+     },
+     {
+      "pin": "C",
+      "name": "collector",
+      "role": "audio",
+      "eli5": "Where the big current flows in (or out, for PNP). The amplified signal lives here."
+     }
+    ]
+   }
+  },
+  {
+   "id": "rc1",
+   "ref": "R1 33k",
+   "kind": "R",
+   "label": "Q1 collector resistor",
+   "term": "collector load resistor",
+   "block": "q1",
+   "place": "shunt",
+   "job": {
+    "eli5": "Turns Q1's changing current into a changing voltage, like a narrow pipe that makes pressure change when the flow changes."
+   },
+   "connects": [
+    "q1",
+    "q2"
+   ],
+   "order": {
+    "eli5": "From Q1's collector down to the −9 V rail: the load Q1 works against."
+   },
+   "breaks": {
+    "eli5": "No voltage swing at Q1's output, so Q2 gets nothing and the pedal goes almost silent."
+   },
+   "onRemove": [
+    {
+     "stage": "q1",
+     "param": "level",
+     "value": 0.02
+    }
+   ],
+   "tune": {
+    "unit": "Ω",
+    "nominal": 33000.0,
+    "series": "E12",
+    "min": 4700.0,
+    "max": 150000.0,
+    "higher": "Bigger Q1 load: Q1 gains more and pulls Q2's resting point down, so the fuzz gets hotter and starts to sputter.",
+    "lower": "Smaller: less gain from Q1 and Q2 sits higher, so it gets cleaner and tighter.",
+    "tooFar": "Push it far either way and Q2 leaves its sweet spot: gated, splatty spitting at one end, a choked fizz at the other.",
+    "targets": [
+     {
+      "stage": "q1",
+      "param": "drive",
+      "exp": 0.5,
+      "min": 0.5,
+      "max": 8
+     },
+     {
+      "stage": "q2",
+      "param": "bias",
+      "add": 0.28,
+      "min": -0.98,
+      "max": 0.98
+     }
+    ],
+    "fund": "resistance"
+   }
+  },
+  {
+   "id": "q2",
+   "ref": "Q2",
+   "kind": "QP",
+   "label": "Q2 · PNP transistor",
+   "term": "PNP transistor, common-emitter amplifier",
+   "block": "q2",
+   "place": "active",
+   "job": {
+    "eli5": "A second valve, opened so hard that the wave runs out of room and gets squared off. Most of the fuzz happens here."
+   },
+   "connects": [
+    "q1",
+    "rc2",
+    "trim",
+    "rfb",
+    "fuzz",
+    "ce",
+    "c3"
+   ],
+   "order": {
+    "eli5": "Second in line, so it receives an already-big signal.",
+    "detail": "Its emitter also feeds the loop back to Q1."
+   },
+   "breaks": {
+    "eli5": "Nothing reaches the output: silence."
+   },
+   "onRemove": [
+    {
+     "stage": "output",
+     "param": "gain",
+     "value": 0
+    }
+   ],
+   "tune": {
+    "choices": [
+     {
+      "id": "lo",
+      "label": "low gain (hFE ≈ 70)",
+      "eli5": "Softer, mellow, less sustain.",
+      "effects": [
+       {
+        "stage": "q2",
+        "param": "drive",
+        "scale": 0.7
+       }
+      ]
+     },
+     {
+      "id": "mid",
+      "label": "medium (hFE ≈ 110)",
+      "eli5": "The usual Q2 pick: a bit more gain than Q1.",
+      "effects": []
+     },
+     {
+      "id": "hi",
+      "label": "high gain (hFE ≈ 150)",
+      "eli5": "Saturated, dense, and fussier about the bias trim.",
+      "effects": [
+       {
+        "stage": "q2",
+        "param": "drive",
+        "scale": 1.4
+       }
+      ]
+     },
+     {
+      "id": "si",
+      "label": "silicon (BC108-style)",
+      "eli5": "Silicon swap: bright, aggressive, lots of gain.",
+      "effects": [
+       {
+        "stage": "q2",
+        "param": "drive",
+        "scale": 2
+       }
+      ]
+     }
+    ],
+    "default": "mid",
+    "tooFar": "Very high gain and the fuzz gets harsh and noisy; mismatched pairs make the bias trim fussy.",
+    "fund": "current"
+   },
+   "lugs": {
+    "kind": "transistor",
+    "bp": "q2",
+    "eli5": "A transistor is a valve with three legs: a tiny flow into the base controls a big flow between collector and emitter.",
+    "detail": "Germanium PNP transistors like the AC128 run 'upside down' compared with silicon NPNs: current flows out of the collector toward the negative rail.",
+    "standard": "Standard part. Pin order varies by maker and package: always check the datasheet or a meter.",
+    "lugs": [
+     {
+      "pin": "E",
+      "name": "emitter",
+      "role": "ground",
+      "eli5": "The exit. The arrow on the symbol sits here."
+     },
+     {
+      "pin": "B",
+      "name": "base",
+      "role": "control",
+      "eli5": "The control pin: a tiny current here opens the valve."
+     },
+     {
+      "pin": "C",
+      "name": "collector",
+      "role": "audio",
+      "eli5": "Where the big current flows in (or out, for PNP). The amplified signal lives here."
+     }
+    ]
+   }
+  },
+  {
+   "id": "rc2",
+   "ref": "R2 330",
+   "kind": "R",
+   "label": "Q2 collector resistor",
+   "term": "collector resistor (output split)",
+   "block": "q2",
+   "place": "series",
+   "job": {
+    "eli5": "A small speed bump between Q2 and the output tap, so the trim can set Q2's resting voltage."
+   },
+   "connects": [
+    "q2",
+    "trim",
+    "c3"
+   ],
+   "order": {
+    "eli5": "Between Q2's collector and the point where the trim and the output capacitor meet."
+   },
+   "breaks": {
+    "eli5": "Q2's output loses its little cushion: slightly harsher and louder."
+   },
+   "onRemove": [
+    {
+     "stage": "q2",
+     "param": "level",
+     "value": 0.8
+    }
+   ],
+   "tune": {
+    "unit": "Ω",
+    "nominal": 330,
+    "series": "E12",
+    "min": 100,
+    "max": 2200.0,
+    "higher": "Bigger: a taller output tap, so the fuzz comes out louder and the resting point shifts a little.",
+    "lower": "Smaller: a quieter, slightly cleaner output.",
+    "tooFar": "Very large and Q2 runs out of room to swing; very small and the output nearly vanishes.",
+    "targets": [
+     {
+      "stage": "q2",
+      "param": "level",
+      "exp": 0.45,
+      "min": 0.05,
+      "max": 2
+     },
+     {
+      "stage": "q2",
+      "param": "bias",
+      "add": 0.08,
+      "min": -0.98,
+      "max": 0.98
+     }
+    ],
+    "fund": "resistance"
+   }
+  },
+  {
+   "id": "trim",
+   "ref": "TRIM 20k",
+   "kind": "TRIM",
+   "label": "20k bias trim",
+   "term": "trimmer potentiometer (bias adjust)",
+   "block": "q2",
+   "place": "shunt",
+   "job": {
+    "eli5": "Sets where Q2 rests, like tensioning a spring so it can swing equally both ways.",
+    "detail": "Synthrotek's target is about 4.5 V at Q2's collector, half the battery. Your meter reads −4.5 V because ground is the + side."
+   },
+   "connects": [
+    "rc2",
+    "q2"
+   ],
+   "order": {
+    "eli5": "In Q2's load, down to the −9 V rail, because Q2's resting voltage is what we're steering."
+   },
+   "breaks": {
+    "eli5": "Turned to an extreme, the wave hits one side immediately: gated, sputtery 'dying battery' fuzz, or thin fizz."
+   },
+   "onRemove": [
+    {
+     "stage": "q2",
+     "param": "bias",
+     "value": 0.9
+    }
+   ],
+   "tune": {
+    "unit": "Ω",
+    "nominal": 20000.0,
+    "series": "pot",
+    "min": 5000.0,
+    "max": 100000.0,
+    "higher": "Bigger trimmer: the bias trim sweeps a wider range, so the sputter zone is easier to reach and harder to land in the middle.",
+    "lower": "Smaller: a narrower, finer range around the sweet spot.",
+    "tooFar": "Too big and a tiny turn throws the bias off a cliff; too small and you can't reach the setting your transistors need.",
+    "targets": [
+     {
+      "stage": "q2",
+      "param": "bias",
+      "exp": 0.6,
+      "min": -0.98,
+      "max": 0.98
+     }
+    ],
+    "fund": "resistance"
+   },
+   "lugs": {
+    "kind": "trim",
+    "bp": "trim",
+    "eli5": "A pot is a resistor with a slider: two end lugs and a wiper in the middle that rides along the track.",
+    "detail": "Use all three lugs and it is a voltage divider (a volume knob). Use one end and the wiper and it is a variable resistor (a faucet).",
+    "standard": "Standard part: a potentiometer (A = log taper for volume, B = linear).",
+    "knob": "bias",
+    "lugs": [
+     {
+      "pin": "1",
+      "name": "end 1",
+      "role": "end",
+      "eli5": "One end of the resistive track."
+     },
+     {
+      "pin": "2",
+      "name": "wiper",
+      "role": "wiper",
+      "eli5": "The middle lug rides along the track as you turn: it sets Q2's resting point."
+     },
+     {
+      "pin": "3",
+      "name": "end 3",
+      "role": "end",
+      "eli5": "The other end of the track."
+     }
+    ]
+   }
+  },
+  {
+   "id": "rfb",
+   "ref": "R3 100k",
+   "kind": "R",
+   "label": "Feedback resistor (Q2 emitter → Q1 base)",
+   "term": "DC feedback resistor",
+   "block": "feedback",
+   "place": "fb",
+   "job": {
+    "eli5": "A thermostat wire: if Q2 drifts, it nudges Q1 to push things back.",
+    "detail": "It carries Q2's emitter voltage back to Q1's base."
+   },
+   "connects": [
+    "q2",
+    "q1"
+   ],
+   "order": {
+    "eli5": "It bridges backwards, from stage 2 to stage 1. That backwards path is what makes it feedback."
+   },
+   "breaks": {
+    "eli5": "Nothing holds the resting points, so they drift with temperature into sputter or silence."
+   },
+   "onRemove": [
+    {
+     "stage": "q2",
+     "param": "bias",
+     "value": -0.95
+    },
+    {
+     "stage": "q1",
+     "param": "bias",
+     "value": 0.9
+    }
+   ],
+   "tune": {
+    "unit": "Ω",
+    "nominal": 100000.0,
+    "series": "E12",
+    "min": 22000.0,
+    "max": 470000.0,
+    "higher": "Bigger feedback resistor: weaker steadying, so Q1 drifts toward full on and the fuzz gets rougher.",
+    "lower": "Smaller: stronger steadying, tighter and cleaner, with less sustain.",
+    "tooFar": "Far off and the two transistors lose their balance: one sits jammed on and the sound gates or chokes.",
+    "targets": [
+     {
+      "stage": "q1",
+      "param": "bias",
+      "add": 0.22,
+      "min": -0.95,
+      "max": 0.95
+     },
+     {
+      "stage": "q2",
+      "param": "bias",
+      "add": -0.18,
+      "min": -0.98,
+      "max": 0.98
+     }
+    ],
+    "fund": "resistance"
+   }
+  },
+  {
+   "id": "fuzz",
+   "ref": "FUZZ 1k",
+   "kind": "POT",
+   "label": "Fuzz pot",
+   "term": "pot as an emitter rheostat (gain control)",
+   "block": "feedback",
+   "place": "up",
+   "job": {
+    "eli5": "The fuzz knob decides how much of Q2's brake the big capacitor bypasses for audio. Less brake, more gain.",
+    "detail": "It sits in Q2's emitter leg, so it changes gain without moving the resting voltage."
+   },
+   "connects": [
+    "q2",
+    "ce",
+    "rfb"
+   ],
+   "order": {
+    "eli5": "Between Q2's emitter and ground (the top rail here)."
+   },
+   "breaks": {
+    "eli5": "Gain stuck wherever the emitter parts land."
+   },
+   "onRemove": [
+    {
+     "stage": "q2",
+     "param": "drive",
+     "value": 4
+    }
+   ],
+   "tune": {
+    "unit": "Ω",
+    "nominal": 1000.0,
+    "series": "pot",
+    "min": 250,
+    "max": 10000.0,
+    "higher": "Bigger Fuzz pot: more gain on tap at full turn.",
+    "lower": "Smaller: the Fuzz knob tops out lower, so even flat out it stays tamer.",
+    "tooFar": "Much bigger and the knob's whole useful range crowds into the last few degrees.",
+    "targets": [
+     {
+      "stage": "q2",
+      "param": "drive",
+      "exp": 0.45,
+      "min": 0.5,
+      "max": 60
+     }
+    ],
+    "fund": "resistance"
+   },
+   "lugs": {
+    "kind": "pot",
+    "bp": "xfz",
+    "eli5": "A pot is a resistor with a slider: two end lugs and a wiper in the middle that rides along the track.",
+    "detail": "Use all three lugs and it is a voltage divider (a volume knob). Use one end and the wiper and it is a variable resistor (a faucet).",
+    "standard": "Standard part: a potentiometer (A = log taper for volume, B = linear).",
+    "knob": "fuzz",
+    "lugs": [
+     {
+      "pin": "1",
+      "name": "end 1",
+      "role": "end",
+      "eli5": "One end of the resistive track."
+     },
+     {
+      "pin": "2",
+      "name": "wiper",
+      "role": "wiper",
+      "eli5": "The middle lug rides along the track as you turn: here only one end and the wiper are used, so it is a faucet for the emitter."
+     },
+     {
+      "pin": "3",
+      "name": "end 3",
+      "role": "end",
+      "eli5": "The other end of the track."
+     }
+    ]
+   }
+  },
+  {
+   "id": "ce",
+   "ref": "C2 22µ",
+   "kind": "CP",
+   "label": "Emitter bypass cap (big)",
+   "term": "emitter bypass capacitor",
+   "block": "feedback",
+   "place": "up",
+   "job": {
+    "eli5": "A shortcut for wiggles only: audio skips Q2's brake, the steady resting voltage doesn't.",
+    "detail": "That is why the gain can be huge while the resting point stays put."
+   },
+   "connects": [
+    "fuzz"
+   ],
+   "order": {
+    "eli5": "From the Fuzz pot's wiper to ground."
+   },
+   "breaks": {
+    "eli5": "Q2's gain collapses: clean-ish and polite, barely fuzzing."
+   },
+   "onRemove": [
+    {
+     "stage": "q2",
+     "param": "drive",
+     "scale": 0.12
+    }
+   ],
+   "tune": {
+    "unit": "F",
+    "nominal": 2.2e-05,
+    "series": "E6",
+    "min": 1e-06,
+    "max": 0.00022,
+    "higher": "Bigger emitter cap: more bass gets the full gain, so the fuzz turns thick and heavy.",
+    "lower": "Smaller: only the highs get full gain; the fuzz thins out and gets buzzy.",
+    "tooFar": "Very small and the low strings barely fuzz at all.",
+    "targets": [
+     {
+      "stage": "q2",
+      "param": "drive",
+      "exp": 0.25,
+      "min": 0.5,
+      "max": 60
+     }
+    ],
+    "fund": "capacitance",
+    "real": "On the real board the cap mostly decides how much bass gets fuzzed. The sketch only makes the fuzz hotter or milder."
+   }
+  },
+  {
+   "id": "c3",
+   "ref": "C3 10n",
+   "kind": "C",
+   "label": "Output coupling cap",
+   "term": "coupling capacitor",
+   "block": "output",
+   "place": "series",
+   "job": {
+    "eli5": "A door that passes the fuzz but blocks Q2's steady push."
+   },
+   "connects": [
+    "q2",
+    "vol",
+    "rc2"
+   ],
+   "order": {
+    "eli5": "Right after Q2's output, before anything outside the circuit."
+   },
+   "breaks": {
+    "eli5": "Steady push on the output: scratchy knob, pops, and it can upset the next pedal."
+   },
+   "silentNote": "The steady push makes no sound, so the model can't make you hear this one. Your next pedal and your pots would feel it.",
+   "tune": {
+    "unit": "F",
+    "nominal": 1e-08,
+    "series": "E6",
+    "min": 1e-09,
+    "max": 1e-06,
+    "higher": "Bigger output cap: more bass reaches the amp.",
+    "lower": "Smaller: the bass gets cut on the way out, thin and bright.",
+    "tooFar": "Around 1 nF and the low notes are mostly gone.",
+    "targets": [],
+    "fund": "capacitance",
+    "real": "You would hear this on the real board as more or less bass at the output. This sketch does not model it.",
+    "calc": {
+     "kind": "rc",
+     "with": 500000.0,
+     "label": "with the 500k Level pot"
+    }
+   }
+  },
+  {
+   "id": "vol",
+   "ref": "LEVEL 500k",
+   "kind": "POT",
+   "label": "Level pot",
+   "term": "potentiometer (pot) as a voltage divider",
+   "block": "output",
+   "place": "up",
+   "job": {
+    "eli5": "A slider on a ramp: the wiper picks how much fuzz goes out."
+   },
+   "connects": [
+    "c3",
+    "fsw"
+   ],
+   "order": {
+    "eli5": "Last, so it trims the final level without changing how hard the transistors clip."
+   },
+   "breaks": {
+    "eli5": "Full output always, which is very loud."
+   },
+   "onRemove": [
+    {
+     "stage": "output",
+     "param": "gain",
+     "value": 1.3
+    }
+   ],
+   "tune": {
+    "unit": "Ω",
+    "nominal": 500000.0,
+    "series": "pot",
+    "min": 10000.0,
+    "max": 1000000.0,
+    "higher": "Bigger Level pot: a gentler load on Q2, a touch more top end.",
+    "lower": "Smaller: it loads Q2 and the fuzz gets a bit darker and quieter.",
+    "tooFar": "Very small (10k) and it drags the whole fuzz down.",
+    "targets": [],
+    "fund": "resistance",
+    "real": "You would hear this on the real board as a small change in brightness and the knob's feel. This sketch does not model it."
+   },
+   "lugs": {
+    "kind": "pot",
+    "bp": "xlvl",
+    "eli5": "A pot is a resistor with a slider: two end lugs and a wiper in the middle that rides along the track.",
+    "detail": "Use all three lugs and it is a voltage divider (a volume knob). Use one end and the wiper and it is a variable resistor (a faucet).",
+    "standard": "Standard part: a potentiometer (A = log taper for volume, B = linear).",
+    "knob": "volume",
+    "lugs": [
+     {
+      "pin": "1",
+      "name": "end 1",
+      "role": "end",
+      "eli5": "One end of the resistive track."
+     },
+     {
+      "pin": "2",
+      "name": "wiper",
+      "role": "wiper",
+      "eli5": "The middle lug rides along the track as you turn: it taps off as much of the fuzz as you want."
+     },
+     {
+      "pin": "3",
+      "name": "end 3",
+      "role": "end",
+      "eli5": "The other end of the track."
+     }
+    ]
+   }
+  },
+  {
+   "id": "r5",
+   "ref": "R5 2.2M",
+   "kind": "R",
+   "label": "Output pulldown resistor",
+   "term": "pulldown resistor (anti-pop)",
+   "block": "output",
+   "place": "up",
+   "job": {
+    "eli5": "A slow leak on the output so the switch has nothing stored up to pop."
+   },
+   "connects": [
+    "vol",
+    "fsw"
+   ],
+   "order": {
+    "eli5": "From the effect output to ground, before the footswitch."
+   },
+   "breaks": {
+    "eli5": "Pops when you stomp."
+   },
+   "silentNote": "Switch pops aren't modeled.",
+   "tune": {
+    "unit": "Ω",
+    "nominal": 2200000.0,
+    "series": "E12",
+    "min": 100000.0,
+    "max": 10000000.0,
+    "higher": "Bigger: even less leak. Pops can creep back when you switch.",
+    "lower": "Smaller: it starts to load the output a little.",
+    "tooFar": "Too small and it eats level; leave it out and the output cap pops on every stomp.",
+    "targets": [],
+    "fund": "resistance",
+    "real": "You would hear this on the real board as a pop (or none) when you switch. This sketch does not model it."
+   }
+  },
+  {
+   "id": "jout",
+   "ref": "OUT",
+   "kind": "JACK",
+   "label": "Output jack",
+   "term": "mono jack",
+   "block": "output",
+   "place": "series",
+   "job": {
+    "eli5": "Out to the amp."
+   },
+   "connects": [
+    "fsw"
+   ],
+   "order": {
+    "eli5": "End of the line."
+   },
+   "breaks": {
+    "eli5": "No output."
+   },
+   "onRemove": [
+    {
+     "stage": "output",
+     "param": "gain",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "id": "fsw",
+   "ref": "3PDT",
+   "kind": "SW",
+   "label": "Footswitch (3PDT true bypass)",
+   "term": "3PDT switch (three poles, two positions each)",
+   "block": "bypass",
+   "place": "series",
+   "job": {
+    "eli5": "A railroad switch with three tracks: guitar into the fuzz or straight out, and the LED on or off.",
+    "detail": "Off, the guitar travels a plain wire from IN to OUT. On, it goes through the fuzz and the LED lights."
+   },
+   "connects": [
+    "jin",
+    "c1",
+    "vol",
+    "jout",
+    "led"
+   ],
+   "order": {
+    "eli5": "Between the jacks and the circuit, so it can route around the whole thing."
+   },
+   "breaks": {
+    "eli5": "Stuck on one setting."
+   },
+   "lugs": {
+    "kind": "fsw3",
+    "bp": "fsw",
+    "stateFrom": "fsw",
+    "eli5": "Three light switches glued together that flip at once.",
+    "detail": "A 3PDT footswitch has three poles (columns) and two throws (top and bottom rows). The middle row lugs are the commons; each one joins the lug above it or the lug below it, all three at the same time.",
+    "standard": "Standard part: a 3PDT latching footswitch, the same one in most DIY pedals. Not bespoke.",
+    "alts": [
+     "DPDT footswitch: two poles, so true bypass but no LED switching.",
+     "Soft-touch relay bypass: a quiet momentary button tells a relay to flip; no click and no wear on the switch.",
+     "Buffered bypass: a buffer stays in the path even when off, so long cables don't dull your tone (Boss style)."
+    ],
+    "why": [
+     {
+      "q": "Why three poles?",
+      "a": "True bypass has to switch the input and the output separately, so the circuit is fully cut off at both ends. That takes two poles. The third pole turns the LED on and off."
+     },
+     {
+      "q": "What is true bypass?",
+      "a": "When off, your guitar goes through a plain wire straight to the output, and the circuit isn't touching the signal at all. On this board the bypass wire is the jumper between lugs 7 and 8."
+     }
+    ],
+    "poles": [
+     {
+      "name": "Pole 1 · audio in",
+      "pins": [
+       "1",
+       "4",
+       "7"
+      ]
+     },
+     {
+      "name": "Pole 2 · audio out",
+      "pins": [
+       "2",
+       "5",
+       "8"
+      ]
+     },
+     {
+      "name": "Pole 3 · LED",
+      "pins": [
+       "3",
+       "6",
+       "9"
+      ]
+     }
+    ],
+    "rows": [
+     "throw A (effect on)",
+     "commons",
+     "throw B (bypassed)"
+    ],
+    "states": [
+     {
+      "id": "on",
+      "label": "Effect on",
+      "joins": [
+       [
+        "1",
+        "4"
+       ],
+       [
+        "2",
+        "5"
+       ],
+       [
+        "3",
+        "6"
+       ]
+      ],
+      "eli5": "Input goes into the fuzz, the fuzz comes out to the jack, and the LED gets its path to the battery."
+     },
+     {
+      "id": "off",
+      "label": "Bypassed",
+      "joins": [
+       [
+        "4",
+        "7"
+       ],
+       [
+        "5",
+        "8"
+       ],
+       [
+        "6",
+        "9"
+       ]
+      ],
+      "eli5": "Input jumps across the 7 to 8 wire straight to the output; the fuzz is cut off at both ends and the LED's path is broken."
+     }
+    ],
+    "lugs": [
+     {
+      "pin": "1",
+      "name": "throw A",
+      "role": "audio",
+      "eli5": "Effect send: to the input cap C1."
+     },
+     {
+      "pin": "2",
+      "name": "throw A",
+      "role": "audio",
+      "eli5": "Effect return: from the Level pot."
+     },
+     {
+      "pin": "3",
+      "name": "throw A",
+      "role": "led",
+      "eli5": "LED return to the battery."
+     },
+     {
+      "pin": "4",
+      "name": "common",
+      "role": "audio",
+      "eli5": "The input jack's tip comes in here."
+     },
+     {
+      "pin": "5",
+      "name": "common",
+      "role": "audio",
+      "eli5": "The output jack's tip leaves from here."
+     },
+     {
+      "pin": "6",
+      "name": "common",
+      "role": "led",
+      "eli5": "From the LED's resistor."
+     },
+     {
+      "pin": "7",
+      "name": "throw B",
+      "role": "audio",
+      "eli5": "Bypass jumper, input side."
+     },
+     {
+      "pin": "8",
+      "name": "throw B",
+      "role": "audio",
+      "eli5": "Bypass jumper, output side."
+     },
+     {
+      "pin": "9",
+      "name": "throw B",
+      "role": "unused",
+      "eli5": "Unused: the LED has nowhere to go, so it's dark."
+     }
+    ]
+   }
+  },
+  {
+   "id": "led",
+   "ref": "D1 + R4 33k",
+   "kind": "LED",
+   "label": "Status LED + resistor",
+   "term": "LED (light-emitting diode) + current-limiting resistor",
+   "block": "bypass",
+   "place": "shunt",
+   "job": {
+    "eli5": "A little lamp that says 'fuzz on'. The resistor keeps it from drinking too much current.",
+    "detail": "Synthrotek notes that R4 is the LED's resistor."
+   },
+   "connects": [
+    "fsw"
+   ],
+   "order": {
+    "eli5": "Wired to the third pole of the footswitch."
+   },
+   "breaks": {
+    "eli5": "No 'on' light. The sound is unchanged."
+   },
+   "silentNote": "Light only.",
+   "tune": {
+    "unit": "Ω",
+    "nominal": 33000.0,
+    "series": "E12",
+    "min": 220,
+    "max": 220000.0,
+    "higher": "Bigger LED resistor: less current, a dimmer glow and a longer battery life.",
+    "lower": "Smaller: more current, a brighter LED.",
+    "tooFar": "Too small and the LED burns out: below about 360 Ω the LED passes more than 20 mA. Much above 100k and you can barely see it.",
+    "targets": [],
+    "fund": "current",
+    "real": "Silent in the sound. You would see it on the real board as a brighter or dimmer status LED.",
+    "calc": {
+     "kind": "ohm",
+     "volts": 7.2,
+     "label": "9 V minus the LED's 1.8 V"
+    }
+   }
+  },
+  {
+   "id": "bat",
+   "ref": "9V + DC",
+   "kind": "BAT",
+   "label": "Battery + DC jack",
+   "term": "power supply (positive ground)",
+   "block": "power",
+   "place": "shunt",
+   "job": {
+    "eli5": "The water tower, mounted upside down: its + side is ground, and the circuit lives below it at −9 V.",
+    "detail": "PNP transistors want their power from the minus side. The DC jack disconnects the battery when a supply is plugged in."
+   },
+   "connects": [
+    "jin"
+   ],
+   "order": {
+    "eli5": "Off the board on wires, switched on by the input jack's ring contact."
+   },
+   "breaks": {
+    "eli5": "No push: silence.",
+    "detail": "A shared 'negative ground' pedal supply would short this circuit. Use a battery or an isolated output."
+   },
+   "onRemove": [
+    {
+     "stage": "q1",
+     "param": "level",
+     "value": 0
+    },
+    {
+     "stage": "q2",
+     "param": "level",
+     "value": 0
+    }
+   ],
+   "lugs": {
+    "kind": "dcj",
+    "bp": "xdc",
+    "eli5": "A DC jack is a socket with a built-in switch: plug in a power supply and a spring lifts off, disconnecting the battery.",
+    "detail": "A 2.1 mm jack has a center pin, a barrel (sleeve) contact, and a switch lug that touches the barrel until a plug pushes it away. This sketch's DC-jack wiring is my reading, not checked against the Synthrotek board.",
+    "standard": "Standard part: a 2.1 mm DC barrel jack. Most pedal supplies are center-negative; positive-ground pedals like this one need care (or an isolated supply).",
+    "lugs": [
+     {
+      "pin": "S",
+      "name": "barrel / sleeve",
+      "role": "power",
+      "eli5": "The outer contact of the plug."
+     },
+     {
+      "pin": "C",
+      "name": "center pin",
+      "role": "power",
+      "eli5": "The inner pin of the plug."
+     },
+     {
+      "pin": "R",
+      "name": "switch lug",
+      "role": "unused",
+      "eli5": "Touches the barrel until a plug goes in; unused on this sketch."
+     }
+    ]
+   }
+  }
+ ],
+ "knobs": [
+  {
+   "id": "fuzz",
+   "label": "FUZZ",
+   "part": "fuzz",
+   "default": 0.75,
+   "targets": [
+    {
+     "stage": "q2",
+     "param": "drive",
+     "from": 1.2,
+     "to": 28,
+     "curve": "exp"
+    }
+   ]
+  },
+  {
+   "id": "bias",
+   "label": "Bias TRIM (20k)",
+   "part": "trim",
+   "default": 0.5,
+   "targets": [
+    {
+     "stage": "q2",
+     "param": "bias",
+     "from": -0.95,
+     "to": 0.95
+    }
+   ],
+   "readout": {
+    "label": "Q2 collector ≈",
+    "from": 1,
+    "to": 8,
+    "unit": "V",
+    "digits": 1
+   }
+  },
+  {
+   "id": "volume",
+   "label": "LEVEL",
+   "part": "vol",
+   "default": 0.6,
+   "targets": [
+    {
+     "stage": "output",
+     "param": "gain",
+     "from": 0,
+     "to": 1.3
+    }
+   ]
+  }
+ ],
+ "sections": [
+  {
+   "id": "power",
+   "title": "Power",
+   "term": "positive-ground supply",
+   "eli5": "The battery, + side to ground. The input jack is its on switch.",
+   "blocks": [
+    "power"
+   ],
+   "tint": "#d6b98c",
+   "map": [
+    20,
+    440,
+    300,
+    80
+   ],
+   "honesty": {
+    "level": "none",
+    "eli5": "Not modeled. The battery never sags, and the input jack's power switching isn't simulated."
+   }
+  },
+  {
+   "id": "fsw",
+   "title": "Footswitch + LED",
+   "term": "3PDT true bypass",
+   "eli5": "Sends the guitar through the fuzz or straight around it.",
+   "blocks": [
+    "bypass"
+   ],
+   "tint": "#94a3b8",
+   "map": [
+    380,
+    430,
+    260,
+    90
+   ],
+   "honesty": {
+    "level": "behavioral",
+    "eli5": "Modeled as true bypass: stomp it on the board or in Controls and the whole fuzz drops out of the path, and the LED follows. Switch pops and the LED's battery draw aren't simulated."
+   }
+  },
+  {
+   "id": "input",
+   "title": "Input",
+   "term": "coupling + pulldown",
+   "eli5": "The front door: wiggles in, steady push kept out.",
+   "blocks": [
+    "input"
+   ],
+   "tint": "#2dd4bf",
+   "map": [
+    160,
+    200,
+    150,
+    130
+   ],
+   "honesty": {
+    "level": "behavioral",
+    "eli5": "Modeled as a gentle bass cut. Real guitar pickups interact with this input, which the model skips."
+   }
+  },
+  {
+   "id": "q1",
+   "title": "Q1 stage",
+   "term": "common-emitter amplifier",
+   "eli5": "The first boost.",
+   "blocks": [
+    "q1"
+   ],
+   "tint": "#a78bfa",
+   "map": [
+    350,
+    200,
+    150,
+    130
+   ],
+   "honesty": {
+    "level": "approx",
+    "eli5": "Approximated with a soft-clipping curve. A real transistor's curve changes with temperature and each part's gain."
+   }
+  },
+  {
+   "id": "q2",
+   "title": "Q2 stage",
+   "term": "common-emitter amplifier (clipping)",
+   "eli5": "The second boost, pushed into clipping.",
+   "blocks": [
+    "q2"
+   ],
+   "tint": "#f472b6",
+   "map": [
+    540,
+    200,
+    150,
+    130
+   ],
+   "honesty": {
+    "level": "approx",
+    "eli5": "Approximated with a fuzz curve whose lopsidedness follows the bias trim. Real fuzz also 'sags' and gates with the battery; the model fakes the gating."
+   }
+  },
+  {
+   "id": "fb",
+   "title": "Feedback loop",
+   "term": "DC feedback + emitter bypass",
+   "eli5": "Q2 reports back to Q1 and keeps both steady; the Fuzz knob sets Q2's boost.",
+   "blocks": [
+    "feedback"
+   ],
+   "tint": "#a3e635",
+   "map": [
+    440,
+    30,
+    170,
+    100
+   ],
+   "honesty": {
+    "level": "approx",
+    "eli5": "Approximated: the loop isn't solved as a real loop. Its effects (steady bias, gain set by the Fuzz knob) are mapped onto the two stages."
+   }
+  },
+  {
+   "id": "output",
+   "title": "Output",
+   "term": "coupling + level",
+   "eli5": "The back door and the Level knob.",
+   "blocks": [
+    "output"
+   ],
+   "tint": "#d6b98c",
+   "map": [
+    730,
+    200,
+    130,
+    130
+   ],
+   "honesty": {
+    "level": "behavioral",
+    "eli5": "Modeled as a volume stage."
+   }
+  },
+  {
+   "id": "injack",
+   "title": "IN jack",
+   "term": "stereo jack",
+   "eli5": "Guitar in; also the power switch.",
+   "blocks": [
+    "input"
+   ],
+   "tint": "#cfd8c4",
+   "map": [
+    20,
+    230,
+    110,
+    60
+   ],
+   "io": true
+  },
+  {
+   "id": "outjack",
+   "title": "OUT jack",
+   "term": "mono jack",
+   "eli5": "To the amp.",
+   "blocks": [
+    "output"
+   ],
+   "tint": "#cfd8c4",
+   "map": [
+    880,
+    230,
+    100,
+    60
+   ],
+   "io": true
+  }
+ ],
+ "links": [
+  {
+   "id": "in-fsw",
+   "from": "injack",
+   "to": "fsw",
+   "kind": "audio",
+   "label": "guitar → footswitch",
+   "eli5": "The guitar's signal goes to the footswitch first.",
+   "probe": "__input"
+  },
+  {
+   "id": "fsw-input",
+   "from": "fsw",
+   "to": "input",
+   "kind": "audio",
+   "label": "ON: into the fuzz",
+   "eli5": "With the fuzz on, the switch hands the guitar to the input capacitor.",
+   "probe": "__input"
+  },
+  {
+   "id": "input-q1",
+   "from": "input",
+   "to": "q1",
+   "kind": "audio",
+   "label": "C1 → Q1 base",
+   "eli5": "Wiggles into Q1's control pin.",
+   "probe": "input"
+  },
+  {
+   "id": "q1-q2",
+   "from": "q1",
+   "to": "q2",
+   "kind": "audio",
+   "label": "direct (no capacitor)",
+   "eli5": "Q1's big copy goes straight into Q2, so they share one resting point.",
+   "probe": "q1"
+  },
+  {
+   "id": "q2-out",
+   "from": "q2",
+   "to": "output",
+   "kind": "audio",
+   "label": "Q2 → C3 → Level",
+   "eli5": "The fuzz heads to the output door.",
+   "probe": "q2"
+  },
+  {
+   "id": "out-fsw",
+   "from": "output",
+   "to": "fsw",
+   "kind": "audio",
+   "label": "ON: fuzz out",
+   "eli5": "The finished fuzz goes back through the footswitch.",
+   "probe": "output"
+  },
+  {
+   "id": "fsw-out",
+   "from": "fsw",
+   "to": "outjack",
+   "kind": "audio",
+   "label": "footswitch → amp",
+   "eli5": "Whatever the switch picked goes to your amp.",
+   "probe": "output"
+  },
+  {
+   "id": "bypass",
+   "from": "injack",
+   "to": "outjack",
+   "kind": "audio",
+   "label": "OFF: straight wire (true bypass)",
+   "eli5": "With the fuzz off, the guitar takes a plain wire from IN to OUT, skipping every part.",
+   "detail": "That is a parallel path: two routes, and the footswitch picks one.",
+   "optional": true,
+   "bend": 120,
+   "probe": "__input"
+  },
+  {
+   "id": "q2-fb",
+   "from": "q2",
+   "to": "fb",
+   "kind": "control",
+   "label": "emitter voltage",
+   "eli5": "Q2 reports how it is resting.",
+   "detail": "A steady 'bias' signal, plus a little audio."
+  },
+  {
+   "id": "fb-q1",
+   "from": "fb",
+   "to": "q1",
+   "kind": "control",
+   "label": "100k → Q1 base",
+   "eli5": "The report travels back to Q1's base and pushes it to correct any drift.",
+   "detail": "Backwards on the map, which is exactly what feedback means."
+  },
+  {
+   "id": "pw-q1",
+   "from": "power",
+   "to": "q1",
+   "kind": "power",
+   "label": "−9 V / ground (+)",
+   "eli5": "Q1's load resistor hangs down to −9 V; its emitter sits on ground (the + side)."
+  },
+  {
+   "id": "pw-q2",
+   "from": "power",
+   "to": "q2",
+   "kind": "power",
+   "label": "−9 V / ground (+)",
+   "eli5": "Q2's trim hangs down to −9 V."
+  },
+  {
+   "id": "pw-fsw",
+   "from": "power",
+   "to": "fsw",
+   "kind": "power",
+   "label": "LED power",
+   "eli5": "The LED drinks from the battery through the footswitch."
+  },
+  {
+   "id": "jack-pw",
+   "from": "injack",
+   "to": "power",
+   "kind": "power",
+   "label": "ring → battery switch",
+   "eli5": "Plugging in a guitar completes the battery's path.",
+   "optional": true
+  }
+ ],
+ "board": {
+  "style": "pcb",
+  "color": "green",
+  "w": 400,
+  "h": 442,
+  "view": [
+   -200,
+   -190,
+   790,
+   820
+  ],
+  "fidelity": "kit",
+  "fidelityNote": "Part and pad positions are measured from Synthrotek's photo of the 'Da FF Clone' PCB (silkscreen R0 to R5, C1 to C3, TRIM, D1, 3PDT, IN/OUT, DC jack, battery). Values come from Synthrotek's forum replies (R1 and R4 33k, R0 and R5 2.2M, R2 330, C2 about 22 µF) and the classic Arbiter circuit (R3 100k, C1 2.2 µF, C3 10 nF), because the BOM PDF wouldn't load. Copper routing is redrawn from the schematic. Transistor pin order and the DC-jack wiring are assumptions.",
+  "reference": {
+   "label": "Synthrotek Fuzz Face clone assembly",
+   "url": "https://www.synthrotek.com/kit-assembly-instructions/effect-pedals-assembly-instructions/fuzz-face-clone-assembly-instructions/"
+  },
+  "parts": [
+   {
+    "id": "pL1",
+    "fp": "PAD",
+    "x": 96,
+    "y": 42,
+    "part": "vol",
+    "label": "LVL 1"
+   },
+   {
+    "id": "pL2",
+    "fp": "PAD",
+    "x": 138,
+    "y": 42,
+    "part": "vol",
+    "label": "LVL 2"
+   },
+   {
+    "id": "pL3",
+    "fp": "PAD",
+    "x": 180,
+    "y": 42,
+    "part": "vol",
+    "label": "LVL 3"
+   },
+   {
+    "id": "pF1",
+    "fp": "PAD",
+    "x": 234,
+    "y": 42,
+    "part": "fuzz",
+    "label": "FZ 1"
+   },
+   {
+    "id": "pF2",
+    "fp": "PAD",
+    "x": 279,
+    "y": 42,
+    "part": "fuzz",
+    "label": "FZ 2"
+   },
+   {
+    "id": "pF3",
+    "fp": "PAD",
+    "x": 324,
+    "y": 42,
+    "part": "fuzz",
+    "label": "FZ 3"
+   },
+   {
+    "id": "c3",
+    "fp": "CC",
+    "x": 30,
+    "y": 76,
+    "part": "c3",
+    "value": "10n",
+    "label": "C3",
+    "rot": 90,
+    "span": 40
+   },
+   {
+    "id": "q2",
+    "fp": "QCAN",
+    "x": 108,
+    "y": 111,
+    "part": "q2",
+    "value": "AC128",
+    "label": "Q2",
+    "pinout": "EBC"
+   },
+   {
+    "id": "q1",
+    "fp": "QCAN",
+    "x": 255,
+    "y": 108,
+    "part": "q1",
+    "value": "AC128",
+    "label": "Q1",
+    "pinout": "EBC"
+   },
+   {
+    "id": "r4",
+    "fp": "R",
+    "x": 171,
+    "y": 121,
+    "part": "led",
+    "value": "33k",
+    "label": "R4",
+    "rot": 90
+   },
+   {
+    "id": "r3",
+    "fp": "R",
+    "x": 204,
+    "y": 121,
+    "part": "rfb",
+    "value": "100k",
+    "label": "R3",
+    "rot": 90
+   },
+   {
+    "id": "c2",
+    "fp": "CP",
+    "x": 342,
+    "y": 154,
+    "part": "ce",
+    "value": "22µ",
+    "label": "C2",
+    "rot": 90
+   },
+   {
+    "id": "c1",
+    "fp": "CP",
+    "x": 275,
+    "y": 200,
+    "part": "c1",
+    "value": "2.2µ",
+    "label": "C1",
+    "rot": 270
+   },
+   {
+    "id": "r1",
+    "fp": "R",
+    "x": 30,
+    "y": 190,
+    "part": "rc1",
+    "value": "33k",
+    "label": "R1",
+    "rot": 90,
+    "span": 64
+   },
+   {
+    "id": "trim",
+    "fp": "TRIM",
+    "x": 84,
+    "y": 198,
+    "part": "trim",
+    "value": "20k",
+    "label": "TRIM"
+   },
+   {
+    "id": "d1",
+    "fp": "LED",
+    "x": 198,
+    "y": 216,
+    "part": "led",
+    "label": "D1",
+    "rot": 90,
+    "color": "#ff4d4d",
+    "blink": "fsw"
+   },
+   {
+    "id": "r2",
+    "fp": "R",
+    "x": 90,
+    "y": 300,
+    "part": "rc2",
+    "value": "330",
+    "label": "R2",
+    "rot": 90
+   },
+   {
+    "id": "r5",
+    "fp": "R",
+    "x": 123,
+    "y": 300,
+    "part": "r5",
+    "value": "2.2M",
+    "label": "R5",
+    "rot": 90
+   },
+   {
+    "id": "r0",
+    "fp": "R",
+    "x": 282,
+    "y": 300,
+    "part": "r0",
+    "value": "2.2M",
+    "label": "R0",
+    "rot": 90
+   },
+   {
+    "id": "fsw",
+    "fp": "FSW3",
+    "x": 198,
+    "y": 306,
+    "part": "fsw",
+    "label": "3PDT"
+   },
+   {
+    "id": "pOT",
+    "fp": "PAD",
+    "x": 30,
+    "y": 273,
+    "part": "jout",
+    "label": "OUT T"
+   },
+   {
+    "id": "pOS",
+    "fp": "PAD",
+    "x": 30,
+    "y": 315,
+    "part": "jout",
+    "label": "OUT S"
+   },
+   {
+    "id": "pIT",
+    "fp": "PAD",
+    "x": 363,
+    "y": 261,
+    "part": "jin",
+    "label": "IN T"
+   },
+   {
+    "id": "pIR",
+    "fp": "PAD",
+    "x": 363,
+    "y": 294,
+    "part": "jin",
+    "label": "IN R"
+   },
+   {
+    "id": "pIS",
+    "fp": "PAD",
+    "x": 363,
+    "y": 327,
+    "part": "jin",
+    "label": "IN S"
+   },
+   {
+    "id": "pDS",
+    "fp": "PAD",
+    "x": 129,
+    "y": 384,
+    "part": "bat",
+    "label": "DC S"
+   },
+   {
+    "id": "pDC",
+    "fp": "PAD",
+    "x": 159,
+    "y": 384,
+    "part": "bat",
+    "label": "DC C"
+   },
+   {
+    "id": "pDR",
+    "fp": "PAD",
+    "x": 189,
+    "y": 384,
+    "part": "bat",
+    "label": "DC R"
+   },
+   {
+    "id": "pBP",
+    "fp": "PAD",
+    "x": 261,
+    "y": 384,
+    "part": "bat",
+    "label": "BAT+"
+   },
+   {
+    "id": "pBM",
+    "fp": "PAD",
+    "x": 294,
+    "y": 384,
+    "part": "bat",
+    "label": "BAT−"
+   },
+   {
+    "id": "xlvl",
+    "fp": "POT",
+    "x": 138,
+    "y": -70,
+    "part": "vol",
+    "value": "A500k",
+    "label": "LEVEL",
+    "off": true
+   },
+   {
+    "id": "xfz",
+    "fp": "POT",
+    "x": 279,
+    "y": -70,
+    "part": "fuzz",
+    "value": "B1k",
+    "label": "FUZZ",
+    "off": true
+   },
+   {
+    "id": "xin",
+    "fp": "JACK3",
+    "x": 520,
+    "y": 294,
+    "part": "jin",
+    "label": "IN (stereo)",
+    "rot": 90,
+    "off": true
+   },
+   {
+    "id": "xout",
+    "fp": "JACK",
+    "x": -110,
+    "y": 294,
+    "part": "jout",
+    "label": "OUT",
+    "rot": 270,
+    "off": true
+   },
+   {
+    "id": "xbat",
+    "fp": "BAT",
+    "x": 300,
+    "y": 560,
+    "part": "bat",
+    "value": "9V",
+    "label": "Battery",
+    "off": true
+   },
+   {
+    "id": "xdc",
+    "fp": "DCJ",
+    "x": 120,
+    "y": 520,
+    "part": "bat",
+    "label": "DC 9V",
+    "off": true
+   }
+  ],
+  "nets": [
+   {
+    "id": "gnd",
+    "name": "Ground = +9 V (chassis)",
+    "kind": "plus",
+    "pins": [
+     "q1.E",
+     "pF1.p",
+     "c2.+",
+     "r0.2",
+     "r5.2",
+     "d1.A",
+     "pIS.p",
+     "pOS.p",
+     "pL1.p",
+     "xin.S",
+     "xout.S",
+     "xlvl.1",
+     "xfz.1"
+    ],
+    "eli5": "Ground here is the battery's + side, wired to the metal box. Every signal returns to it.",
+    "detail": "Positive ground: the opposite of most pedals, because PNP transistors want their power from the minus side.",
+    "pour": true
+   },
+   {
+    "id": "vneg",
+    "name": "−9 V rail",
+    "kind": "minus",
+    "pins": [
+     "r1.2",
+     "trim.1",
+     "trim.2",
+     "fsw.3",
+     "pBM.p",
+     "xbat.-"
+    ],
+    "eli5": "The battery's − side: the 'power' rail for PNP transistors.",
+    "detail": "Collector loads hang down to this rail."
+   },
+   {
+    "id": "batp",
+    "name": "Battery + → DC jack",
+    "kind": "plus",
+    "pins": [
+     "pBP.p",
+     "pDS.p",
+     "xbat.+",
+     "xdc.S"
+    ],
+    "eli5": "The battery's + side heads to the DC jack's switch.",
+    "detail": "Plug in a power supply and this contact opens, so the battery rests."
+   },
+   {
+    "id": "dcc",
+    "name": "DC jack → IN ring",
+    "kind": "plus",
+    "pins": [
+     "pDC.p",
+     "pIR.p",
+     "xdc.C",
+     "xin.R"
+    ],
+    "eli5": "From the DC jack to the input jack's ring.",
+    "detail": "A mono guitar plug touches ring to sleeve, which connects the battery's + to ground and powers the pedal."
+   },
+   {
+    "id": "in",
+    "name": "IN tip",
+    "kind": "audio",
+    "pins": [
+     "pIT.p",
+     "fsw.4",
+     "r0.1",
+     "xin.T"
+    ],
+    "eli5": "The raw guitar signal, plus a slow leak to ground (R0) to stop pops.",
+    "probe": "__input"
+   },
+   {
+    "id": "effin",
+    "name": "Footswitch → C1",
+    "kind": "audio",
+    "pins": [
+     "fsw.1",
+     "c1.+"
+    ],
+    "eli5": "With the fuzz on, the guitar goes this way, into the door capacitor.",
+    "probe": "__input"
+   },
+   {
+    "id": "q1b",
+    "name": "Q1 base",
+    "kind": "audio",
+    "pins": [
+     "c1.-",
+     "q1.B",
+     "r3.2"
+    ],
+    "eli5": "Q1's control pin: the guitar's wiggles meet the feedback correction here.",
+    "probe": "input"
+   },
+   {
+    "id": "q1c",
+    "name": "Q1 collector → Q2 base",
+    "kind": "audio",
+    "pins": [
+     "q1.C",
+     "q2.B",
+     "r1.1"
+    ],
+    "eli5": "Q1's big upside-down copy, wired straight into Q2's control pin.",
+    "detail": "No capacitor here, so a change in one stage's resting point moves the other.",
+    "probe": "q1"
+   },
+   {
+    "id": "q2e",
+    "name": "Q2 emitter",
+    "kind": "control",
+    "pins": [
+     "q2.E",
+     "r3.1",
+     "pF3.p",
+     "xfz.3"
+    ],
+    "eli5": "Q2's 'how am I resting?' report, which the 100k carries back to Q1.",
+    "detail": "The Fuzz pot also hangs here, which sets Q2's boost."
+   },
+   {
+    "id": "fw",
+    "name": "Fuzz wiper → C2",
+    "kind": "bias",
+    "pins": [
+     "pF2.p",
+     "c2.-",
+     "xfz.2"
+    ],
+    "eli5": "Where the big capacitor shortcuts part of the Fuzz pot for wiggles only."
+   },
+   {
+    "id": "q2c",
+    "name": "Q2 collector",
+    "kind": "audio",
+    "pins": [
+     "q2.C",
+     "r2.1"
+    ],
+    "eli5": "The clipped fuzz wave at its source.",
+    "probe": "q2"
+   },
+   {
+    "id": "nx",
+    "name": "Output tap (trim + C3)",
+    "kind": "audio",
+    "pins": [
+     "r2.2",
+     "trim.3",
+     "c3.1"
+    ],
+    "eli5": "Q2's output after its little 330 Ω bump. Measure here when you set the trim.",
+    "detail": "Synthrotek's target is about −4.5 V on this side of Q2.",
+    "probe": "q2"
+   },
+   {
+    "id": "lv3",
+    "name": "C3 → Level pot",
+    "kind": "audio",
+    "pins": [
+     "c3.2",
+     "pL3.p",
+     "xlvl.3"
+    ],
+    "eli5": "Fuzz with the steady push removed, at the top of the Level pot.",
+    "probe": "q2"
+   },
+   {
+    "id": "effout",
+    "name": "Level wiper → footswitch",
+    "kind": "audio",
+    "pins": [
+     "pL2.p",
+     "fsw.2",
+     "r5.1",
+     "xlvl.2"
+    ],
+    "eli5": "The fuzz at your chosen level, heading back to the switch.",
+    "probe": "output"
+   },
+   {
+    "id": "out",
+    "name": "OUT tip",
+    "kind": "audio",
+    "pins": [
+     "fsw.5",
+     "pOT.p",
+     "xout.T"
+    ],
+    "eli5": "Whatever the footswitch picked: fuzz or the plain guitar.",
+    "probe": "output"
+   },
+   {
+    "id": "byp",
+    "name": "Bypass jumper",
+    "kind": "audio",
+    "pins": [
+     "fsw.7",
+     "fsw.8"
+    ],
+    "eli5": "The plain wire that lets the guitar skip the whole circuit when the fuzz is off.",
+    "probe": "__input"
+   },
+   {
+    "id": "ledk",
+    "name": "LED → R4",
+    "kind": "bias",
+    "pins": [
+     "d1.K",
+     "r4.1"
+    ],
+    "eli5": "The LED's current, limited by R4."
+   },
+   {
+    "id": "ledr",
+    "name": "R4 → footswitch",
+    "kind": "bias",
+    "pins": [
+     "r4.2",
+     "fsw.6"
+    ],
+    "eli5": "The footswitch's third pole completes the LED's path when the fuzz is on."
+   }
+  ]
+ }
+}

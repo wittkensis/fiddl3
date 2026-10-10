@@ -1,0 +1,1268 @@
+{
+ "id": "ring-mod",
+ "name": "Ring modulator",
+ "subtitle": "PAiA CA-9-style (Craig Anderton, Electronic Projects for Musicians) · Frequency · Effect · Normal",
+ "kind": "effect",
+ "mine": true,
+ "defaultInput": "pluck",
+ "keyIdea": {
+  "eli5": "Multiply two signals and both originals vanish. You get their sum and difference instead, like two notes 'fighting' and leaving new notes behind.",
+  "detail": "A 440 Hz guitar note times a 100 Hz carrier leaves 340 Hz and 540 Hz. Those don't fit a musical scale, so it sounds bell-like and robotic."
+ },
+ "summary": "Guitar times a carrier oscillator. The Frequency knob moves the carrier; Effect and Normal blend the wet and dry.",
+ "rails": {
+  "top": {
+   "label": "+V",
+   "sign": "+",
+   "ground": false,
+   "eli5": "Red is the + side of the battery: every chip drinks from it."
+  },
+  "bottom": {
+   "label": "0 V (ground)",
+   "sign": "-",
+   "ground": true,
+   "eli5": "Blue is the battery's − side, and here it is also ground: the 0 V floor."
+  }
+ },
+ "source": {
+  "label": "Effects Database: PAiA CA-9 Craig Anderton's Ring Modulator",
+  "url": "https://www.effectsdatabase.com/diy/anderton/epfm/ringmod"
+ },
+ "sim": {
+  "label": "Falstad: OTA ring modulator",
+  "url": "https://www.falstad.com/circuit/circuitjs.html?startCircuit=ota-ringmod.txt"
+ },
+ "notes": [
+  "The controls (Frequency, Effect, Normal) come from the Effects Database entry. I couldn't load the CA-9 schematic, so the exact multiplier circuit is unverified. Blocks and board here follow the generic balanced-modulator layout.",
+  "Try the test tone at 110 Hz with the carrier near 110 Hz: the difference tone drops toward 0 Hz and you hear a slow beating."
+ ],
+ "blocks": [
+  {
+   "id": "input",
+   "title": "INPUT BUFFER",
+   "job": {
+    "eli5": "A polite listener: it copies the guitar without pulling on it, and hands a strong copy to both paths."
+   },
+   "stage": {
+    "kind": "gain",
+    "params": {
+     "gain": 1
+    }
+   },
+   "wire": {
+    "eli5": "A strong copy of the guitar. It splits here: one copy to the multiplier, one to the Normal knob."
+   }
+  },
+  {
+   "id": "carrier",
+   "title": "CARRIER OSCILLATOR",
+   "side": true,
+   "stage": null,
+   "probeTap": {
+    "stage": "ring",
+    "node": "carrier"
+   },
+   "job": {
+    "eli5": "Makes the second signal you multiply by. Its pitch decides where the new bell-like tones land."
+   },
+   "onBypass": [
+    {
+     "stage": "ring",
+     "param": "balance",
+     "value": 0
+    }
+   ],
+   "wire": {
+    "eli5": "A steady tone (the carrier), heading to the multiplier's second input."
+   }
+  },
+  {
+   "id": "ring",
+   "title": "MULTIPLIER (BALANCED)",
+   "job": {
+    "eli5": "Multiplies guitar × carrier, so only new 'sum and difference' tones come out."
+   },
+   "stage": {
+    "kind": "ringmod",
+    "params": {
+     "carrier": 440,
+     "wet": 1.4,
+     "dry": 0,
+     "balance": 1,
+     "leak": 0
+    }
+   },
+   "wire": {
+    "eli5": "The ring-mod sound: new tones, with both originals gone."
+   }
+  },
+  {
+   "id": "out",
+   "title": "EFFECT / NORMAL MIX → OUT",
+   "job": {
+    "eli5": "Blends the ring sound (Effect) with the plain guitar (Normal) side by side, then sends it out."
+   },
+   "stage": {
+    "kind": "gain",
+    "params": {
+     "gain": 0.9
+    }
+   },
+   "wire": {
+    "eli5": "Your blend of wet and dry, out to the amp."
+   }
+  }
+ ],
+ "parts": [
+  {
+   "id": "buf",
+   "ref": "IC1a",
+   "kind": "OPAMP",
+   "label": "Input buffer op-amp",
+   "term": "op-amp (operational amplifier) buffer",
+   "block": "input",
+   "place": "active",
+   "job": {
+    "eli5": "A polite listener: it copies the guitar without pulling on the pickup."
+   },
+   "connects": [
+    "mult",
+    "normal"
+   ],
+   "order": {
+    "eli5": "First, so neither the multiplier nor the dry path pulls on the pickup."
+   },
+   "breaks": {
+    "eli5": "The multiplier loads the pickup: duller, quieter, noisier."
+   },
+   "onRemove": [
+    {
+     "stage": "input",
+     "param": "gain",
+     "value": 0.5
+    }
+   ],
+   "chip": {
+    "chip": "TL072",
+    "bp": "ic1",
+    "pins": [
+     1,
+     2,
+     3
+    ],
+    "note": "The original CA-9 used an RC4739 (and PAiA's kit a 5532); Craig Anderton lists the TL072 as a fine modern swap."
+   }
+  },
+  {
+   "id": "osc",
+   "ref": "IC2",
+   "kind": "OSC",
+   "label": "Carrier oscillator",
+   "term": "oscillator",
+   "block": "carrier",
+   "place": "active",
+   "job": {
+    "eli5": "A steady humming tone: the thing the guitar gets multiplied by."
+   },
+   "connects": [
+    "freq",
+    "mult"
+   ],
+   "order": {
+    "eli5": "It feeds the multiplier's second input and never sits in the guitar's path."
+   },
+   "breaks": {
+    "eli5": "Nothing to multiply by, so the effect goes silent."
+   },
+   "onRemove": [
+    {
+     "stage": "ring",
+     "param": "balance",
+     "value": 0
+    }
+   ],
+   "chip": {
+    "chip": "LM565",
+    "note": "PAiA's tech notes list IC2 as a 565 phase-locked loop. My reading: its VCO is the carrier and its balanced phase detector is the multiplier, one chip doing both jobs. This sketch draws two placeholder chips, so pins aren't mapped to the board."
+   }
+  },
+  {
+   "id": "freq",
+   "ref": "FREQUENCY",
+   "kind": "POT",
+   "label": "Frequency pot",
+   "term": "pot in the oscillator's timing",
+   "block": "carrier",
+   "place": "shunt",
+   "job": {
+    "eli5": "The carrier's pitch knob.",
+    "detail": "It is part of the oscillator's timing: resistance and a capacitor set the speed."
+   },
+   "connects": [
+    "osc"
+   ],
+   "order": {
+    "eli5": "Inside the carrier oscillator."
+   },
+   "breaks": {
+    "eli5": "The carrier is stuck at one pitch."
+   },
+   "tune": {
+    "unit": "Ω",
+    "nominal": 100000.0,
+    "series": "pot",
+    "min": 10000.0,
+    "max": 1000000.0,
+    "higher": "Bigger Frequency pot: the carrier can sweep lower.",
+    "lower": "Smaller: the lowest carrier is higher, so it stays bell-like.",
+    "tooFar": "Very big and most of the knob lives in rumble territory.",
+    "targets": [
+     {
+      "stage": "ring",
+      "param": "carrier",
+      "exp": -1,
+      "min": 5,
+      "max": 8000
+     }
+    ],
+    "fund": "frequency"
+   },
+   "lugs": {
+    "kind": "pot",
+    "bp": "xfr",
+    "eli5": "A pot is a resistor with a slider: two end lugs and a wiper in the middle that rides along the track.",
+    "detail": "Use all three lugs and it is a voltage divider (a volume knob). Use one end and the wiper and it is a variable resistor (a faucet).",
+    "standard": "Standard part: a potentiometer (A = log taper for volume, B = linear).",
+    "knob": "freq",
+    "lugs": [
+     {
+      "pin": "1",
+      "name": "end 1",
+      "role": "end",
+      "eli5": "One end of the resistive track."
+     },
+     {
+      "pin": "2",
+      "name": "wiper",
+      "role": "wiper",
+      "eli5": "The middle lug rides along the track as you turn: used as the carrier's faucet."
+     },
+     {
+      "pin": "3",
+      "name": "end 3",
+      "role": "end",
+      "eli5": "The other end of the track."
+     }
+    ]
+   }
+  },
+  {
+   "id": "mult",
+   "ref": "IC3",
+   "kind": "MULT",
+   "label": "Balanced multiplier",
+   "term": "balanced modulator / four-quadrant multiplier",
+   "block": "ring",
+   "place": "active",
+   "job": {
+    "eli5": "A math machine: it multiplies two signals, and both originals vanish, leaving new 'sum and difference' tones.",
+    "detail": "'Balanced' means that with no guitar playing, the carrier cancels itself out."
+   },
+   "connects": [
+    "buf",
+    "osc",
+    "trim",
+    "effect"
+   ],
+   "order": {
+    "eli5": "Where the two paths meet: after the buffer, fed by the carrier."
+   },
+   "breaks": {
+    "eli5": "No ring tones. Dry only."
+   },
+   "onRemove": [
+    {
+     "stage": "ring",
+     "param": "wet",
+     "value": 0
+    }
+   ],
+   "chip": {
+    "chip": "LM565",
+    "note": "PAiA's tech notes list IC2 as a 565 phase-locked loop; its double-balanced phase detector multiplies the guitar by the carrier. This sketch draws a placeholder chip, so pins aren't mapped to the board."
+   }
+  },
+  {
+   "id": "trim",
+   "ref": "TRIM",
+   "kind": "TRIM",
+   "label": "Carrier null (balance) trim",
+   "term": "trimmer potentiometer (null adjust)",
+   "block": "ring",
+   "place": "shunt",
+   "job": {
+    "eli5": "A fine-tuning screw that makes the carrier cancel perfectly when you're not playing."
+   },
+   "connects": [
+    "mult"
+   ],
+   "order": {
+    "eli5": "On the multiplier itself."
+   },
+   "breaks": {
+    "eli5": "A constant whine of the carrier leaks into the output even when the guitar is silent."
+   },
+   "onRemove": [
+    {
+     "stage": "ring",
+     "param": "leak",
+     "value": 0.18
+    }
+   ],
+   "tune": {
+    "unit": "Ω",
+    "nominal": 10000.0,
+    "series": "pot",
+    "min": 1000.0,
+    "max": 100000.0,
+    "higher": "Bigger: a coarser null; harder to land the exact balance point.",
+    "lower": "Smaller: a finer null.",
+    "tooFar": "Off balance and the carrier whistles through even with nothing playing.",
+    "targets": [],
+    "fund": "resistance",
+    "real": "This sketch does not model it."
+   },
+   "lugs": {
+    "kind": "trim",
+    "bp": "trim",
+    "eli5": "A pot is a resistor with a slider: two end lugs and a wiper in the middle that rides along the track.",
+    "detail": "Use all three lugs and it is a voltage divider (a volume knob). Use one end and the wiper and it is a variable resistor (a faucet).",
+    "standard": "Standard part: a potentiometer (A = log taper for volume, B = linear).",
+    "lugs": [
+     {
+      "pin": "1",
+      "name": "end 1",
+      "role": "end",
+      "eli5": "One end of the resistive track."
+     },
+     {
+      "pin": "2",
+      "name": "wiper",
+      "role": "wiper",
+      "eli5": "The middle lug rides along the track as you turn: it nulls the carrier."
+     },
+     {
+      "pin": "3",
+      "name": "end 3",
+      "role": "end",
+      "eli5": "The other end of the track."
+     }
+    ]
+   }
+  },
+  {
+   "id": "effect",
+   "ref": "EFFECT",
+   "kind": "POT",
+   "label": "Effect (wet) pot",
+   "term": "pot as a volume control",
+   "block": "out",
+   "place": "series",
+   "job": {
+    "eli5": "How much ring sound goes into the mix."
+   },
+   "connects": [
+    "mult",
+    "sum"
+   ],
+   "order": {
+    "eli5": "After the multiplier, before the mixer."
+   },
+   "breaks": {
+    "eli5": "Ring sound stuck at full level."
+   },
+   "tune": {
+    "unit": "Ω",
+    "nominal": 100000.0,
+    "series": "pot",
+    "min": 10000.0,
+    "max": 1000000.0,
+    "higher": "Bigger: a softer load, a little more level.",
+    "lower": "Smaller: a little less level.",
+    "tooFar": "Very small and it loads the mixer.",
+    "targets": [],
+    "fund": "resistance",
+    "real": "This sketch does not model it."
+   },
+   "lugs": {
+    "kind": "pot",
+    "bp": "xef",
+    "eli5": "A pot is a resistor with a slider: two end lugs and a wiper in the middle that rides along the track.",
+    "detail": "Use all three lugs and it is a voltage divider (a volume knob). Use one end and the wiper and it is a variable resistor (a faucet).",
+    "standard": "Standard part: a potentiometer (A = log taper for volume, B = linear).",
+    "knob": "effect",
+    "lugs": [
+     {
+      "pin": "1",
+      "name": "end 1",
+      "role": "end",
+      "eli5": "One end of the resistive track."
+     },
+     {
+      "pin": "2",
+      "name": "wiper",
+      "role": "wiper",
+      "eli5": "The middle lug rides along the track as you turn: it taps the wet ring-mod level."
+     },
+     {
+      "pin": "3",
+      "name": "end 3",
+      "role": "end",
+      "eli5": "The other end of the track."
+     }
+    ]
+   }
+  },
+  {
+   "id": "normal",
+   "ref": "NORMAL",
+   "kind": "POT",
+   "label": "Normal (dry) pot",
+   "term": "pot as a volume control on a parallel path",
+   "block": "out",
+   "place": "fb",
+   "job": {
+    "eli5": "How much plain guitar gets blended back in. It is a second road that skips the multiplier."
+   },
+   "connects": [
+    "buf",
+    "sum"
+   ],
+   "order": {
+    "eli5": "It taps the buffer and skips the multiplier entirely. That is why it's drawn as a bridge."
+   },
+   "breaks": {
+    "eli5": "No way to hear the plain note under the bells."
+   },
+   "onRemove": [
+    {
+     "stage": "ring",
+     "param": "dry",
+     "value": 0
+    }
+   ],
+   "tune": {
+    "unit": "Ω",
+    "nominal": 100000.0,
+    "series": "pot",
+    "min": 10000.0,
+    "max": 1000000.0,
+    "higher": "Bigger: a softer load, a little more level.",
+    "lower": "Smaller: a little less level.",
+    "tooFar": "Very small and it loads the buffer.",
+    "targets": [],
+    "fund": "resistance",
+    "real": "This sketch does not model it."
+   },
+   "lugs": {
+    "kind": "pot",
+    "bp": "xno",
+    "eli5": "A pot is a resistor with a slider: two end lugs and a wiper in the middle that rides along the track.",
+    "detail": "Use all three lugs and it is a voltage divider (a volume knob). Use one end and the wiper and it is a variable resistor (a faucet).",
+    "standard": "Standard part: a potentiometer (A = log taper for volume, B = linear).",
+    "knob": "normal",
+    "lugs": [
+     {
+      "pin": "1",
+      "name": "end 1",
+      "role": "end",
+      "eli5": "One end of the resistive track."
+     },
+     {
+      "pin": "2",
+      "name": "wiper",
+      "role": "wiper",
+      "eli5": "The middle lug rides along the track as you turn: it taps the dry level."
+     },
+     {
+      "pin": "3",
+      "name": "end 3",
+      "role": "end",
+      "eli5": "The other end of the track."
+     }
+    ]
+   }
+  },
+  {
+   "id": "sum",
+   "ref": "IC1b",
+   "kind": "OPAMP",
+   "label": "Mixer op-amp",
+   "term": "op-amp summing amplifier",
+   "block": "out",
+   "place": "active",
+   "job": {
+    "eli5": "A mixing bowl that adds wet and dry without them pushing on each other.",
+    "detail": "Its minus input is held steady (a 'virtual ground'), so each input resistor adds its share independently."
+   },
+   "connects": [
+    "effect",
+    "normal"
+   ],
+   "order": {
+    "eli5": "Last: it combines the two paths."
+   },
+   "breaks": {
+    "eli5": "The pots load each other and the blend gets unpredictable."
+   },
+   "onRemove": [
+    {
+     "stage": "out",
+     "param": "gain",
+     "value": 0.5
+    }
+   ],
+   "chip": {
+    "chip": "TL072",
+    "bp": "ic1",
+    "pins": [
+     5,
+     6,
+     7
+    ],
+    "note": "The second half of the same op-amp chip mixes wet and dry."
+   }
+  }
+ ],
+ "knobs": [
+  {
+   "id": "freq",
+   "label": "Frequency (carrier)",
+   "part": "freq",
+   "default": 0.45,
+   "targets": [
+    {
+     "stage": "ring",
+     "param": "carrier",
+     "from": 30,
+     "to": 2500,
+     "curve": "exp"
+    }
+   ],
+   "readout": {
+    "label": "carrier ≈",
+    "from": 30,
+    "to": 2500,
+    "unit": "Hz",
+    "digits": 0,
+    "curve": "exp"
+   }
+  },
+  {
+   "id": "effect",
+   "label": "Effect",
+   "part": "effect",
+   "default": 0.8,
+   "targets": [
+    {
+     "stage": "ring",
+     "param": "wet",
+     "from": 0,
+     "to": 3
+    }
+   ]
+  },
+  {
+   "id": "normal",
+   "label": "Normal",
+   "part": "normal",
+   "default": 0.0,
+   "targets": [
+    {
+     "stage": "ring",
+     "param": "dry",
+     "from": 0,
+     "to": 1
+    }
+   ]
+  }
+ ],
+ "groundNote": {
+  "eli5": "Ground here is the battery's − side (negative ground), the usual setup."
+ },
+ "honestyNote": {
+  "eli5": "The multiplier is modeled as exact math, which is the ideal a real chip aims for. The dry path really is parallel in the audio model too."
+ },
+ "sections": [
+  {
+   "id": "input",
+   "title": "Input buffer",
+   "term": "op-amp buffer",
+   "eli5": "Copies the guitar and splits it into two roads.",
+   "blocks": [
+    "input"
+   ],
+   "tint": "#2dd4bf",
+   "map": [
+    170,
+    200,
+    170,
+    130
+   ],
+   "honesty": {
+    "level": "behavioral",
+    "eli5": "Modeled as a clean copy."
+   }
+  },
+  {
+   "id": "carrier",
+   "title": "Carrier oscillator",
+   "term": "oscillator",
+   "eli5": "The humming tone you multiply by.",
+   "blocks": [
+    "carrier"
+   ],
+   "tint": "#a78bfa",
+   "map": [
+    400,
+    30,
+    190,
+    100
+   ],
+   "honesty": {
+    "level": "behavioral",
+    "eli5": "Modeled as a Web Audio sine. The real CA-9 carrier waveform is unverified (likely triangle or square)."
+   }
+  },
+  {
+   "id": "ring",
+   "title": "Multiplier",
+   "term": "balanced modulator",
+   "eli5": "Guitar × carrier.",
+   "blocks": [
+    "ring"
+   ],
+   "tint": "#f472b6",
+   "map": [
+    410,
+    200,
+    170,
+    130
+   ],
+   "honesty": {
+    "level": "behavioral",
+    "eli5": "Modeled as true multiplication, which is the ideal. A real multiplier chip leaks a little and adds some distortion; the trim adds leak back in."
+   }
+  },
+  {
+   "id": "mix",
+   "title": "Effect / Normal mix",
+   "term": "summing amplifier",
+   "eli5": "Blends the two roads.",
+   "blocks": [
+    "out"
+   ],
+   "tint": "#a3e635",
+   "map": [
+    650,
+    200,
+    170,
+    130
+   ],
+   "honesty": {
+    "level": "behavioral",
+    "eli5": "Modeled as a wet/dry blend."
+   }
+  },
+  {
+   "id": "power",
+   "title": "Power",
+   "term": "supply",
+   "eli5": "Battery and rails.",
+   "blocks": [],
+   "tint": "#d6b98c",
+   "map": [
+    300,
+    440,
+    400,
+    80
+   ],
+   "honesty": {
+    "level": "none",
+    "eli5": "Not modeled."
+   }
+  },
+  {
+   "id": "injack",
+   "title": "IN jack",
+   "term": "jack",
+   "eli5": "Guitar in.",
+   "blocks": [
+    "input"
+   ],
+   "tint": "#cfd8c4",
+   "map": [
+    20,
+    235,
+    110,
+    60
+   ],
+   "io": true
+  },
+  {
+   "id": "outjack",
+   "title": "OUT jack",
+   "term": "jack",
+   "eli5": "To the amp.",
+   "blocks": [
+    "out"
+   ],
+   "tint": "#cfd8c4",
+   "map": [
+    870,
+    235,
+    110,
+    60
+   ],
+   "io": true
+  }
+ ],
+ "links": [
+  {
+   "id": "in-buf",
+   "from": "injack",
+   "to": "input",
+   "kind": "audio",
+   "label": "guitar",
+   "eli5": "The guitar arrives.",
+   "probe": "__input"
+  },
+  {
+   "id": "buf-ring",
+   "from": "input",
+   "to": "ring",
+   "kind": "audio",
+   "label": "copy 1 → multiplier",
+   "eli5": "One copy goes to be multiplied.",
+   "probe": "input"
+  },
+  {
+   "id": "buf-mix",
+   "from": "input",
+   "to": "mix",
+   "kind": "audio",
+   "label": "copy 2 → Normal (dry, parallel)",
+   "eli5": "A second copy skips the multiplier entirely and waits at the mixer.",
+   "detail": "This is the parallel path: two roads from the same starting point.",
+   "probe": "input"
+  },
+  {
+   "id": "car-ring",
+   "from": "carrier",
+   "to": "ring",
+   "kind": "control",
+   "label": "carrier tone",
+   "eli5": "The humming tone the guitar gets multiplied by.",
+   "detail": "It is an audio-rate signal, but it acts as the 'instruction' for the multiplier, so it's drawn as control.",
+   "probe": "tap:carrier"
+  },
+  {
+   "id": "ring-mix",
+   "from": "ring",
+   "to": "mix",
+   "kind": "audio",
+   "label": "wet → Effect",
+   "eli5": "The ring sound goes through the Effect knob to the mixer.",
+   "probe": "ring"
+  },
+  {
+   "id": "mix-out",
+   "from": "mix",
+   "to": "outjack",
+   "kind": "audio",
+   "label": "blend → amp",
+   "eli5": "Your blend goes out.",
+   "probe": "out"
+  },
+  {
+   "id": "pw-all",
+   "from": "power",
+   "to": "input",
+   "kind": "power",
+   "label": "+V / ground",
+   "eli5": "Every op-amp drinks from the rails."
+  },
+  {
+   "id": "pw-car",
+   "from": "power",
+   "to": "carrier",
+   "kind": "power",
+   "label": "+V / ground",
+   "eli5": "The oscillator drinks too."
+  },
+  {
+   "id": "pw-ring",
+   "from": "power",
+   "to": "ring",
+   "kind": "power",
+   "label": "+V / ground",
+   "eli5": "And the multiplier."
+  }
+ ],
+ "board": {
+  "style": "perf",
+  "color": "perf",
+  "w": 620,
+  "h": 420,
+  "view": [
+   -190,
+   -150,
+   1000,
+   700
+  ],
+  "fidelity": "generic",
+  "fidelityNote": "Generic perfboard layout from the block diagram. The CA-9 schematic wouldn't load, so IC2 (oscillator) and IC3 (multiplier) are labeled placeholders with made-up pin numbers. Only IC1 (a TL072 dual op-amp) uses real pins. Treat this as 'what kinds of parts you'd solder', not a build guide.",
+  "parts": [
+   {
+    "id": "ic1",
+    "fp": "DIP",
+    "x": 150,
+    "y": 230,
+    "part": "buf",
+    "value": "TL072",
+    "label": "IC1",
+    "span": 8
+   },
+   {
+    "id": "ic2",
+    "fp": "DIP",
+    "x": 300,
+    "y": 80,
+    "part": "osc",
+    "value": "OSC?",
+    "label": "IC2",
+    "span": 8
+   },
+   {
+    "id": "ic3",
+    "fp": "DIP",
+    "x": 380,
+    "y": 230,
+    "part": "mult",
+    "value": "MULT?",
+    "label": "IC3",
+    "span": 14
+   },
+   {
+    "id": "trim",
+    "fp": "TRIM",
+    "x": 520,
+    "y": 120,
+    "part": "trim",
+    "value": "10k",
+    "label": "TRIM"
+   },
+   {
+    "id": "cin",
+    "fp": "CC",
+    "x": 50,
+    "y": 200,
+    "part": "buf",
+    "value": ".1",
+    "label": "C1"
+   },
+   {
+    "id": "cout",
+    "fp": "CF",
+    "x": 540,
+    "y": 300,
+    "part": "sum",
+    "value": "1µ",
+    "label": "C2"
+   },
+   {
+    "id": "rs1",
+    "fp": "R",
+    "x": 240,
+    "y": 330,
+    "part": "effect",
+    "value": "100k",
+    "label": "R1"
+   },
+   {
+    "id": "rs2",
+    "fp": "R",
+    "x": 130,
+    "y": 330,
+    "part": "normal",
+    "value": "100k",
+    "label": "R2"
+   },
+   {
+    "id": "rf",
+    "fp": "R",
+    "x": 240,
+    "y": 140,
+    "part": "sum",
+    "value": "100k",
+    "label": "R3"
+   },
+   {
+    "id": "pIN",
+    "fp": "PAD",
+    "x": 20,
+    "y": 170,
+    "part": "buf",
+    "label": "IN"
+   },
+   {
+    "id": "pOUT",
+    "fp": "PAD",
+    "x": 600,
+    "y": 170,
+    "part": "sum",
+    "label": "OUT"
+   },
+   {
+    "id": "pFR1",
+    "fp": "PAD",
+    "x": 260,
+    "y": 20,
+    "part": "freq",
+    "label": "FR1"
+   },
+   {
+    "id": "pFR2",
+    "fp": "PAD",
+    "x": 290,
+    "y": 20,
+    "part": "freq",
+    "label": "FR2"
+   },
+   {
+    "id": "pFR3",
+    "fp": "PAD",
+    "x": 320,
+    "y": 20,
+    "part": "freq",
+    "label": "FR3"
+   },
+   {
+    "id": "pEF1",
+    "fp": "PAD",
+    "x": 330,
+    "y": 390,
+    "part": "effect",
+    "label": "EF1"
+   },
+   {
+    "id": "pEF2",
+    "fp": "PAD",
+    "x": 360,
+    "y": 390,
+    "part": "effect",
+    "label": "EF2"
+   },
+   {
+    "id": "pEF3",
+    "fp": "PAD",
+    "x": 390,
+    "y": 390,
+    "part": "effect",
+    "label": "EF3"
+   },
+   {
+    "id": "pNO1",
+    "fp": "PAD",
+    "x": 450,
+    "y": 390,
+    "part": "normal",
+    "label": "NO1"
+   },
+   {
+    "id": "pNO2",
+    "fp": "PAD",
+    "x": 480,
+    "y": 390,
+    "part": "normal",
+    "label": "NO2"
+   },
+   {
+    "id": "pNO3",
+    "fp": "PAD",
+    "x": 510,
+    "y": 390,
+    "part": "normal",
+    "label": "NO3"
+   },
+   {
+    "id": "pBP",
+    "fp": "PAD",
+    "x": 600,
+    "y": 360,
+    "label": "BAT+"
+   },
+   {
+    "id": "pBM",
+    "fp": "PAD",
+    "x": 600,
+    "y": 390,
+    "label": "BAT−"
+   },
+   {
+    "id": "xin",
+    "fp": "JACK",
+    "x": -90,
+    "y": 170,
+    "part": "buf",
+    "label": "IN",
+    "rot": 270,
+    "off": true
+   },
+   {
+    "id": "xout",
+    "fp": "JACK",
+    "x": 700,
+    "y": 170,
+    "part": "sum",
+    "label": "OUT",
+    "rot": 90,
+    "off": true
+   },
+   {
+    "id": "xfr",
+    "fp": "POT",
+    "x": 290,
+    "y": -60,
+    "part": "freq",
+    "value": "100k",
+    "label": "FREQUENCY",
+    "off": true
+   },
+   {
+    "id": "xef",
+    "fp": "POT",
+    "x": 360,
+    "y": 470,
+    "part": "effect",
+    "value": "100k",
+    "label": "EFFECT",
+    "rot": 180,
+    "off": true
+   },
+   {
+    "id": "xno",
+    "fp": "POT",
+    "x": 480,
+    "y": 470,
+    "part": "normal",
+    "value": "100k",
+    "label": "NORMAL",
+    "rot": 180,
+    "off": true
+   },
+   {
+    "id": "xbat",
+    "fp": "BAT",
+    "x": 720,
+    "y": 470,
+    "value": "9V",
+    "label": "Battery",
+    "off": true
+   }
+  ],
+  "nets": [
+   {
+    "id": "gnd",
+    "name": "Ground (0 V)",
+    "kind": "minus",
+    "pins": [
+     "ic1.4",
+     "ic2.4",
+     "ic3.7",
+     "trim.3",
+     "pBM.p",
+     "pEF1.p",
+     "pNO1.p",
+     "xin.S",
+     "xout.S",
+     "xef.1",
+     "xno.1",
+     "xbat.-"
+    ],
+    "eli5": "Ground: the shared floor every signal returns to.",
+    "pour": true
+   },
+   {
+    "id": "vp",
+    "name": "+V rail",
+    "kind": "plus",
+    "pins": [
+     "ic1.8",
+     "ic2.8",
+     "ic3.14",
+     "trim.1",
+     "pBP.p",
+     "xbat.+"
+    ],
+    "eli5": "The battery's push, to every chip's power pin."
+   },
+   {
+    "id": "in",
+    "name": "IN",
+    "kind": "audio",
+    "pins": [
+     "pIN.p",
+     "cin.1",
+     "xin.T"
+    ],
+    "eli5": "The raw guitar.",
+    "probe": "__input"
+   },
+   {
+    "id": "bufin",
+    "name": "Buffer + input",
+    "kind": "audio",
+    "pins": [
+     "cin.2",
+     "ic1.3"
+    ],
+    "eli5": "The guitar's wiggles, through the door capacitor.",
+    "probe": "__input"
+   },
+   {
+    "id": "bufout",
+    "name": "Buffer out (splits)",
+    "kind": "audio",
+    "pins": [
+     "ic1.1",
+     "ic1.2",
+     "ic3.1",
+     "pNO3.p",
+     "xno.3"
+    ],
+    "eli5": "The guitar copy. It splits: to the multiplier and to the Normal knob.",
+    "detail": "One wire, two destinations: the start of the parallel path.",
+    "probe": "input"
+   },
+   {
+    "id": "car",
+    "name": "Carrier → multiplier",
+    "kind": "control",
+    "pins": [
+     "ic2.7",
+     "ic3.8"
+    ],
+    "eli5": "The humming carrier tone, into the multiplier's second input.",
+    "probe": "tap:carrier"
+   },
+   {
+    "id": "fr",
+    "name": "Frequency pot",
+    "kind": "bias",
+    "pins": [
+     "ic2.2",
+     "pFR1.p",
+     "pFR2.p",
+     "xfr.1",
+     "xfr.2"
+    ],
+    "eli5": "The carrier's timing resistance (placeholder pins)."
+   },
+   {
+    "id": "fr3",
+    "name": "Frequency pot end",
+    "kind": "bias",
+    "pins": [
+     "ic2.6",
+     "pFR3.p",
+     "xfr.3"
+    ],
+    "eli5": "The other end of the timing resistance (placeholder pins)."
+   },
+   {
+    "id": "null",
+    "name": "Null trim",
+    "kind": "bias",
+    "pins": [
+     "ic3.2",
+     "trim.2"
+    ],
+    "eli5": "The fine-tuning screw that cancels the carrier."
+   },
+   {
+    "id": "wet",
+    "name": "Multiplier out",
+    "kind": "audio",
+    "pins": [
+     "ic3.6",
+     "pEF3.p",
+     "xef.3"
+    ],
+    "eli5": "The ring sound, at the top of the Effect knob.",
+    "probe": "ring"
+   },
+   {
+    "id": "effw",
+    "name": "Effect wiper",
+    "kind": "audio",
+    "pins": [
+     "pEF2.p",
+     "rs1.1",
+     "xef.2"
+    ],
+    "eli5": "The ring sound at your chosen level.",
+    "probe": "ring"
+   },
+   {
+    "id": "norw",
+    "name": "Normal wiper",
+    "kind": "audio",
+    "pins": [
+     "pNO2.p",
+     "rs2.1",
+     "xno.2"
+    ],
+    "eli5": "The plain guitar at your chosen level.",
+    "probe": "input"
+   },
+   {
+    "id": "sumn",
+    "name": "Mixer input (virtual ground)",
+    "kind": "audio",
+    "pins": [
+     "rs1.2",
+     "rs2.2",
+     "rf.1",
+     "ic1.6"
+    ],
+    "eli5": "The mixing bowl: wet and dry meet here.",
+    "detail": "The op-amp holds this point steady so the two inputs don't push on each other."
+   },
+   {
+    "id": "mixout",
+    "name": "Mixer out",
+    "kind": "audio",
+    "pins": [
+     "ic1.7",
+     "rf.2",
+     "cout.1"
+    ],
+    "eli5": "The blend.",
+    "probe": "out"
+   },
+   {
+    "id": "out",
+    "name": "OUT",
+    "kind": "audio",
+    "pins": [
+     "cout.2",
+     "pOUT.p",
+     "xout.T"
+    ],
+    "eli5": "The blend, through a door capacitor, to the amp.",
+    "probe": "out"
+   }
+  ]
+ }
+}

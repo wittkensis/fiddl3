@@ -1,0 +1,3403 @@
+{
+ "id": "thingamagoop",
+ "name": "Thingamagoop / Thingamakit",
+ "subtitle": "Bleep Labs · XR2206 sound chip · 40106 blinkers · TL072 · LM386 amp",
+ "kind": "generator",
+ "mine": true,
+ "defaultInput": "off",
+ "keyIdea": {
+  "eli5": "Light plays the pitch. The photocell is a light-controlled faucet for the current that fills the timing bucket: more light fills it faster, and faster means a higher note.",
+  "detail": "Aim a blinking LEDacle (a bendable LED) at the photocell and light becomes the patch cable between the circuits."
+ },
+ "summary": "Light sets pitch. The XR2206 makes a triangle or square. A 40106 square can chop it via pin 9. The volume pot and LM386 push it into a tiny speaker.",
+ "rails": {
+  "top": {
+   "label": "+9 V",
+   "sign": "+",
+   "ground": false,
+   "eli5": "Red is the + side of the battery: the push every chip drinks from.",
+   "detail": "Each chip has a power pin on this rail. Parts that hang up to it, like the 10k pull-up, borrow its push to set a resting level."
+  },
+  "bottom": {
+   "label": "0 V (ground)",
+   "sign": "-",
+   "ground": true,
+   "eli5": "Blue is the − side of the battery, and here it is also ground: the floor every voltage is measured from.",
+   "detail": "The speaker, both jacks' sleeves, the photocells and the LEDs all come home to this rail."
+  }
+ },
+ "groundNote": {
+  "eli5": "On the Thingamagoop, ground is the battery's − side (the blue rail). That is the usual setup, called negative ground."
+ },
+ "source": {
+  "label": "Thingamakit schematic v1.1 (Bleep Labs)",
+  "url": "https://bleeplabs.com/wp/wp-content/uploads/2015/02/Thingamakit-sch11.gif"
+ },
+ "sim": {
+  "label": "Falstad: Schmitt-trigger oscillator (the 40106 blinkers). The XR2206 needs a behavioral stand-in",
+  "url": "https://www.falstad.com/circuit/circuitjs.html?startCircuit=schmitt.txt"
+ },
+ "notes": [
+  "Parts list: https://bleeplabs.com/wp/wp-content/uploads/2015/04/kit-parts-list.pdf (XR2206, 40106, 386, TL072, 2 photocells).",
+  "Pin 9 note: pin 8 isn't drawn on the kit schematic, so a low on pin 9 should starve the oscillator and chop the tone. That is my reading; check it on your board.",
+  "The schematic labels the MOD and TRI 40106 gates as pins 10→11 and 8→9. The CD40106 datasheet has inputs 11 and 9 with outputs 10 and 8. The board view follows the datasheet.",
+  "The PCB has spots for 20 resistors; the schematic shows 19. The TRI SHAPE pot reads 1M on the schematic and 100k on the PCB silkscreen."
+ ],
+ "honestyNote": {
+  "eli5": "The sound comes from one Web Audio chain (light → oscillator → wave → volume → amp) plus a side tap for the MOD square. The map and the board show the full branching circuit; the audio engine does not simulate every branch."
+ },
+ "blocks": [
+  {
+   "id": "light",
+   "title": "LIGHT SENSE",
+   "job": {
+    "eli5": "Turns light into resistance. That is all a photocell does, and it is enough to play pitch."
+   },
+   "stage": null,
+   "onBypass": [
+    {
+     "stage": "osc",
+     "param": "freq",
+     "value": 55
+    }
+   ],
+   "wire": {
+    "eli5": "A light-controlled trickle of current, pulled out of XR2206 pin 7.",
+    "detail": "More light, bigger trickle, higher note."
+   }
+  },
+  {
+   "id": "osc",
+   "title": "XR2206 OSCILLATOR",
+   "job": {
+    "eli5": "Fills and empties a tiny bucket (the timing capacitor) over and over, and turns that into a triangle and a square wave."
+   },
+   "stage": {
+    "kind": "osc",
+    "params": {
+     "freq": 330,
+     "wave": "triangle",
+     "level": 0.6,
+     "gateDepth": 0,
+     "gateRate": 4,
+     "fmDepth": 0,
+     "squareOk": 1
+    }
+   },
+   "wire": {
+    "eli5": "The raw tone: a triangle on pin 2 and a square on pin 11.",
+    "detail": "Both waves exist at once; the WAVEFORM switch picks one."
+   }
+  },
+  {
+   "id": "wave",
+   "title": "WAVE SELECT",
+   "job": {
+    "eli5": "Picks the triangle or the square, and shrinks the square so both play at a similar volume."
+   },
+   "stage": {
+    "kind": "gain",
+    "params": {
+     "gain": 1
+    }
+   },
+   "wire": {
+    "eli5": "Whichever wave the switch picked, still riding on the chip's steady resting voltage."
+   }
+  },
+  {
+   "id": "volume",
+   "title": "VOLUME",
+   "job": {
+    "eli5": "A door blocks the steady push, then the volume knob picks how much sound goes on."
+   },
+   "stage": {
+    "kind": "gain",
+    "params": {
+     "gain": 0.7
+    }
+   },
+   "wire": {
+    "eli5": "The tone, shrunk by the volume knob. The Out jack listens to this same wire."
+   }
+  },
+  {
+   "id": "amp",
+   "title": "LM386 + SPEAKER",
+   "job": {
+    "eli5": "A small muscle (power amp) shoves a small speaker: no deep bass, a little grit."
+   },
+   "stage": {
+    "kind": "speaker",
+    "params": {
+     "low": 180,
+     "high": 6000,
+     "gain": 0.9
+    }
+   },
+   "wire": {
+    "eli5": "Big swings of current that push and pull the speaker cone."
+   }
+  },
+  {
+   "id": "power",
+   "title": "POWER (9 V)",
+   "side": true,
+   "stage": null,
+   "job": {
+    "eli5": "The battery is the water tower, and the switch on the volume knob is the main valve."
+   },
+   "onBypass": [
+    {
+     "stage": "osc",
+     "param": "level",
+     "value": 0
+    },
+    {
+     "stage": "amp",
+     "param": "gain",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "id": "ledosc",
+   "title": "LED BLINKERS (40106)",
+   "side": true,
+   "stage": null,
+   "job": {
+    "eli5": "Three slow blinkers make LEDacle 1 flicker. They only make light."
+   },
+   "onBypass": [
+    {
+     "stage": "osc",
+     "param": "fmDepth",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "id": "modosc",
+   "title": "MOD OSCILLATOR (40106)",
+   "side": true,
+   "stage": null,
+   "probeTap": {
+    "stage": "osc",
+    "node": "lfo"
+   },
+   "job": {
+    "eli5": "A metronome square that can chop the tone (patch B) or blink the LED (patch A)."
+   },
+   "onBypass": [
+    {
+     "stage": "osc",
+     "param": "gateDepth",
+     "value": 0
+    }
+   ],
+   "wire": {
+    "eli5": "A slow on/off square heading to node B (pin 9) or to LEDacle 1."
+   }
+  },
+  {
+   "id": "tri",
+   "title": "TRI OSC + TL072 → LEDacle 2",
+   "side": true,
+   "stage": null,
+   "job": {
+    "eli5": "A third slow square, smoothed by an op-amp into a breathing glow for LEDacle 2. Light only."
+   }
+  }
+ ],
+ "parts": [
+  {
+   "id": "bat",
+   "ref": "BT1",
+   "kind": "BAT",
+   "label": "9 V battery",
+   "term": "power supply",
+   "block": "power",
+   "place": "shunt",
+   "job": {
+    "eli5": "The water tower: it holds the push (voltage) that every part spends.",
+    "detail": "Its + side feeds the +9 V rail through the power switch. Its − side is ground."
+   },
+   "connects": [
+    "pwrsw"
+   ],
+   "order": {
+    "eli5": "It sits off the board on two wires, because you have to swap it out.",
+    "detail": "The wires land on the BAT pads at the board's right edge."
+   },
+   "breaks": {
+    "eli5": "No battery, no push: everything goes dark and silent.",
+    "detail": "A tired battery first makes the pitch drift and the amp crackle."
+   },
+   "onRemove": [
+    {
+     "stage": "osc",
+     "param": "level",
+     "value": 0
+    },
+    {
+     "stage": "amp",
+     "param": "gain",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "id": "pwrsw",
+   "ref": "PWR",
+   "kind": "SW",
+   "label": "Power switch (on the back of the volume pot)",
+   "term": "switch pot",
+   "block": "power",
+   "place": "series",
+   "job": {
+    "eli5": "The main valve: turn the volume knob past its click and the battery's push flows in.",
+    "detail": "The switch is built into the volume pot, so 'off' and 'quietest' share one knob."
+   },
+   "connects": [
+    "bat",
+    "cdec"
+   ],
+   "order": {
+    "eli5": "It sits between the battery's + side and the +9 V rail, so it cuts everything at once."
+   },
+   "breaks": {
+    "eli5": "No path for the battery: no power. Bridge it and the toy stays on forever."
+   },
+   "onRemove": [
+    {
+     "stage": "osc",
+     "param": "level",
+     "value": 0
+    },
+    {
+     "stage": "amp",
+     "param": "gain",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "id": "cdec",
+   "ref": "C 1µ (pin 4)",
+   "kind": "CP",
+   "label": "Supply decoupling cap",
+   "term": "decoupling capacitor",
+   "block": "power",
+   "place": "shunt",
+   "job": {
+    "eli5": "A little water tank next to the chip, so it never goes thirsty when the amp gulps current.",
+    "detail": "It sits from the +9 V pin to ground and fills in quick dips in the supply."
+   },
+   "connects": [
+    "xr",
+    "lm386",
+    "pwrsw"
+   ],
+   "order": {
+    "eli5": "Right beside the chip's power pin. A long wire would make the tank too far away to help."
+   },
+   "breaks": {
+    "eli5": "The amp's gulps make the supply wobble, and the pitch warbles with a putt-putt sound (motorboating)."
+   },
+   "onRemove": [
+    {
+     "stage": "osc",
+     "param": "fmDepth",
+     "value": 0.03
+    },
+    {
+     "stage": "osc",
+     "param": "gateRate",
+     "value": 7
+    }
+   ]
+  },
+  {
+   "id": "pcell1",
+   "ref": "PC1",
+   "kind": "LDR",
+   "label": "Photocell 1 (pitch)",
+   "term": "photoresistor (LDR, light-dependent resistor)",
+   "block": "light",
+   "place": "shunt",
+   "job": {
+    "eli5": "A light-controlled faucet: more light lets more current through.",
+    "detail": "It is the XR2206's timing resistor, from pin 7 to ground. More current fills the timing cap faster, so the pitch goes up."
+   },
+   "connects": [
+    "xr",
+    "ctime",
+    "led1"
+   ],
+   "order": {
+    "eli5": "It hangs off pin 7, the chip's 'how fast?' input, so it decides the pitch before you hear anything.",
+    "detail": "It sits off the board on two wires so it can poke out of the face."
+   },
+   "breaks": {
+    "eli5": "Shut the faucet and the oscillator stops: silence.",
+    "detail": "Swap in a fixed resistor and you get one fixed pitch."
+   },
+   "onRemove": [
+    {
+     "stage": "osc",
+     "param": "level",
+     "value": 0
+    }
+   ],
+   "tune": {
+    "unit": "Ω",
+    "nominal": 10000.0,
+    "series": "E12",
+    "min": 1000.0,
+    "max": 220000.0,
+    "higher": "A darker-rated photocell (more ohms in the same light): the faucet is tighter, so the bucket fills slower and the pitch drops.",
+    "lower": "A lower-ohm photocell: a wider faucet, so the pitch climbs.",
+    "tooFar": "The XR2206 wants its timing resistor between 1k and 2M (best between 4k and 200k). Below 1k it pulls too much current; the datasheet caps the timing current at 3 mA.",
+    "targets": [
+     {
+      "stage": "osc",
+      "param": "freq",
+      "exp": -1,
+      "min": 15,
+      "max": 12000
+     }
+    ],
+    "fund": "resistance",
+    "calc": {
+     "kind": "xr",
+     "with": 1e-07,
+     "label": "with the .1 µF timing cap"
+    },
+    "typical": true
+   }
+  },
+  {
+   "id": "ctime",
+   "ref": "C .1µ/.01µ + RANGE",
+   "kind": "C",
+   "label": "Timing caps + RANGE switch",
+   "term": "timing capacitor",
+   "block": "osc",
+   "place": "shunt",
+   "job": {
+    "eli5": "The bucket the photocell fills: a big bucket fills slowly (low notes), a small one fills fast (high notes).",
+    "detail": "The .01 µF cap always sits across pins 5 and 6. The RANGE switch adds the .1 µF beside it for the low range."
+   },
+   "connects": [
+    "xr",
+    "pcell1"
+   ],
+   "order": {
+    "eli5": "It sits right on the chip's timing pins, because faucet and bucket together set the pitch."
+   },
+   "breaks": {
+    "eli5": "No bucket, nothing to fill and empty, so no oscillation."
+   },
+   "onRemove": [
+    {
+     "stage": "osc",
+     "param": "level",
+     "value": 0
+    }
+   ],
+   "tune": {
+    "unit": "F",
+    "nominal": 1e-07,
+    "series": "E6",
+    "min": 1e-09,
+    "max": 1e-05,
+    "higher": "Bigger timing cap: a bigger bucket takes longer to fill, so the pitch drops.",
+    "lower": "Smaller: it fills in a blink and squeaks higher.",
+    "tooFar": "Huge (10 µF) and the pitch slows into clicks; tiny (1 nF) and it sings above your hearing. The datasheet recommends 1 nF to 100 µF.",
+    "targets": [
+     {
+      "stage": "osc",
+      "param": "freq",
+      "exp": -1,
+      "min": 15,
+      "max": 12000
+     }
+    ],
+    "fund": "capacitance",
+    "calc": {
+     "kind": "xr",
+     "with": 10000.0,
+     "label": "with the photocell at about 10k"
+    }
+   },
+   "lugs": {
+    "kind": "toggle",
+    "bp": "rng",
+    "eli5": "A toggle is a railroad junction: the middle lug is the track you're on, and the bat picks which side track it joins.",
+    "detail": "This is an SPDT (single pole, double throw) switch: one common lug, two throws.",
+    "standard": "Standard part: a mini toggle switch (SPDT, on-on).",
+    "stateFrom": "range",
+    "lugs": [
+     {
+      "pin": "1",
+      "name": "throw",
+      "role": "control",
+      "eli5": "To the extra .1 µF timing cap."
+     },
+     {
+      "pin": "2",
+      "name": "common",
+      "role": "control",
+      "eli5": "Timing cap node (pin 6)."
+     },
+     {
+      "pin": "3",
+      "name": "throw",
+      "role": "unused",
+      "eli5": "Unused."
+     }
+    ],
+    "states": [
+     {
+      "id": "0",
+      "label": ".1 µF · low",
+      "joins": [
+       [
+        "1",
+        "2"
+       ]
+      ]
+     },
+     {
+      "id": "1",
+      "label": ".01 µF · high",
+      "joins": []
+     }
+    ]
+   }
+  },
+  {
+   "id": "xr",
+   "ref": "U1 XR2206",
+   "kind": "IC",
+   "label": "XR2206 function generator",
+   "term": "function generator IC (integrated circuit: a chip)",
+   "block": "osc",
+   "place": "active",
+   "job": {
+    "eli5": "The heart: it fills and empties the timing bucket over and over and turns that into a triangle and a square.",
+    "detail": "Pin 2 gives the triangle, pin 11 the square. Pins 13 and 14 stay open, so the triangle stays a triangle instead of being rounded into a sine."
+   },
+   "connects": [
+    "pcell1",
+    "ctime",
+    "pullup",
+    "div",
+    "bias3",
+    "nodeb",
+    "c10",
+    "cdec"
+   ],
+   "order": {
+    "eli5": "It sits in the middle: everything before it sets its speed, everything after it shapes and amplifies it."
+   },
+   "breaks": {
+    "eli5": "No heart, no sound at all."
+   },
+   "onRemove": [
+    {
+     "stage": "osc",
+     "param": "level",
+     "value": 0
+    }
+   ],
+   "chip": {
+    "chip": "XR2206",
+    "bp": "u1",
+    "use": {
+     "7": "Photocell 1 is the timing faucet here, so light sets the pitch.",
+     "5": "One side of the timing caps (RANGE switch).",
+     "6": "The other side of the timing caps.",
+     "13": "Left open, so the chip makes a triangle.",
+     "14": "Left open, so the chip makes a triangle.",
+     "9": "The MOD patch can chop this pin (node B).",
+     "11": "Square out, with the 10k pull-up.",
+     "8": "Unused here."
+    }
+   }
+  },
+  {
+   "id": "bias3",
+   "ref": "R 4.7k ×2",
+   "kind": "R",
+   "label": "Pin 3 half-voltage divider",
+   "term": "voltage divider (bias)",
+   "block": "osc",
+   "place": "up",
+   "job": {
+    "eli5": "Two equal resistors split the battery in half, like a seesaw balanced in the middle, and pin 3 sits on that middle.",
+    "detail": "Pin 3 sets the output level and centers the wave, so it has equal room to swing up and down."
+   },
+   "connects": [
+    "xr"
+   ],
+   "order": {
+    "eli5": "One resistor goes up to the + rail, one down to ground, and the middle feeds pin 3."
+   },
+   "breaks": {
+    "eli5": "The seesaw tips: the output goes very quiet or lopsided."
+   },
+   "onRemove": [
+    {
+     "stage": "osc",
+     "param": "level",
+     "scale": 0.2
+    }
+   ],
+   "tune": {
+    "unit": "Ω",
+    "nominal": 4700.0,
+    "series": "E12",
+    "min": 1000.0,
+    "max": 47000.0,
+    "higher": "Bigger divider resistors: the same half-way point, a little less current from the battery.",
+    "lower": "Smaller: the same half-way point, more current wasted.",
+    "tooFar": "Unequal pairs move pin 3 off center and the wave clips on one side.",
+    "targets": [],
+    "fund": "voltage",
+    "real": "You would hear this on the real board only if the two resistors differ (lopsided clipping). This sketch does not model it."
+   }
+  },
+  {
+   "id": "c10",
+   "ref": "C 1µ (pin 10)",
+   "kind": "CP",
+   "label": "Pin 10 bypass cap",
+   "term": "bypass capacitor",
+   "block": "osc",
+   "place": "shunt",
+   "job": {
+    "eli5": "A shock absorber on the chip's internal reference, so tiny ripples don't wiggle the pitch.",
+    "detail": "Pin 10 holds the XR2206's own reference voltage. The datasheet asks for a cap from here to ground."
+   },
+   "connects": [
+    "xr"
+   ],
+   "order": {
+    "eli5": "Straight from pin 10 to ground, on the shortest path the board allows."
+   },
+   "breaks": {
+    "eli5": "The reference picks up noise, so the tone gets less steady."
+   },
+   "silentNote": "The model has no internal reference to disturb, so you won't hear this one.",
+   "tune": {
+    "unit": "F",
+    "nominal": 1e-06,
+    "series": "E6",
+    "min": 1e-07,
+    "max": 2.2e-05,
+    "higher": "Bigger bias cap: a calmer reference and less hiss.",
+    "lower": "Smaller: more supply noise leaks into the tone.",
+    "tooFar": "Leave it out and the reference wobbles with the battery.",
+    "targets": [],
+    "fund": "capacitance",
+    "real": "You would hear this on the real board as more or less hum and hiss. This sketch does not model it."
+   }
+  },
+  {
+   "id": "nodeb",
+   "ref": "B → pin 9",
+   "kind": "WIRE",
+   "label": "Node B (pin 9)",
+   "term": "FSK input (frequency-shift keying: a pin that flips between two timing settings)",
+   "block": "osc",
+   "place": "fb",
+   "job": {
+    "eli5": "A remote on/off button for the oscillator, pressed by the MOD square.",
+    "detail": "Pin 9 picks which timing pin (7 or 8) runs the chip. Pin 8 has nothing on it, so a low on pin 9 starves the oscillator and the tone chops. That is my reading of the schematic; check it on your board."
+   },
+   "connects": [
+    "xr",
+    "patchsw"
+   ],
+   "order": {
+    "eli5": "It comes in from the side chain (the helper circuits), not from the audio path."
+   },
+   "breaks": {
+    "eli5": "Nobody presses the button: a steady, unchopped tone."
+   },
+   "onRemove": [
+    {
+     "stage": "osc",
+     "param": "gateDepth",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "id": "pullup",
+   "ref": "R 10k",
+   "kind": "R",
+   "label": "Pull-up on pin 11 (square out)",
+   "term": "pull-up resistor",
+   "block": "wave",
+   "place": "up",
+   "job": {
+    "eli5": "A spring that pulls the square back up, because pin 11 can only pull down by itself.",
+    "detail": "Pin 11 is an open-collector output: it can only connect to ground or let go. The resistor gives it a high level to return to."
+   },
+   "connects": [
+    "xr",
+    "div"
+   ],
+   "order": {
+    "eli5": "It hangs from the + rail straight onto pin 11."
+   },
+   "breaks": {
+    "eli5": "The square has no 'up', so square mode goes silent."
+   },
+   "onRemove": [
+    {
+     "stage": "osc",
+     "param": "squareOk",
+     "value": 0
+    }
+   ],
+   "tune": {
+    "unit": "Ω",
+    "nominal": 10000.0,
+    "series": "E12",
+    "min": 1000.0,
+    "max": 100000.0,
+    "higher": "Bigger pull-up: a weaker lift, so the square's rising edge rounds off and gets quieter.",
+    "lower": "Smaller: a crisper, louder square, and more current from the battery.",
+    "tooFar": "Below about 1k the chip strains to pull it down; very big and the square turns into a shark fin.",
+    "targets": [],
+    "fund": "resistance",
+    "real": "You would hear this on the real board as a rounder or crisper square wave. This sketch does not model it."
+   }
+  },
+  {
+   "id": "div",
+   "ref": "R 750 ×2",
+   "kind": "R",
+   "label": "Square level resistors",
+   "term": "voltage divider + load resistor",
+   "block": "wave",
+   "place": "shunt",
+   "job": {
+    "eli5": "Shrinks the big square to the triangle's size, so flipping the switch doesn't jump in volume.",
+    "detail": "With the 10k pull-up, the first 750 Ω keeps only a thin slice of the 9 V swing. The second 750 Ω gives the switch output a path to ground."
+   },
+   "connects": [
+    "pullup",
+    "sw"
+   ],
+   "order": {
+    "eli5": "Between the square output and the WAVEFORM switch."
+   },
+   "breaks": {
+    "eli5": "Square mode blasts much louder than triangle mode."
+   },
+   "onRemove": [
+    {
+     "stage": "wave",
+     "param": "gain",
+     "value": 2.2
+    }
+   ],
+   "tune": {
+    "unit": "Ω",
+    "nominal": 750,
+    "series": "E12",
+    "min": 100,
+    "max": 10000.0,
+    "higher": "Bigger: the square comes out quieter next to the triangle.",
+    "lower": "Smaller: the square comes out louder.",
+    "tooFar": "Very small and the square drowns the triangle when you flip the switch.",
+    "targets": [
+     {
+      "stage": "wave",
+      "param": "gain",
+      "exp": -0.4,
+      "min": 0.2,
+      "max": 4
+     }
+    ],
+    "fund": "voltage",
+    "real": "On the real board these only change the square; the sketch turns the whole switch output up or down."
+   }
+  },
+  {
+   "id": "sw",
+   "ref": "WAVEFORM",
+   "kind": "SW",
+   "label": "Waveform switch",
+   "term": "SPDT toggle (single pole, double throw: one input, two choices)",
+   "block": "wave",
+   "place": "series",
+   "job": {
+    "eli5": "A railroad switch: it sends either the triangle or the square down the track.",
+    "detail": "Triangle comes from pin 2, square from pin 11."
+   },
+   "connects": [
+    "div",
+    "xr",
+    "cout"
+   ],
+   "order": {
+    "eli5": "After both waves exist and before the shared volume path."
+   },
+   "breaks": {
+    "eli5": "Stuck on one waveform."
+   },
+   "lugs": {
+    "kind": "toggle",
+    "bp": "wsw",
+    "eli5": "A toggle is a railroad junction: the middle lug is the track you're on, and the bat picks which side track it joins.",
+    "detail": "This is an SPDT (single pole, double throw) switch: one common lug, two throws.",
+    "standard": "Standard part: a mini toggle switch (SPDT, on-on).",
+    "stateFrom": "waveshape",
+    "lugs": [
+     {
+      "pin": "1",
+      "name": "throw (square)",
+      "role": "audio",
+      "eli5": "Pin 11's square wave."
+     },
+     {
+      "pin": "2",
+      "name": "common",
+      "role": "audio",
+      "eli5": "Out to the volume pot."
+     },
+     {
+      "pin": "3",
+      "name": "throw (triangle)",
+      "role": "audio",
+      "eli5": "Pin 2's triangle wave."
+     }
+    ],
+    "states": [
+     {
+      "id": "0",
+      "label": "Triangle",
+      "joins": [
+       [
+        "2",
+        "3"
+       ]
+      ]
+     },
+     {
+      "id": "1",
+      "label": "Square",
+      "joins": [
+       [
+        "2",
+        "1"
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "cout",
+   "ref": "C .1µ",
+   "kind": "C",
+   "label": "Output coupling cap",
+   "term": "coupling capacitor",
+   "block": "volume",
+   "place": "series",
+   "job": {
+    "eli5": "A door that lets the wiggles through but blocks the steady push.",
+    "detail": "The XR2206 output rides on a few volts of steady DC (direct current, the part that doesn't wiggle). The cap passes only the audio."
+   },
+   "connects": [
+    "sw",
+    "volpot"
+   ],
+   "order": {
+    "eli5": "Between the chip and the volume pot, so the pot never carries the steady push."
+   },
+   "breaks": {
+    "eli5": "Steady push leaks into the pot and amp: a scratchy knob and earlier distortion."
+   },
+   "silentNote": "The steady push makes no sound on its own, so the model can't show this. On the real board you'd hear a scratchy pot and earlier distortion.",
+   "tune": {
+    "unit": "F",
+    "nominal": 1e-07,
+    "series": "E6",
+    "min": 1e-08,
+    "max": 1e-05,
+    "higher": "Bigger output cap: more bass reaches the jack.",
+    "lower": "Smaller: the bass gets cut and it sounds thin.",
+    "tooFar": "Around 10 nF the low pitches nearly vanish through the jack.",
+    "targets": [],
+    "fund": "capacitance",
+    "real": "You would hear this on the real board as more or less bass at the out jack. This sketch does not model it.",
+    "calc": {
+     "kind": "rc",
+     "with": 10000.0,
+     "label": "with the 10k volume pot"
+    }
+   }
+  },
+  {
+   "id": "volpot",
+   "ref": "VOL 10k",
+   "kind": "POT",
+   "label": "Volume pot (with power switch)",
+   "term": "potentiometer (pot) as a voltage divider",
+   "block": "volume",
+   "place": "shunt",
+   "job": {
+    "eli5": "A slider on a ramp: the middle pin (the wiper) picks how much of the sound to keep.",
+    "detail": "Signal goes in on lug 3, lug 1 goes to ground, and the wiper feeds both the LM386 and the Out jack."
+   },
+   "connects": [
+    "cout",
+    "lm386",
+    "jout",
+    "pwrsw"
+   ],
+   "order": {
+    "eli5": "Before the power amp, so it sets the level without touching the oscillator."
+   },
+   "breaks": {
+    "eli5": "Always full volume."
+   },
+   "onRemove": [
+    {
+     "stage": "volume",
+     "param": "gain",
+     "value": 1.2
+    }
+   ],
+   "lugs": {
+    "kind": "swpot",
+    "bp": "xvol",
+    "eli5": "A pot with a power switch on its back: turn it up from zero and it clicks the battery on.",
+    "detail": "Use all three lugs and it is a voltage divider (a volume knob). Use one end and the wiper and it is a variable resistor (a faucet).",
+    "standard": "Standard part: a potentiometer (A = log taper for volume, B = linear).",
+    "knob": "volume",
+    "lugs": [
+     {
+      "pin": "1",
+      "name": "end 1",
+      "role": "end",
+      "eli5": "One end of the resistive track."
+     },
+     {
+      "pin": "2",
+      "name": "wiper",
+      "role": "wiper",
+      "eli5": "The middle lug rides along the track as you turn: it sends some of the tone to the amp and jack."
+     },
+     {
+      "pin": "3",
+      "name": "end 3",
+      "role": "end",
+      "eli5": "The other end of the track."
+     },
+     {
+      "pin": "S1",
+      "name": "switch",
+      "role": "power",
+      "eli5": "Battery + comes in."
+     },
+     {
+      "pin": "S2",
+      "name": "switch",
+      "role": "power",
+      "eli5": "The +9 V rail, live once the switch clicks on."
+     }
+    ]
+   }
+  },
+  {
+   "id": "jout",
+   "ref": "OUT",
+   "kind": "JACK",
+   "label": "Out jack (¼ inch)",
+   "term": "line output",
+   "block": "volume",
+   "place": "shunt",
+   "job": {
+    "eli5": "A side door for the sound: plug in a cable to send the tone to an amp or recorder.",
+    "detail": "It taps the volume pot's wiper beside the LM386, so it skips the little amp and speaker."
+   },
+   "connects": [
+    "volpot"
+   ],
+   "order": {
+    "eli5": "It branches off after the volume knob, next to the amp rather than after it."
+   },
+   "breaks": {
+    "eli5": "No line out. The speaker still plays."
+   },
+   "silentNote": "The model always listens at the speaker path, so pulling this jack changes nothing you hear."
+  },
+  {
+   "id": "lm386",
+   "ref": "U4 LM386",
+   "kind": "OPAMP",
+   "label": "LM386 power amp",
+   "term": "power amplifier IC",
+   "block": "amp",
+   "place": "active",
+   "job": {
+    "eli5": "A muscle: it turns a small signal into enough current to shove a speaker cone.",
+    "detail": "Its gain pins (1 and 8) stay open, which gives the chip's lowest built-in boost."
+   },
+   "connects": [
+    "volpot",
+    "c220",
+    "cdec"
+   ],
+   "order": {
+    "eli5": "Last of the active parts, because a power amp works on the finished sound."
+   },
+   "breaks": {
+    "eli5": "The speaker goes silent. The Out jack still works."
+   },
+   "onRemove": [
+    {
+     "stage": "amp",
+     "param": "gain",
+     "value": 0.05
+    }
+   ],
+   "chip": {
+    "chip": "LM386",
+    "bp": "u4",
+    "use": {
+     "1": "Open: no gain cap, so the gain is 20.",
+     "8": "Open: gain 20.",
+     "7": "Open on this sketch."
+    }
+   }
+  },
+  {
+   "id": "c220",
+   "ref": "C 220µ",
+   "kind": "CP",
+   "label": "Speaker coupling cap (220 µF)",
+   "term": "output coupling capacitor (electrolytic)",
+   "block": "amp",
+   "place": "series",
+   "job": {
+    "eli5": "A big door that passes the speaker's wiggles but blocks the amp's steady half-battery push.",
+    "detail": "The LM386 output rests at half the supply. Without this cap that steady voltage would sit on the speaker coil."
+   },
+   "connects": [
+    "lm386",
+    "spk"
+   ],
+   "order": {
+    "eli5": "Between the amp and the speaker. It has to be big to pass bass into a speaker's low resistance."
+   },
+   "breaks": {
+    "eli5": "The steady push holds the cone out, drains the battery, and distorts.",
+    "detail": "A smaller cap here loses bass."
+   },
+   "onRemove": [
+    {
+     "stage": "amp",
+     "param": "low",
+     "value": 600
+    }
+   ],
+   "tune": {
+    "unit": "F",
+    "nominal": 0.00022,
+    "series": "E6",
+    "min": 1e-05,
+    "max": 0.001,
+    "higher": "Bigger speaker cap: more bass reaches the little speaker.",
+    "lower": "Smaller: the bass is cut and it gets thin and buzzy.",
+    "tooFar": "Very small (10 µF) and a speaker this size plays almost no lows; the cap also protects the speaker from DC, so never leave it out.",
+    "targets": [
+     {
+      "stage": "amp",
+      "param": "low",
+      "exp": -1,
+      "min": 30,
+      "max": 3000
+     }
+    ],
+    "fund": "capacitance",
+    "calc": {
+     "kind": "rc",
+     "with": 8,
+     "label": "into the 8 Ω speaker"
+    }
+   }
+  },
+  {
+   "id": "spk",
+   "ref": "SPK",
+   "kind": "SPK",
+   "label": "Speaker",
+   "term": "dynamic speaker",
+   "block": "amp",
+   "place": "shunt",
+   "job": {
+    "eli5": "A paper drum moved by a magnet: current in, air movement out.",
+    "detail": "A small cone can't push enough air for deep bass."
+   },
+   "connects": [
+    "c220"
+   ],
+   "order": {
+    "eli5": "The end of the line, off the board on two wires."
+   },
+   "breaks": {
+    "eli5": "Quiet. Only the Out jack plays."
+   }
+  },
+  {
+   "id": "ledosc",
+   "ref": "U2 40106 ×3",
+   "kind": "IC",
+   "label": "3 blink oscillators (1M / 1.5M / 10M)",
+   "term": "Schmitt-trigger relaxation oscillator",
+   "block": "ledosc",
+   "place": "active",
+   "job": {
+    "eli5": "Three slow blinkers at different speeds, like three people tapping out of sync.",
+    "detail": "Each 40106 gate has a resistor from its output back to its input and a .1 µF cap to ground. The cap fills until the gate flips, then empties until it flips back."
+   },
+   "connects": [
+    "ledmix"
+   ],
+   "order": {
+    "eli5": "They live in the side chain: they make light, not sound."
+   },
+   "breaks": {
+    "eli5": "LEDacle 1 stops flickering."
+   },
+   "silentNote": "These only make light. Set 'LEDacle → photocell' to Aimed to hear light become modulation.",
+   "chip": {
+    "chip": "CD40106",
+    "bp": "u2",
+    "pins": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6
+    ],
+    "use": {
+     "13": "Gate F's unused input, tied to ground so it can't float.",
+     "12": "Gate F's output, unused."
+    }
+   }
+  },
+  {
+   "id": "ledmix",
+   "ref": "R 220 ×4",
+   "kind": "R",
+   "label": "Blink mixing resistors",
+   "term": "resistor mixer + LED current limiter",
+   "block": "ledosc",
+   "place": "series",
+   "job": {
+    "eli5": "Three blinkers pour into one cup through separate straws, so none of them drowns out the others.",
+    "detail": "Each blinker goes through 220 Ω to node A. One more 220 Ω keeps the LED's current safe."
+   },
+   "connects": [
+    "ledosc",
+    "led1",
+    "patchsw"
+   ],
+   "order": {
+    "eli5": "Between the blinkers and LEDacle 1."
+   },
+   "breaks": {
+    "eli5": "The outputs fight each other and the LED gets too much current."
+   },
+   "silentNote": "Light only. The model doesn't simulate LED brightness.",
+   "tune": {
+    "unit": "Ω",
+    "nominal": 220,
+    "series": "E12",
+    "min": 47,
+    "max": 4700.0,
+    "higher": "Bigger LED resistors: dimmer LEDacles and a calmer battery.",
+    "lower": "Smaller: brighter LEDs, until the 40106's outputs can't keep up.",
+    "tooFar": "Too small and you ask more of the chip and LED than they like; keep LED current under about 20 mA.",
+    "targets": [],
+    "fund": "current",
+    "real": "Silent in this sketch. On the real board brighter LEDs push more light into the photocell.",
+    "calc": {
+     "kind": "ohm",
+     "volts": 7,
+     "label": "9 V minus a 2 V LED"
+    }
+   }
+  },
+  {
+   "id": "led1",
+   "ref": "LEDacle 1",
+   "kind": "LED",
+   "label": "LEDacle 1",
+   "term": "LED (light-emitting diode)",
+   "block": "ledosc",
+   "place": "shunt",
+   "job": {
+    "eli5": "A bendable flashlight you can aim at a photocell: an optical patch cable."
+   },
+   "connects": [
+    "ledmix",
+    "pcell1"
+   ],
+   "order": {
+    "eli5": "The end of the light side chain, off the board on two wires."
+   },
+   "breaks": {
+    "eli5": "No optical modulation."
+   },
+   "onRemove": [
+    {
+     "stage": "osc",
+     "param": "fmDepth",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "id": "modosc",
+   "ref": "U2 MOD gate",
+   "kind": "IC",
+   "label": "MOD oscillator (one 40106 gate)",
+   "term": "Schmitt-trigger oscillator",
+   "block": "modosc",
+   "place": "active",
+   "job": {
+    "eli5": "A metronome: a steady on/off square that can chop the tone or blink the LED.",
+    "detail": "Another 40106 gate with a speed resistor from output to input and a cap to ground."
+   },
+   "connects": [
+    "modrate",
+    "pcell2",
+    "modsel",
+    "modrange",
+    "patchsw"
+   ],
+   "order": {
+    "eli5": "Side chain. The MOD PATCH switch sends its square to A (LEDs) or B (pin 9)."
+   },
+   "breaks": {
+    "eli5": "No rhythmic chopping."
+   },
+   "onRemove": [
+    {
+     "stage": "osc",
+     "param": "gateDepth",
+     "value": 0
+    }
+   ],
+   "chip": {
+    "chip": "CD40106",
+    "bp": "u2",
+    "pins": [
+     10,
+     11
+    ]
+   }
+  },
+  {
+   "id": "modrate",
+   "ref": "MOD RATE 1M",
+   "kind": "POT",
+   "label": "MOD rate pot",
+   "term": "pot wired as a variable resistor (rheostat)",
+   "block": "modosc",
+   "place": "fb",
+   "job": {
+    "eli5": "The metronome's speed knob: less resistance fills the cap faster, so the ticks come faster."
+   },
+   "connects": [
+    "modosc",
+    "modsel"
+   ],
+   "order": {
+    "eli5": "In the feedback path from the gate's output back to its input."
+   },
+   "breaks": {
+    "eli5": "No feedback path, so the metronome stops (unless Photocell 2 is selected)."
+   },
+   "onRemove": [
+    {
+     "stage": "osc",
+     "param": "gateDepth",
+     "value": 0
+    }
+   ],
+   "tune": {
+    "unit": "Ω",
+    "nominal": 1000000.0,
+    "series": "pot",
+    "min": 100000.0,
+    "max": 4700000.0,
+    "higher": "Bigger MOD rate pot: a tighter faucet at full turn, so the chop can go much slower.",
+    "lower": "Smaller: the slowest setting is still fast.",
+    "tooFar": "Very big and the slow end crawls to a stop.",
+    "targets": [
+     {
+      "stage": "osc",
+      "param": "gateRate",
+      "exp": -1,
+      "min": 0.05,
+      "max": 80
+     }
+    ],
+    "fund": "resistance"
+   },
+   "lugs": {
+    "kind": "pot",
+    "bp": "pmod",
+    "eli5": "A pot is a resistor with a slider: two end lugs and a wiper in the middle that rides along the track.",
+    "detail": "Use all three lugs and it is a voltage divider (a volume knob). Use one end and the wiper and it is a variable resistor (a faucet).",
+    "standard": "Standard part: a potentiometer (A = log taper for volume, B = linear).",
+    "knob": "modrate",
+    "lugs": [
+     {
+      "pin": "1",
+      "name": "end 1",
+      "role": "end",
+      "eli5": "One end of the resistive track."
+     },
+     {
+      "pin": "2",
+      "name": "wiper",
+      "role": "wiper",
+      "eli5": "The middle lug rides along the track as you turn: used as a faucet for the MOD timing."
+     },
+     {
+      "pin": "3",
+      "name": "end 3",
+      "role": "end",
+      "eli5": "The other end of the track."
+     }
+    ]
+   }
+  },
+  {
+   "id": "pcell2",
+   "ref": "PC2",
+   "kind": "LDR",
+   "label": "Photocell 2 (MOD speed by light)",
+   "term": "photoresistor",
+   "block": "modosc",
+   "place": "fb",
+   "job": {
+    "eli5": "Swap the speed knob for a light sensor: wave your hand to change the chop speed.",
+    "detail": "MOD SEL chooses between the rate pot and this photocell."
+   },
+   "connects": [
+    "modsel",
+    "modosc"
+   ],
+   "order": {
+    "eli5": "Off the board, wired into the same feedback spot as the rate pot."
+   },
+   "breaks": {
+    "eli5": "Light can no longer set the MOD speed. The pot still works."
+   },
+   "silentNote": "The model only uses the MOD rate knob."
+  },
+  {
+   "id": "modsel",
+   "ref": "MOD SEL",
+   "kind": "SW",
+   "label": "MOD select switch",
+   "term": "SPDT toggle",
+   "block": "modosc",
+   "place": "series",
+   "job": {
+    "eli5": "Picks who sets the metronome speed: your hand on the knob, or light on Photocell 2."
+   },
+   "connects": [
+    "modrate",
+    "pcell2",
+    "modosc"
+   ],
+   "order": {
+    "eli5": "Between the gate's output and the two speed parts."
+   },
+   "breaks": {
+    "eli5": "Stuck on one speed source."
+   },
+   "silentNote": "The model only uses the MOD rate knob.",
+   "lugs": {
+    "kind": "toggle",
+    "bp": "msel",
+    "eli5": "A toggle is a railroad junction: the middle lug is the track you're on, and the bat picks which side track it joins.",
+    "detail": "This is an SPDT (single pole, double throw) switch: one common lug, two throws.",
+    "standard": "Standard part: a mini toggle switch (SPDT, on-on).",
+    "lugs": [
+     {
+      "pin": "1",
+      "name": "throw (rate pot)",
+      "role": "control",
+      "eli5": "The MOD rate pot."
+     },
+     {
+      "pin": "2",
+      "name": "common",
+      "role": "control",
+      "eli5": "The MOD oscillator's timing."
+     },
+     {
+      "pin": "3",
+      "name": "throw (photocell)",
+      "role": "control",
+      "eli5": "Photocell 2."
+     }
+    ],
+    "states": [
+     {
+      "id": "pot",
+      "label": "Rate pot",
+      "joins": [
+       [
+        "2",
+        "1"
+       ]
+      ]
+     },
+     {
+      "id": "pc",
+      "label": "Photocell 2",
+      "joins": [
+       [
+        "2",
+        "3"
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "modrange",
+   "ref": "C .33µ / 1µ",
+   "kind": "C",
+   "label": "MOD range caps",
+   "term": "timing capacitors",
+   "block": "modosc",
+   "place": "shunt",
+   "job": {
+    "eli5": "Two bucket sizes for the metronome: small for fast, big for slow.",
+    "detail": "The schematic shows a MOD range switch, but the kit PCB only shows four toggles, so its spot on the board is my guess."
+   },
+   "connects": [
+    "modosc"
+   ],
+   "order": {
+    "eli5": "From the gate's input to ground."
+   },
+   "breaks": {
+    "eli5": "No bucket, no MOD oscillation."
+   },
+   "onRemove": [
+    {
+     "stage": "osc",
+     "param": "gateDepth",
+     "value": 0
+    }
+   ],
+   "tune": {
+    "unit": "F",
+    "nominal": 3.3e-07,
+    "series": "E6",
+    "min": 1e-08,
+    "max": 1e-05,
+    "higher": "Bigger MOD cap: a bigger bucket for that 40106 doorman, so the chop gets slower.",
+    "lower": "Smaller: the chop speeds up into a buzz.",
+    "tooFar": "Too small and the chop turns into a pitch of its own; too big and it barely moves.",
+    "targets": [
+     {
+      "stage": "osc",
+      "param": "gateRate",
+      "exp": -1,
+      "min": 0.05,
+      "max": 80
+     }
+    ],
+    "fund": "capacitance"
+   }
+  },
+  {
+   "id": "patchsw",
+   "ref": "MOD PATCH",
+   "kind": "SW",
+   "label": "MOD patch switch",
+   "term": "SPDT toggle",
+   "block": "modosc",
+   "place": "series",
+   "job": {
+    "eli5": "A two-way splitter: the metronome either blinks LEDacle 1 (A) or chops the tone (B).",
+    "detail": "On A it joins the blinkers through 220 Ω. On B it drives XR2206 pin 9 directly."
+   },
+   "connects": [
+    "modosc",
+    "nodeb",
+    "ledmix"
+   ],
+   "order": {
+    "eli5": "Right after the MOD oscillator's output."
+   },
+   "breaks": {
+    "eli5": "The MOD square goes nowhere."
+   },
+   "lugs": {
+    "kind": "toggle",
+    "bp": "patch",
+    "eli5": "A toggle is a railroad junction: the middle lug is the track you're on, and the bat picks which side track it joins.",
+    "detail": "This is an SPDT (single pole, double throw) switch: one common lug, two throws.",
+    "standard": "Standard part: a mini toggle switch (SPDT, on-on).",
+    "stateFrom": "modpatch",
+    "lugs": [
+     {
+      "pin": "1",
+      "name": "throw A",
+      "role": "control",
+      "eli5": "Patch A: the LEDs only."
+     },
+     {
+      "pin": "2",
+      "name": "common",
+      "role": "control",
+      "eli5": "The MOD square."
+     },
+     {
+      "pin": "3",
+      "name": "throw B",
+      "role": "control",
+      "eli5": "Node B: the XR2206's pin 9."
+     }
+    ],
+    "states": [
+     {
+      "id": "0",
+      "label": "A · LEDs only",
+      "joins": [
+       [
+        "2",
+        "1"
+       ]
+      ]
+     },
+     {
+      "id": "1",
+      "label": "B · chop the tone",
+      "joins": [
+       [
+        "2",
+        "3"
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "trios",
+   "ref": "U2 TRI gate",
+   "kind": "IC",
+   "label": "TRI oscillator (one 40106 gate + 1 µF)",
+   "term": "Schmitt-trigger oscillator",
+   "block": "tri",
+   "place": "active",
+   "job": {
+    "eli5": "A third metronome whose square gets smoothed into a slow breathing glow."
+   },
+   "connects": [
+    "trirate",
+    "tri"
+   ],
+   "order": {
+    "eli5": "Side chain, light only."
+   },
+   "breaks": {
+    "eli5": "LEDacle 2 goes dark."
+   },
+   "silentNote": "Light only. It doesn't change the sound unless LEDacle 2 shines on a photocell.",
+   "chip": {
+    "chip": "CD40106",
+    "bp": "u2",
+    "pins": [
+     8,
+     9
+    ]
+   }
+  },
+  {
+   "id": "trirate",
+   "ref": "TRI RATE 1M",
+   "kind": "POT",
+   "label": "TRI rate pot (+ 220 Ω)",
+   "term": "pot wired as a variable resistor",
+   "block": "tri",
+   "place": "fb",
+   "job": {
+    "eli5": "The speed knob for the breathing."
+   },
+   "connects": [
+    "trios"
+   ],
+   "order": {
+    "eli5": "In the TRI gate's feedback path."
+   },
+   "breaks": {
+    "eli5": "The breathing stops."
+   },
+   "silentNote": "Light only.",
+   "tune": {
+    "unit": "Ω",
+    "nominal": 1000000.0,
+    "series": "pot",
+    "min": 100000.0,
+    "max": 4700000.0,
+    "higher": "Bigger: the TRI wobble can go slower.",
+    "lower": "Smaller: the slowest wobble is faster.",
+    "tooFar": "Very big and the slow end stalls.",
+    "targets": [],
+    "fund": "resistance",
+    "real": "You would see this on the real board as a slower or faster LEDacle 2 breath. This sketch does not model it."
+   },
+   "lugs": {
+    "kind": "pot",
+    "bp": "ptri",
+    "eli5": "A pot is a resistor with a slider: two end lugs and a wiper in the middle that rides along the track.",
+    "detail": "Use all three lugs and it is a voltage divider (a volume knob). Use one end and the wiper and it is a variable resistor (a faucet).",
+    "standard": "Standard part: a potentiometer (A = log taper for volume, B = linear).",
+    "lugs": [
+     {
+      "pin": "1",
+      "name": "end 1",
+      "role": "end",
+      "eli5": "One end of the resistive track."
+     },
+     {
+      "pin": "2",
+      "name": "wiper",
+      "role": "wiper",
+      "eli5": "The middle lug rides along the track as you turn: used as a faucet for the TRI timing."
+     },
+     {
+      "pin": "3",
+      "name": "end 3",
+      "role": "end",
+      "eli5": "The other end of the track."
+     }
+    ]
+   }
+  },
+  {
+   "id": "tri",
+   "ref": "U3 TL072",
+   "kind": "OPAMP",
+   "label": "TL072 shaper",
+   "term": "op-amp (operational amplifier) inverting stage",
+   "block": "tri",
+   "place": "active",
+   "job": {
+    "eli5": "A smoothing helper: it rounds the TRI square into a soft, breathing glow.",
+    "detail": "A .33 µF cap and 30k feed the minus input, and 130k from output back to input sets how much it amplifies."
+   },
+   "connects": [
+    "trios",
+    "trishape",
+    "led2"
+   ],
+   "order": {
+    "eli5": "Between the TRI oscillator and LEDacle 2."
+   },
+   "breaks": {
+    "eli5": "LEDacle 2 goes dark."
+   },
+   "silentNote": "Light only.",
+   "chip": {
+    "chip": "TL072",
+    "bp": "u3",
+    "pins": [
+     1,
+     2,
+     3
+    ],
+    "use": {
+     "5": "The second op-amp is unused on this sketch.",
+     "6": "Unused.",
+     "7": "Unused."
+    }
+   }
+  },
+  {
+   "id": "trishape",
+   "ref": "TRI SHAPE",
+   "kind": "POT",
+   "label": "TRI shape pot + 30k ×2",
+   "term": "pot as an adjustable voltage divider (offset)",
+   "block": "tri",
+   "place": "up",
+   "job": {
+    "eli5": "Slides the breathing wave up or down, so LEDacle 2 spends more time bright or more time dim.",
+    "detail": "The wiper sets the TL072's + input between two 30k resistors. The schematic says 1M; the PCB silkscreen says 100k."
+   },
+   "connects": [
+    "tri"
+   ],
+   "order": {
+    "eli5": "Between the + rail and ground, with its wiper on the op-amp's + input."
+   },
+   "breaks": {
+    "eli5": "The glow sits stuck at one shape."
+   },
+   "silentNote": "Light only.",
+   "tune": {
+    "unit": "Ω",
+    "nominal": 100000.0,
+    "series": "pot",
+    "min": 10000.0,
+    "max": 1000000.0,
+    "higher": "Bigger shape pot: a wider range of wave shapes.",
+    "lower": "Smaller: subtler shape changes.",
+    "tooFar": "Far off and one end of the knob does nothing.",
+    "targets": [],
+    "fund": "resistance",
+    "real": "This sketch does not model it."
+   },
+   "lugs": {
+    "kind": "pot",
+    "bp": "pshape",
+    "eli5": "A pot is a resistor with a slider: two end lugs and a wiper in the middle that rides along the track.",
+    "detail": "Use all three lugs and it is a voltage divider (a volume knob). Use one end and the wiper and it is a variable resistor (a faucet).",
+    "standard": "Standard part: a potentiometer (A = log taper for volume, B = linear).",
+    "lugs": [
+     {
+      "pin": "1",
+      "name": "end 1",
+      "role": "end",
+      "eli5": "One end of the resistive track."
+     },
+     {
+      "pin": "2",
+      "name": "wiper",
+      "role": "wiper",
+      "eli5": "The middle lug rides along the track as you turn: it feeds the TL072's plus input."
+     },
+     {
+      "pin": "3",
+      "name": "end 3",
+      "role": "end",
+      "eli5": "The other end of the track."
+     }
+    ]
+   }
+  },
+  {
+   "id": "led2",
+   "ref": "LEDacle 2",
+   "kind": "LED",
+   "label": "LEDacle 2 (+ 220 Ω)",
+   "term": "LED (light-emitting diode)",
+   "block": "tri",
+   "place": "shunt",
+   "job": {
+    "eli5": "The second bendable flashlight, breathing instead of blinking."
+   },
+   "connects": [
+    "tri",
+    "pcell1"
+   ],
+   "order": {
+    "eli5": "The end of the TRI side chain."
+   },
+   "breaks": {
+    "eli5": "No breathing light."
+   },
+   "silentNote": "Light only.",
+   "tune": {
+    "unit": "Ω",
+    "nominal": 220,
+    "series": "E12",
+    "min": 47,
+    "max": 4700.0,
+    "higher": "Bigger: a dimmer LEDacle 2.",
+    "lower": "Smaller: a brighter LEDacle 2.",
+    "tooFar": "Too small and the LED cooks; keep it under about 20 mA.",
+    "targets": [],
+    "fund": "current",
+    "real": "Silent in this sketch. This sketch does not model it.",
+    "calc": {
+     "kind": "ohm",
+     "volts": 7,
+     "label": "9 V minus a 2 V LED"
+    }
+   }
+  }
+ ],
+ "knobs": [
+  {
+   "id": "light",
+   "label": "Light on Photocell 1",
+   "part": "pcell1",
+   "default": 0.45,
+   "pad": true,
+   "targets": [
+    {
+     "stage": "osc",
+     "param": "freq",
+     "from": 60,
+     "to": 1800,
+     "curve": "exp"
+    }
+   ]
+  },
+  {
+   "id": "range",
+   "label": "RANGE (timing cap)",
+   "part": "ctime",
+   "default": 0,
+   "options": [
+    {
+     "label": ".1 µF · low",
+     "effects": []
+    },
+    {
+     "label": ".01 µF · high",
+     "effects": [
+      {
+       "stage": "osc",
+       "param": "freq",
+       "scale": 4
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "waveshape",
+   "label": "WAVEFORM",
+   "part": "sw",
+   "default": 0,
+   "options": [
+    {
+     "label": "Triangle (pin 2)",
+     "effects": [
+      {
+       "stage": "osc",
+       "param": "wave",
+       "value": "triangle"
+      }
+     ]
+    },
+    {
+     "label": "Square (pin 11)",
+     "effects": [
+      {
+       "stage": "osc",
+       "param": "wave",
+       "value": "square"
+      },
+      {
+       "stage": "wave",
+       "param": "gain",
+       "value": 0.45
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "modrate",
+   "label": "MOD RATE",
+   "part": "modrate",
+   "default": 0.35,
+   "targets": [
+    {
+     "stage": "osc",
+     "param": "gateRate",
+     "from": 0.5,
+     "to": 30,
+     "curve": "exp"
+    }
+   ]
+  },
+  {
+   "id": "modpatch",
+   "label": "MOD PATCH",
+   "part": "patchsw",
+   "default": 0,
+   "options": [
+    {
+     "label": "A · LEDs only",
+     "effects": [
+      {
+       "stage": "osc",
+       "param": "gateDepth",
+       "value": 0
+      }
+     ]
+    },
+    {
+     "label": "B · chop the tone",
+     "effects": [
+      {
+       "stage": "osc",
+       "param": "gateDepth",
+       "value": 1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ledfb",
+   "label": "LEDacle → Photocell 1",
+   "part": "led1",
+   "default": 0,
+   "options": [
+    {
+     "label": "Pointed away",
+     "effects": []
+    },
+    {
+     "label": "Aimed at Photocell 1",
+     "effects": [
+      {
+       "stage": "osc",
+       "param": "fmDepth",
+       "value": 0.35
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "volume",
+   "label": "VOLUME",
+   "part": "volpot",
+   "default": 0.6,
+   "targets": [
+    {
+     "stage": "volume",
+     "param": "gain",
+     "from": 0,
+     "to": 1.1
+    }
+   ]
+  }
+ ],
+ "sections": [
+  {
+   "id": "power",
+   "title": "Power",
+   "term": "supply + decoupling",
+   "eli5": "The battery and its valve. Every chip drinks from the red rail and returns to the blue one.",
+   "blocks": [
+    "power"
+   ],
+   "tint": "#d6b98c",
+   "map": [
+    420,
+    500,
+    300,
+    60
+   ],
+   "honesty": {
+    "level": "none",
+    "eli5": "Not modeled. The app's battery never runs down.",
+    "detail": "A real tired battery makes the pitch drift and the LM386 crackle early."
+   }
+  },
+  {
+   "id": "sound",
+   "title": "Sound oscillator (XR2206)",
+   "term": "function generator",
+   "eli5": "Where the tone is born: light sets the speed, the chip makes the wave.",
+   "blocks": [
+    "light",
+    "osc",
+    "wave"
+   ],
+   "tint": "#2dd4bf",
+   "map": [
+    400,
+    140,
+    240,
+    170
+   ],
+   "honesty": {
+    "level": "behavioral",
+    "eli5": "Modeled by behavior: a Web Audio oscillator whose pitch follows your light slider.",
+    "detail": "The real triangle is slightly rounded, and the light-to-pitch curve depends on your exact photocell. The model uses one smooth curve."
+   }
+  },
+  {
+   "id": "mod",
+   "title": "LED + MOD oscillators (40106)",
+   "term": "Schmitt-trigger oscillators",
+   "eli5": "Four slow blinkers on one chip: three flicker LEDacle 1, one (MOD) can chop the tone.",
+   "blocks": [
+    "ledosc",
+    "modosc"
+   ],
+   "tint": "#a78bfa",
+   "map": [
+    40,
+    140,
+    260,
+    170
+   ],
+   "honesty": {
+    "level": "approx",
+    "eli5": "Approximated. The MOD square that chops the tone is modeled. The three LED blinkers only appear as a wobble when you set the LEDacle to 'aimed'.",
+    "detail": "Real light from an LED onto a photocell is uneven and slow; the model uses a simple wobble."
+   }
+  },
+  {
+   "id": "tl072",
+   "title": "TRI shaper (TL072)",
+   "term": "op-amp stage",
+   "eli5": "Turns the TRI square into a breathing glow for LEDacle 2.",
+   "blocks": [
+    "tri"
+   ],
+   "tint": "#f472b6",
+   "map": [
+    40,
+    390,
+    260,
+    100
+   ],
+   "honesty": {
+    "level": "none",
+    "eli5": "Not modeled. It only makes light, and the app doesn't simulate LEDacle 2 shining on a photocell."
+   }
+  },
+  {
+   "id": "amp",
+   "title": "Volume + LM386 amp",
+   "term": "power amplifier",
+   "eli5": "The volume knob, then a small muscle that pushes the speaker.",
+   "blocks": [
+    "volume",
+    "amp"
+   ],
+   "tint": "#a3e635",
+   "map": [
+    740,
+    140,
+    220,
+    170
+   ],
+   "honesty": {
+    "level": "approx",
+    "eli5": "Approximated: a volume stage plus a speaker-shaped filter (no deep bass, a little grit).",
+    "detail": "The real LM386 clips harder as the battery sags, and the real speaker rattles in its box."
+   }
+  },
+  {
+   "id": "pc1",
+   "title": "Photocell 1",
+   "term": "LDR",
+   "eli5": "The pitch eye.",
+   "blocks": [
+    "light"
+   ],
+   "tint": "#cfd8c4",
+   "map": [
+    420,
+    20,
+    180,
+    50
+   ],
+   "io": true
+  },
+  {
+   "id": "pc2",
+   "title": "Photocell 2",
+   "term": "LDR",
+   "eli5": "The MOD speed eye (via MOD SEL).",
+   "blocks": [
+    "modosc"
+   ],
+   "tint": "#cfd8c4",
+   "map": [
+    40,
+    20,
+    130,
+    50
+   ],
+   "io": true
+  },
+  {
+   "id": "led1",
+   "title": "LEDacle 1",
+   "term": "LED",
+   "eli5": "Blinks from the 40106.",
+   "blocks": [
+    "ledosc"
+   ],
+   "tint": "#cfd8c4",
+   "map": [
+    190,
+    20,
+    130,
+    50
+   ],
+   "io": true
+  },
+  {
+   "id": "led2",
+   "title": "LEDacle 2",
+   "term": "LED",
+   "eli5": "Breathes from the TL072.",
+   "blocks": [
+    "tri"
+   ],
+   "tint": "#cfd8c4",
+   "map": [
+    400,
+    400,
+    180,
+    50
+   ],
+   "io": true
+  },
+  {
+   "id": "spk",
+   "title": "Speaker",
+   "term": "dynamic speaker",
+   "eli5": "The paper drum.",
+   "blocks": [
+    "amp"
+   ],
+   "tint": "#cfd8c4",
+   "map": [
+    760,
+    380,
+    200,
+    50
+   ],
+   "io": true
+  },
+  {
+   "id": "outj",
+   "title": "Out jack",
+   "term": "line output",
+   "eli5": "The side door for a cable.",
+   "blocks": [
+    "volume"
+   ],
+   "tint": "#cfd8c4",
+   "map": [
+    760,
+    460,
+    200,
+    50
+   ],
+   "io": true
+  }
+ ],
+ "links": [
+  {
+   "id": "pc1-sound",
+   "from": "pc1",
+   "to": "sound",
+   "kind": "control",
+   "label": "light → pin 7",
+   "eli5": "Light in, current out: the photocell decides how fast the timing bucket fills.",
+   "detail": "This is a control signal: it never carries the sound, it sets the speed of the thing that makes the sound."
+  },
+  {
+   "id": "sound-amp",
+   "from": "sound",
+   "to": "amp",
+   "kind": "audio",
+   "label": "triangle or square",
+   "eli5": "The finished tone travels to the volume knob.",
+   "detail": "Through the .1 µF door, so only the wiggles arrive.",
+   "probe": "wave"
+  },
+  {
+   "id": "amp-spk",
+   "from": "amp",
+   "to": "spk",
+   "kind": "audio",
+   "label": "LM386 → 220 µF → speaker",
+   "eli5": "Big current wiggles go out to push the cone.",
+   "probe": "amp"
+  },
+  {
+   "id": "amp-out",
+   "from": "amp",
+   "to": "outj",
+   "kind": "audio",
+   "label": "volume wiper → Out (parallel branch)",
+   "eli5": "A second exit: the Out jack listens to the volume knob directly, side by side with the amp.",
+   "detail": "This is a branch: one wire, two destinations at once.",
+   "probe": "volume"
+  },
+  {
+   "id": "mod-sound",
+   "from": "mod",
+   "to": "sound",
+   "kind": "control",
+   "label": "MOD square → node B → pin 9",
+   "eli5": "An on/off finger on the oscillator's remote button: patched to B, it chops the tone.",
+   "detail": "Only when MOD PATCH is on B.",
+   "optional": true,
+   "probe": "tap:modosc"
+  },
+  {
+   "id": "mod-led1",
+   "from": "mod",
+   "to": "led1",
+   "kind": "control",
+   "label": "blinkers (+ MOD on A) → LEDacle 1",
+   "eli5": "Three blinkers, plus the MOD square when patched to A, pour into LEDacle 1."
+  },
+  {
+   "id": "pc2-mod",
+   "from": "pc2",
+   "to": "mod",
+   "kind": "control",
+   "label": "light → MOD speed",
+   "eli5": "Light on Photocell 2 can set the metronome speed instead of the knob.",
+   "detail": "Only when MOD SEL picks the photocell.",
+   "optional": true
+  },
+  {
+   "id": "mod-tri",
+   "from": "mod",
+   "to": "tl072",
+   "kind": "control",
+   "label": "TRI square → .33 µF → TL072",
+   "eli5": "The 40106's third metronome hands its square to the op-amp to be smoothed."
+  },
+  {
+   "id": "tri-led2",
+   "from": "tl072",
+   "to": "led2",
+   "kind": "control",
+   "label": "breathing wave → LEDacle 2",
+   "eli5": "The smoothed wave sets how bright LEDacle 2 glows."
+  },
+  {
+   "id": "led1-pc1",
+   "from": "led1",
+   "to": "pc1",
+   "kind": "control",
+   "label": "light, if you aim it",
+   "eli5": "Bend LEDacle 1 toward Photocell 1 and the blinks wobble the pitch. Light is the patch cable.",
+   "detail": "The only way the blinkers ever reach the sound.",
+   "optional": true
+  },
+  {
+   "id": "led2-pc1",
+   "from": "led2",
+   "to": "pc1",
+   "kind": "control",
+   "label": "light, if you aim it",
+   "eli5": "Same trick with the breathing LEDacle: a slow swoop in pitch.",
+   "optional": true,
+   "bend": -110
+  },
+  {
+   "id": "pw-sound",
+   "from": "power",
+   "to": "sound",
+   "kind": "power",
+   "label": "+9 V / ground",
+   "eli5": "Pin 4 drinks from the red rail; pins 1 and 12 return to ground."
+  },
+  {
+   "id": "pw-mod",
+   "from": "power",
+   "to": "mod",
+   "kind": "power",
+   "label": "+9 V / ground",
+   "eli5": "Pin 14 drinks, pin 7 returns."
+  },
+  {
+   "id": "pw-tl",
+   "from": "power",
+   "to": "tl072",
+   "kind": "power",
+   "label": "+9 V / ground",
+   "eli5": "Pin 8 drinks, pin 4 returns."
+  },
+  {
+   "id": "pw-amp",
+   "from": "power",
+   "to": "amp",
+   "kind": "power",
+   "label": "+9 V / ground",
+   "eli5": "Pin 6 drinks, pins 2 and 4 return."
+  }
+ ],
+ "board": {
+  "style": "pcb",
+  "color": "white",
+  "w": 720,
+  "h": 470,
+  "view": [
+   -20,
+   -20,
+   1150,
+   640
+  ],
+  "fidelity": "kit",
+  "fidelityNote": "Part placement follows the real Thingamakit PCB (Bleep Labs assembly guide, pages 2 and 4): four toggles on top, DIP sockets in the middle, three resistor banks, ceramic cap columns, three board-mounted pots, wire pads on the right edge. The copper traces are redrawn from the schematic, not traced from the kit. The guide's photos don't show the routing.",
+  "reference": {
+   "label": "Thingamakit instructions (PDF)",
+   "url": "https://bleeplabs.com/wp/wp-content/uploads/2015/04/Thingamakit-inst-v2-b.pdf"
+  },
+  "parts": [
+   {
+    "id": "u2",
+    "fp": "DIP",
+    "x": 110,
+    "y": 205,
+    "part": "ledosc",
+    "value": "40106",
+    "label": "40106",
+    "span": 14
+   },
+   {
+    "id": "u1",
+    "fp": "DIP",
+    "x": 290,
+    "y": 205,
+    "part": "xr",
+    "value": "XR2206",
+    "label": "2206",
+    "span": 16
+   },
+   {
+    "id": "u4",
+    "fp": "DIP",
+    "x": 450,
+    "y": 205,
+    "part": "lm386",
+    "value": "LM386",
+    "label": "386",
+    "span": 8
+   },
+   {
+    "id": "u3",
+    "fp": "DIP",
+    "x": 570,
+    "y": 205,
+    "part": "tri",
+    "value": "TL072",
+    "label": "072",
+    "span": 8
+   },
+   {
+    "id": "wsw",
+    "fp": "TOG",
+    "x": 80,
+    "y": 60,
+    "part": "sw",
+    "label": "WAVEFORM",
+    "color": "#d9443a"
+   },
+   {
+    "id": "rng",
+    "fp": "TOG",
+    "x": 240,
+    "y": 60,
+    "part": "ctime",
+    "label": "RANGE",
+    "color": "#d9443a"
+   },
+   {
+    "id": "msel",
+    "fp": "TOG",
+    "x": 430,
+    "y": 60,
+    "part": "modsel",
+    "label": "MOD SEL",
+    "color": "#3faa4a"
+   },
+   {
+    "id": "patch",
+    "fp": "TOG",
+    "x": 640,
+    "y": 60,
+    "part": "patchsw",
+    "label": "MOD PATCH",
+    "color": "#3a6fd9"
+   },
+   {
+    "id": "c4",
+    "fp": "CP",
+    "x": 165,
+    "y": 70,
+    "part": "cdec",
+    "value": "1µ"
+   },
+   {
+    "id": "c10",
+    "fp": "CP",
+    "x": 335,
+    "y": 35,
+    "part": "c10",
+    "value": "1µ"
+   },
+   {
+    "id": "c1m",
+    "fp": "CP",
+    "x": 335,
+    "y": 75,
+    "part": "modrange",
+    "value": "1µ"
+   },
+   {
+    "id": "ctri",
+    "fp": "CP",
+    "x": 335,
+    "y": 115,
+    "part": "trios",
+    "value": "1µ"
+   },
+   {
+    "id": "c220",
+    "fp": "CP",
+    "x": 540,
+    "y": 75,
+    "part": "c220",
+    "value": "220µ",
+    "span": 34
+   },
+   {
+    "id": "c33",
+    "fp": "CC",
+    "x": 25,
+    "y": 270,
+    "part": "modrange",
+    "value": ".33"
+   },
+   {
+    "id": "cb1",
+    "fp": "CC",
+    "x": 25,
+    "y": 300,
+    "part": "ledosc",
+    "value": ".1"
+   },
+   {
+    "id": "cb2",
+    "fp": "CC",
+    "x": 25,
+    "y": 330,
+    "part": "ledosc",
+    "value": ".1"
+   },
+   {
+    "id": "cb3",
+    "fp": "CC",
+    "x": 25,
+    "y": 360,
+    "part": "ledosc",
+    "value": ".1"
+   },
+   {
+    "id": "c01",
+    "fp": "CC",
+    "x": 385,
+    "y": 270,
+    "part": "ctime",
+    "value": ".01"
+   },
+   {
+    "id": "c1t",
+    "fp": "CC",
+    "x": 385,
+    "y": 300,
+    "part": "ctime",
+    "value": ".1"
+   },
+   {
+    "id": "cout",
+    "fp": "CC",
+    "x": 385,
+    "y": 330,
+    "part": "cout",
+    "value": ".1"
+   },
+   {
+    "id": "c33t",
+    "fp": "CC",
+    "x": 385,
+    "y": 360,
+    "part": "tri",
+    "value": ".33"
+   },
+   {
+    "id": "rm1",
+    "fp": "R",
+    "x": 60,
+    "y": 310,
+    "part": "ledmix",
+    "value": "220",
+    "rot": 90
+   },
+   {
+    "id": "rb1",
+    "fp": "R",
+    "x": 80,
+    "y": 310,
+    "part": "ledosc",
+    "value": "1M",
+    "rot": 90
+   },
+   {
+    "id": "rm2",
+    "fp": "R",
+    "x": 100,
+    "y": 310,
+    "part": "ledmix",
+    "value": "220",
+    "rot": 90
+   },
+   {
+    "id": "rb3",
+    "fp": "R",
+    "x": 120,
+    "y": 310,
+    "part": "ledosc",
+    "value": "10M",
+    "rot": 90
+   },
+   {
+    "id": "rm3",
+    "fp": "R",
+    "x": 140,
+    "y": 310,
+    "part": "ledmix",
+    "value": "220",
+    "rot": 90
+   },
+   {
+    "id": "rb2",
+    "fp": "R",
+    "x": 160,
+    "y": 310,
+    "part": "ledosc",
+    "value": "1.5M",
+    "rot": 90
+   },
+   {
+    "id": "rled1",
+    "fp": "R",
+    "x": 180,
+    "y": 310,
+    "part": "ledmix",
+    "value": "220",
+    "rot": 90
+   },
+   {
+    "id": "rpa",
+    "fp": "R",
+    "x": 200,
+    "y": 310,
+    "part": "patchsw",
+    "value": "220",
+    "rot": 90
+   },
+   {
+    "id": "rtri",
+    "fp": "R",
+    "x": 240,
+    "y": 310,
+    "part": "trirate",
+    "value": "220",
+    "rot": 90
+   },
+   {
+    "id": "rled2",
+    "fp": "R",
+    "x": 260,
+    "y": 310,
+    "part": "led2",
+    "value": "220",
+    "rot": 90
+   },
+   {
+    "id": "r47a",
+    "fp": "R",
+    "x": 280,
+    "y": 310,
+    "part": "bias3",
+    "value": "4.7k",
+    "rot": 90
+   },
+   {
+    "id": "r47b",
+    "fp": "R",
+    "x": 300,
+    "y": 310,
+    "part": "bias3",
+    "value": "4.7k",
+    "rot": 90
+   },
+   {
+    "id": "r10k",
+    "fp": "R",
+    "x": 320,
+    "y": 310,
+    "part": "pullup",
+    "value": "10k",
+    "rot": 90
+   },
+   {
+    "id": "r750a",
+    "fp": "R",
+    "x": 430,
+    "y": 310,
+    "part": "div",
+    "value": "750",
+    "rot": 90
+   },
+   {
+    "id": "r750b",
+    "fp": "R",
+    "x": 450,
+    "y": 310,
+    "part": "div",
+    "value": "750",
+    "rot": 90
+   },
+   {
+    "id": "r30in",
+    "fp": "R",
+    "x": 470,
+    "y": 310,
+    "part": "tri",
+    "value": "30k",
+    "rot": 90
+   },
+   {
+    "id": "r130",
+    "fp": "R",
+    "x": 490,
+    "y": 310,
+    "part": "tri",
+    "value": "130k",
+    "rot": 90
+   },
+   {
+    "id": "r30a",
+    "fp": "R",
+    "x": 510,
+    "y": 310,
+    "part": "trishape",
+    "value": "30k",
+    "rot": 90
+   },
+   {
+    "id": "r30b",
+    "fp": "R",
+    "x": 530,
+    "y": 310,
+    "part": "trishape",
+    "value": "30k",
+    "rot": 90
+   },
+   {
+    "id": "jmp",
+    "fp": "JMP3",
+    "x": 60,
+    "y": 410,
+    "part": "modrange",
+    "label": "MOD RNG?"
+   },
+   {
+    "id": "pshape",
+    "fp": "POT",
+    "x": 150,
+    "y": 440,
+    "part": "trishape",
+    "value": "100k",
+    "label": "TRI SHAPE",
+    "rot": 180
+   },
+   {
+    "id": "ptri",
+    "fp": "POT",
+    "x": 370,
+    "y": 440,
+    "part": "trirate",
+    "value": "1M",
+    "label": "TRI RATE",
+    "rot": 180
+   },
+   {
+    "id": "pmod",
+    "fp": "POT",
+    "x": 570,
+    "y": 440,
+    "part": "modrate",
+    "value": "1M",
+    "label": "MOD RATE",
+    "rot": 180
+   },
+   {
+    "id": "p_led1p",
+    "fp": "PAD",
+    "x": 690,
+    "y": 100,
+    "part": "led1",
+    "label": "LED1+"
+   },
+   {
+    "id": "p_led1m",
+    "fp": "PAD",
+    "x": 690,
+    "y": 117,
+    "part": "led1",
+    "label": "LED1-"
+   },
+   {
+    "id": "p_led2p",
+    "fp": "PAD",
+    "x": 690,
+    "y": 134,
+    "part": "led2",
+    "label": "LED2+"
+   },
+   {
+    "id": "p_led2m",
+    "fp": "PAD",
+    "x": 690,
+    "y": 151,
+    "part": "led2",
+    "label": "LED2-"
+   },
+   {
+    "id": "p_pc2a",
+    "fp": "PAD",
+    "x": 690,
+    "y": 168,
+    "part": "pcell2",
+    "label": "PC2a"
+   },
+   {
+    "id": "p_pc2b",
+    "fp": "PAD",
+    "x": 690,
+    "y": 185,
+    "part": "pcell2",
+    "label": "PC2b"
+   },
+   {
+    "id": "p_pc1a",
+    "fp": "PAD",
+    "x": 690,
+    "y": 202,
+    "part": "pcell1",
+    "label": "PC1a"
+   },
+   {
+    "id": "p_pc1b",
+    "fp": "PAD",
+    "x": 690,
+    "y": 219,
+    "part": "pcell1",
+    "label": "PC1b"
+   },
+   {
+    "id": "p_spkp",
+    "fp": "PAD",
+    "x": 690,
+    "y": 236,
+    "part": "spk",
+    "label": "SPK+"
+   },
+   {
+    "id": "p_spkm",
+    "fp": "PAD",
+    "x": 690,
+    "y": 253,
+    "part": "spk",
+    "label": "SPK-"
+   },
+   {
+    "id": "p_outt",
+    "fp": "PAD",
+    "x": 690,
+    "y": 270,
+    "part": "jout",
+    "label": "OUT T"
+   },
+   {
+    "id": "p_outs",
+    "fp": "PAD",
+    "x": 690,
+    "y": 287,
+    "part": "jout",
+    "label": "OUT S"
+   },
+   {
+    "id": "p_batp",
+    "fp": "PAD",
+    "x": 690,
+    "y": 304,
+    "part": "bat",
+    "label": "BAT+"
+   },
+   {
+    "id": "p_batm",
+    "fp": "PAD",
+    "x": 690,
+    "y": 321,
+    "part": "bat",
+    "label": "BAT-"
+   },
+   {
+    "id": "p_vol1",
+    "fp": "PAD",
+    "x": 690,
+    "y": 338,
+    "part": "volpot",
+    "label": "VOL1"
+   },
+   {
+    "id": "p_vol2",
+    "fp": "PAD",
+    "x": 690,
+    "y": 355,
+    "part": "volpot",
+    "label": "VOL2"
+   },
+   {
+    "id": "p_vol3",
+    "fp": "PAD",
+    "x": 690,
+    "y": 372,
+    "part": "volpot",
+    "label": "VOL3"
+   },
+   {
+    "id": "p_pwr1",
+    "fp": "PAD",
+    "x": 690,
+    "y": 389,
+    "part": "pwrsw",
+    "label": "PWR1"
+   },
+   {
+    "id": "p_pwr2",
+    "fp": "PAD",
+    "x": 690,
+    "y": 406,
+    "part": "pwrsw",
+    "label": "PWR2"
+   },
+   {
+    "id": "xled1",
+    "fp": "LED",
+    "x": 830,
+    "y": 70,
+    "part": "led1",
+    "label": "LEDacle 1",
+    "off": true,
+    "color": "#ff4d4d",
+    "blink": "tap:modosc"
+   },
+   {
+    "id": "xled2",
+    "fp": "LED",
+    "x": 930,
+    "y": 70,
+    "part": "led2",
+    "label": "LEDacle 2",
+    "off": true,
+    "color": "#4dff88",
+    "blink": "breathe"
+   },
+   {
+    "id": "xpc2",
+    "fp": "LDR",
+    "x": 830,
+    "y": 170,
+    "part": "pcell2",
+    "label": "Photocell 2",
+    "off": true
+   },
+   {
+    "id": "xpc1",
+    "fp": "LDR",
+    "x": 930,
+    "y": 170,
+    "part": "pcell1",
+    "label": "Photocell 1",
+    "off": true
+   },
+   {
+    "id": "xspk",
+    "fp": "SPK",
+    "x": 1010,
+    "y": 330,
+    "part": "spk",
+    "value": "8 Ω",
+    "label": "Speaker",
+    "off": true
+   },
+   {
+    "id": "xjack",
+    "fp": "JACK",
+    "x": 830,
+    "y": 300,
+    "part": "jout",
+    "label": "OUT ¼\"",
+    "off": true
+   },
+   {
+    "id": "xbat",
+    "fp": "BAT",
+    "x": 840,
+    "y": 420,
+    "part": "bat",
+    "value": "9V",
+    "label": "Battery",
+    "off": true
+   },
+   {
+    "id": "xvol",
+    "fp": "SWPOT",
+    "x": 1000,
+    "y": 520,
+    "part": "volpot",
+    "value": "10k",
+    "label": "VOLUME / PWR",
+    "off": true
+   }
+  ],
+  "nets": [
+   {
+    "id": "gnd",
+    "name": "Ground (0 V)",
+    "kind": "minus",
+    "pins": [
+     "u1.1",
+     "u1.12",
+     "r47a.2",
+     "c10.-",
+     "c4.-",
+     "u2.7",
+     "u2.13",
+     "cb1.2",
+     "cb2.2",
+     "cb3.2",
+     "c33.2",
+     "c1m.-",
+     "ctri.-",
+     "u3.4",
+     "r30b.2",
+     "u4.2",
+     "u4.4",
+     "r750a.2",
+     "r750b.2",
+     "p_pc1b.p",
+     "p_led1m.p",
+     "p_led2m.p",
+     "p_outs.p",
+     "p_spkm.p",
+     "p_batm.p",
+     "p_vol1.p",
+     "xpc1.2",
+     "xled1.K",
+     "xled2.K",
+     "xjack.S",
+     "xspk.-",
+     "xbat.-",
+     "xvol.1"
+    ],
+    "eli5": "Ground: the shared floor. Every signal comes back here to finish its loop.",
+    "detail": "On the kit it is a wide copper area (a ground pour) instead of thin traces, so every part has a short, quiet way home.",
+    "pour": true
+   },
+   {
+    "id": "v9",
+    "name": "+9 V rail",
+    "kind": "plus",
+    "pins": [
+     "u1.4",
+     "c4.+",
+     "r47b.2",
+     "r10k.1",
+     "u4.6",
+     "u2.14",
+     "u3.8",
+     "r30a.1",
+     "p_pwr2.p",
+     "xvol.S2"
+    ],
+    "eli5": "The red rail: the battery's push, delivered to every chip's power pin.",
+    "detail": "It only exists while the power switch on the volume knob is on."
+   },
+   {
+    "id": "vbat",
+    "name": "Battery + (before switch)",
+    "kind": "plus",
+    "pins": [
+     "p_batp.p",
+     "p_pwr1.p",
+     "xbat.+",
+     "xvol.S1"
+    ],
+    "eli5": "The battery's + side, waiting at the power switch.",
+    "detail": "Turn the volume knob past its click and this joins the +9 V rail."
+   },
+   {
+    "id": "p7",
+    "name": "Pin 7 · timing current",
+    "kind": "control",
+    "pins": [
+     "u1.7",
+     "p_pc1a.p",
+     "xpc1.1"
+    ],
+    "eli5": "A light-controlled trickle of current out of pin 7, through Photocell 1, to ground.",
+    "detail": "The chip copies this current to fill the timing bucket. More light, bigger trickle, higher note."
+   },
+   {
+    "id": "t5",
+    "name": "Timing cap A (pin 5)",
+    "kind": "bias",
+    "pins": [
+     "u1.5",
+     "c01.1",
+     "c1t.1"
+    ],
+    "eli5": "One side of the timing bucket. A ramp goes up and down here as the chip fills and empties it."
+   },
+   {
+    "id": "t6",
+    "name": "Timing cap B (pin 6)",
+    "kind": "bias",
+    "pins": [
+     "u1.6",
+     "c01.2",
+     "rng.2"
+    ],
+    "eli5": "The other side of the timing bucket."
+   },
+   {
+    "id": "rng",
+    "name": "RANGE switch → .1 µF",
+    "kind": "bias",
+    "pins": [
+     "c1t.2",
+     "rng.1"
+    ],
+    "eli5": "When RANGE closes, the big .1 µF bucket joins the small one, and the pitch drops."
+   },
+   {
+    "id": "p3",
+    "name": "Pin 3 · half voltage",
+    "kind": "bias",
+    "pins": [
+     "u1.3",
+     "r47a.1",
+     "r47b.1"
+    ],
+    "eli5": "The seesaw's middle: about 4.5 V, half the battery.",
+    "detail": "Pin 3 uses it to center the output wave."
+   },
+   {
+    "id": "p10",
+    "name": "Pin 10 · reference",
+    "kind": "bias",
+    "pins": [
+     "u1.10",
+     "c10.+"
+    ],
+    "eli5": "The chip's internal reference, steadied by a 1 µF shock absorber."
+   },
+   {
+    "id": "tri",
+    "name": "Pin 2 · triangle out",
+    "kind": "audio",
+    "pins": [
+     "u1.2",
+     "wsw.3"
+    ],
+    "eli5": "The triangle wave, on its way to the WAVEFORM switch.",
+    "probe": "osc"
+   },
+   {
+    "id": "sq",
+    "name": "Pin 11 · square out",
+    "kind": "audio",
+    "pins": [
+     "u1.11",
+     "r10k.2",
+     "r750a.1",
+     "wsw.1"
+    ],
+    "eli5": "The square wave: the pull-up lifts it, the 750 Ω shrinks it.",
+    "probe": "osc"
+   },
+   {
+    "id": "wave",
+    "name": "Switch out",
+    "kind": "audio",
+    "pins": [
+     "wsw.2",
+     "r750b.1",
+     "cout.1"
+    ],
+    "eli5": "Whichever wave the switch picked, still riding on the chip's steady push.",
+    "probe": "wave"
+   },
+   {
+    "id": "volin",
+    "name": "To volume pot",
+    "kind": "audio",
+    "pins": [
+     "cout.2",
+     "p_vol3.p",
+     "xvol.3"
+    ],
+    "eli5": "Pure wiggles now: the .1 µF door kept the steady push behind.",
+    "probe": "wave"
+   },
+   {
+    "id": "wiper",
+    "name": "Volume wiper → LM386 + Out",
+    "kind": "audio",
+    "pins": [
+     "u4.3",
+     "p_vol2.p",
+     "p_outt.p",
+     "xvol.2",
+     "xjack.T"
+    ],
+    "eli5": "The sound after the volume knob. It splits here: one copy to the LM386, one to the Out jack.",
+    "detail": "That split is a parallel branch, not a chain.",
+    "probe": "volume"
+   },
+   {
+    "id": "ampout",
+    "name": "LM386 out",
+    "kind": "audio",
+    "pins": [
+     "u4.5",
+     "c220.+"
+    ],
+    "eli5": "The amp's output: big current wiggles riding on half the battery voltage.",
+    "probe": "amp"
+   },
+   {
+    "id": "spk",
+    "name": "To speaker",
+    "kind": "audio",
+    "pins": [
+     "c220.-",
+     "p_spkp.p",
+     "xspk.+"
+    ],
+    "eli5": "Only the wiggles, now strong enough to push the cone.",
+    "probe": "amp"
+   },
+   {
+    "id": "b1in",
+    "name": "Blinker 1 timing",
+    "kind": "control",
+    "pins": [
+     "u2.1",
+     "rb1.1",
+     "cb1.1"
+    ],
+    "eli5": "Blinker 1's bucket fills and empties through the 1M resistor."
+   },
+   {
+    "id": "b1out",
+    "name": "Blinker 1 out",
+    "kind": "control",
+    "pins": [
+     "u2.2",
+     "rb1.2",
+     "rm1.1"
+    ],
+    "eli5": "Blinker 1's on/off square."
+   },
+   {
+    "id": "b2in",
+    "name": "Blinker 2 timing",
+    "kind": "control",
+    "pins": [
+     "u2.3",
+     "rb2.1",
+     "cb2.1"
+    ],
+    "eli5": "Blinker 2's bucket (1.5M: a bit slower)."
+   },
+   {
+    "id": "b2out",
+    "name": "Blinker 2 out",
+    "kind": "control",
+    "pins": [
+     "u2.4",
+     "rb2.2",
+     "rm2.1"
+    ],
+    "eli5": "Blinker 2's on/off square."
+   },
+   {
+    "id": "b3in",
+    "name": "Blinker 3 timing",
+    "kind": "control",
+    "pins": [
+     "u2.5",
+     "rb3.1",
+     "cb3.1"
+    ],
+    "eli5": "Blinker 3's bucket (10M: very slow)."
+   },
+   {
+    "id": "b3out",
+    "name": "Blinker 3 out",
+    "kind": "control",
+    "pins": [
+     "u2.6",
+     "rb3.2",
+     "rm3.1"
+    ],
+    "eli5": "Blinker 3's on/off square."
+   },
+   {
+    "id": "nodeA",
+    "name": "Node A",
+    "kind": "control",
+    "pins": [
+     "rm1.2",
+     "rm2.2",
+     "rm3.2",
+     "rled1.1",
+     "rpa.2"
+    ],
+    "eli5": "The cup where the blinkers mix (plus the MOD square on patch A).",
+    "detail": "The mix flickers in an uneven, organic way because the three speeds never line up."
+   },
+   {
+    "id": "led1a",
+    "name": "To LEDacle 1",
+    "kind": "control",
+    "pins": [
+     "rled1.2",
+     "p_led1p.p",
+     "xled1.A"
+    ],
+    "eli5": "Current for LEDacle 1, limited by 220 Ω."
+   },
+   {
+    "id": "modin",
+    "name": "MOD timing",
+    "kind": "control",
+    "pins": [
+     "u2.11",
+     "jmp.2",
+     "pmod.1",
+     "pmod.2",
+     "p_pc2a.p",
+     "xpc2.1"
+    ],
+    "eli5": "The MOD metronome's bucket and its two possible speed controls."
+   },
+   {
+    "id": "modr1",
+    "name": "MOD range .33 µF",
+    "kind": "control",
+    "pins": [
+     "jmp.1",
+     "c33.1"
+    ],
+    "eli5": "The small (fast) MOD bucket."
+   },
+   {
+    "id": "modr2",
+    "name": "MOD range 1 µF",
+    "kind": "control",
+    "pins": [
+     "jmp.3",
+     "c1m.+"
+    ],
+    "eli5": "The big (slow) MOD bucket."
+   },
+   {
+    "id": "modpot",
+    "name": "MOD SEL ← rate pot",
+    "kind": "control",
+    "pins": [
+     "pmod.3",
+     "msel.1"
+    ],
+    "eli5": "The rate pot's path back to the gate's output."
+   },
+   {
+    "id": "modpc",
+    "name": "MOD SEL ← Photocell 2",
+    "kind": "control",
+    "pins": [
+     "p_pc2b.p",
+     "msel.3",
+     "xpc2.2"
+    ],
+    "eli5": "Photocell 2's path back to the gate's output."
+   },
+   {
+    "id": "modout",
+    "name": "MOD square out",
+    "kind": "control",
+    "pins": [
+     "u2.10",
+     "msel.2",
+     "patch.2"
+    ],
+    "eli5": "The MOD metronome's on/off square, on its way to the MOD PATCH switch.",
+    "probe": "tap:modosc"
+   },
+   {
+    "id": "patchA",
+    "name": "Patch A → node A",
+    "kind": "control",
+    "pins": [
+     "patch.1",
+     "rpa.1"
+    ],
+    "eli5": "Patch A: the MOD square joins the blinkers."
+   },
+   {
+    "id": "pin9",
+    "name": "Node B → pin 9",
+    "kind": "control",
+    "pins": [
+     "patch.3",
+     "u1.9"
+    ],
+    "eli5": "Patch B: the MOD square presses the oscillator's on/off button.",
+    "detail": "When it goes low, the tone stops; when high, it plays. That is the chop.",
+    "probe": "tap:modosc"
+   },
+   {
+    "id": "triin",
+    "name": "TRI timing",
+    "kind": "control",
+    "pins": [
+     "u2.9",
+     "ctri.+",
+     "ptri.1",
+     "ptri.2"
+    ],
+    "eli5": "The TRI metronome's bucket and speed knob."
+   },
+   {
+    "id": "trimid",
+    "name": "TRI rate → 220 Ω",
+    "kind": "control",
+    "pins": [
+     "ptri.3",
+     "rtri.1"
+    ],
+    "eli5": "The speed path, with a 220 Ω so the knob at zero can't short the gate."
+   },
+   {
+    "id": "triout",
+    "name": "TRI square out",
+    "kind": "control",
+    "pins": [
+     "u2.8",
+     "rtri.2",
+     "c33t.1"
+    ],
+    "eli5": "The TRI metronome's square, heading to the op-amp."
+   },
+   {
+    "id": "tlin",
+    "name": "TL072 input",
+    "kind": "control",
+    "pins": [
+     "c33t.2",
+     "r30in.1"
+    ],
+    "eli5": "Only the square's edges get through the .33 µF door."
+   },
+   {
+    "id": "tlinv",
+    "name": "TL072 minus input",
+    "kind": "control",
+    "pins": [
+     "r30in.2",
+     "r130.1",
+     "u3.2"
+    ],
+    "eli5": "Where input and feedback meet: the op-amp works to keep this point steady."
+   },
+   {
+    "id": "tlout",
+    "name": "TL072 out",
+    "kind": "control",
+    "pins": [
+     "u3.1",
+     "r130.2",
+     "rled2.1"
+    ],
+    "eli5": "The breathing wave, ready to light LEDacle 2."
+   },
+   {
+    "id": "led2a",
+    "name": "To LEDacle 2",
+    "kind": "control",
+    "pins": [
+     "rled2.2",
+     "p_led2p.p",
+     "xled2.A"
+    ],
+    "eli5": "Current for LEDacle 2, limited by 220 Ω."
+   },
+   {
+    "id": "tlplus",
+    "name": "TL072 plus input",
+    "kind": "bias",
+    "pins": [
+     "u3.3",
+     "pshape.2"
+    ],
+    "eli5": "The TRI SHAPE wiper sets this resting level, sliding the breathing up or down."
+   },
+   {
+    "id": "shtop",
+    "name": "TRI SHAPE top",
+    "kind": "bias",
+    "pins": [
+     "pshape.3",
+     "r30a.2"
+    ],
+    "eli5": "Top of the shape divider, fed from +9 V through 30k."
+   },
+   {
+    "id": "shbot",
+    "name": "TRI SHAPE bottom",
+    "kind": "bias",
+    "pins": [
+     "pshape.1",
+     "r30b.1"
+    ],
+    "eli5": "Bottom of the shape divider, to ground through 30k."
+   }
+  ]
+ }
+}

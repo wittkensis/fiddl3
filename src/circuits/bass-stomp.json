@@ -1,0 +1,629 @@
+{
+ "id": "bass-stomp",
+ "name": "Bass stomp box",
+ "subtitle": "Homemade, Peterman-style · speaker run backwards · step-up transformer · passive",
+ "kind": "effect",
+ "mine": true,
+ "defaultInput": "stomp",
+ "keyIdea": {
+  "eli5": "A speaker run backwards is a microphone. The box's own ring (about 80 to 120 Hz) is the tone control, and a transformer acts as a gearbox so a tiny coil can drive a long cable.",
+  "detail": "No battery anywhere: all the energy comes from your heel."
+ },
+ "summary": "Heel hits the box. The box rings. The cone moves, the coil makes voltage, the transformer steps it up, and the amp makes it a kick drum.",
+ "rails": {
+  "top": {
+   "label": "(no power: fully passive)",
+   "sign": "none",
+   "ground": false,
+   "eli5": "There is no red rail here: this circuit has no battery. Your heel supplies all the energy.",
+   "detail": "Passive means no power supply. That is why the transformer matters so much: it is the only way to make the signal 'bigger'."
+  },
+  "bottom": {
+   "label": "0 V (cable shield / ground)",
+   "sign": "none",
+   "ground": true,
+   "eli5": "The bottom line is the cable's shield: the return path and the 0 V reference.",
+   "detail": "It carries no battery voltage, it just gives the signal a way home."
+  }
+ },
+ "groundNote": {
+  "eli5": "Here ground is just the cable shield and the amp's input sleeve. There is no battery, so there is no + or − rail at all."
+ },
+ "source": {
+  "label": "Peterman DIY stomp-box transducer (magnetic transducer + transformer)",
+  "url": "https://www.peterman.shop/products/diy-professional-stomp-box-bass-sound"
+ },
+ "sim": null,
+ "notes": [
+  "There's no published schematic. This is drawn from the description: a speaker as a generator into an 8 Ω to high-impedance transformer, no power.",
+  "Peterman's spare part ships as 'Transducer and Transformer'. It's a magnetic transducer, not a piezo.",
+  "Piezo contrast: a piezo is the opposite (very high impedance) and needs a buffer (a JFET preamp) or it sounds tinny."
+ ],
+ "honestyNote": {
+  "eli5": "A single chain is the honest picture here: this circuit really is one path from heel to amp."
+ },
+ "blocks": [
+  {
+   "id": "box",
+   "title": "THE BOX (MECHANICAL)",
+   "job": {
+    "eli5": "A wooden drum: your heel's knock becomes a ringing low thump at the box's favorite note."
+   },
+   "stage": {
+    "kind": "resonator",
+    "params": {
+     "freq": 100,
+     "q": 5,
+     "gain": 3
+    }
+   },
+   "wire": {
+    "eli5": "Not a wire yet: the box's vibration, shaking the speaker cone."
+   }
+  },
+  {
+   "id": "gen",
+   "title": "SPEAKER AS GENERATOR",
+   "job": {
+    "eli5": "A speaker run backwards is a microphone: the moving coil makes a tiny voltage."
+   },
+   "stage": {
+    "kind": "gain",
+    "params": {
+     "gain": 0.12
+    }
+   },
+   "wire": {
+    "eli5": "A tiny voltage from the speaker coil: weak, but able to push a lot of current."
+   }
+  },
+  {
+   "id": "xfmr",
+   "title": "STEP-UP TRANSFORMER",
+   "job": {
+    "eli5": "Trades current for voltage, like a gearbox, so the weak coil can talk to a high-impedance amp input."
+   },
+   "stage": {
+    "kind": "gain",
+    "params": {
+     "gain": 18
+    }
+   },
+   "wire": {
+    "eli5": "The same thump at a much higher voltage, ready for a long cable."
+   }
+  },
+  {
+   "id": "amp",
+   "title": "CABLE → AMP INPUT",
+   "job": {
+    "eli5": "A bass amp's input listens closely and the amp gives the thump its body."
+   },
+   "stage": {
+    "kind": "lp",
+    "params": {
+     "freq": 2500,
+     "q": 0.7
+    }
+   },
+   "wire": {
+    "eli5": "The thump at the amp's input."
+   }
+  }
+ ],
+ "parts": [
+  {
+   "id": "lid",
+   "ref": "BOX",
+   "kind": "BOX",
+   "label": "Box lid + body",
+   "term": "resonant enclosure",
+   "block": "box",
+   "place": "series",
+   "job": {
+    "eli5": "The thing you stomp. It rings at its own low note, like a drum.",
+    "detail": "Bigger box, lower ring. Its walls and the air inside both vibrate."
+   },
+   "connects": [
+    "felt",
+    "cone"
+   ],
+   "order": {
+    "eli5": "First: the box decides which notes even exist before anything electrical happens."
+   },
+   "breaks": {
+    "eli5": "You'd be hitting the speaker directly: a click, not a thump."
+   },
+   "onRemove": [
+    {
+     "stage": "box",
+     "param": "q",
+     "value": 0.5
+    },
+    {
+     "stage": "box",
+     "param": "freq",
+     "value": 1800
+    }
+   ]
+  },
+  {
+   "id": "felt",
+   "ref": "DAMP",
+   "kind": "R",
+   "label": "Damping (foam / felt / feet)",
+   "term": "mechanical damping",
+   "block": "box",
+   "place": "shunt",
+   "job": {
+    "eli5": "A hand resting on a drum: it soaks up the ring so the thump stops sooner."
+   },
+   "connects": [
+    "lid"
+   ],
+   "order": {
+    "eli5": "It acts on the box itself."
+   },
+   "breaks": {
+    "eli5": "A long, boomy ring that can feed back at stage volume."
+   },
+   "onRemove": [
+    {
+     "stage": "box",
+     "param": "q",
+     "value": 14
+    }
+   ]
+  },
+  {
+   "id": "cone",
+   "ref": "SPK",
+   "kind": "SPK",
+   "label": "Speaker (cone + coil + magnet)",
+   "term": "dynamic transducer (speaker used as a microphone)",
+   "block": "gen",
+   "place": "series",
+   "job": {
+    "eli5": "A speaker run backwards: shake the cone and its coil makes electricity, like a bike dynamo.",
+    "detail": "The box pushes the cone, the coil moves past the magnet, and a small voltage appears."
+   },
+   "connects": [
+    "lid",
+    "xp"
+   ],
+   "order": {
+    "eli5": "Mounted to the box, so it turns the box's motion into electricity."
+   },
+   "breaks": {
+    "eli5": "Nothing turns motion into voltage, so there is no signal."
+   },
+   "onRemove": [
+    {
+     "stage": "gen",
+     "param": "gain",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "id": "xp",
+   "ref": "T1",
+   "kind": "XFMR",
+   "label": "Transformer (8 Ω side → high-impedance side)",
+   "term": "step-up transformer (impedance matching)",
+   "block": "xfmr",
+   "place": "series",
+   "job": {
+    "eli5": "A gearbox for electricity: few turns in, many turns out, so the voltage goes up and the current goes down.",
+    "detail": "That lets a speaker coil (low impedance: needs lots of current) drive an amp input (high impedance: wants voltage). Impedance means how hard a part resists a wiggling signal."
+   },
+   "connects": [
+    "cone",
+    "jack"
+   ],
+   "order": {
+    "eli5": "Right at the coil. The matching has to happen before the long cable."
+   },
+   "breaks": {
+    "eli5": "The coil's tiny voltage goes straight to the amp: very quiet and thin.",
+    "detail": "Wired backwards it gets even quieter."
+   },
+   "onRemove": [
+    {
+     "stage": "xfmr",
+     "param": "gain",
+     "value": 1.2
+    }
+   ]
+  },
+  {
+   "id": "jack",
+   "ref": "J1",
+   "kind": "JACK",
+   "label": "¼ inch jack + cable",
+   "term": "mono jack",
+   "block": "amp",
+   "place": "series",
+   "job": {
+    "eli5": "The cable to the amp.",
+    "detail": "At kick-drum notes the cable's own capacitance barely matters."
+   },
+   "connects": [
+    "xp",
+    "zin"
+   ],
+   "order": {
+    "eli5": "After the transformer."
+   },
+   "breaks": {
+    "eli5": "No connection."
+   }
+  },
+  {
+   "id": "zin",
+   "ref": "Z in",
+   "kind": "R",
+   "label": "Amp input (high impedance)",
+   "term": "input impedance",
+   "block": "amp",
+   "place": "shunt",
+   "job": {
+    "eli5": "The amp's ear. A high-impedance input listens without pulling on the signal."
+   },
+   "connects": [
+    "jack"
+   ],
+   "order": {
+    "eli5": "The end of the passive chain."
+   },
+   "breaks": {
+    "eli5": "A low-impedance input (mic or line) loads it down: quieter, and the bass shifts."
+   },
+   "onRemove": [
+    {
+     "stage": "amp",
+     "param": "freq",
+     "value": 6000
+    }
+   ],
+   "tune": {
+    "unit": "Ω",
+    "nominal": 1000000.0,
+    "series": "E12",
+    "min": 4700.0,
+    "max": 10000000.0,
+    "higher": "Bigger amp input impedance: the transformer's gearbox sees an easy load, so you keep level and highs.",
+    "lower": "Smaller: the amp drinks the signal, so it gets quieter and duller, like plugging a pickup into a headphone jack.",
+    "tooFar": "Below about 10k most of the stomp's tiny voltage is lost.",
+    "targets": [
+     {
+      "stage": "xfmr",
+      "param": "gain",
+      "exp": 0.35,
+      "min": 0.2,
+      "max": 80
+     },
+     {
+      "stage": "amp",
+      "param": "freq",
+      "exp": 0.3,
+      "min": 300,
+      "max": 12000
+     }
+    ],
+    "fund": "impedance",
+    "typical": true
+   }
+  }
+ ],
+ "knobs": [
+  {
+   "id": "size",
+   "label": "Box size (ring)",
+   "part": "lid",
+   "default": 0.5,
+   "targets": [
+    {
+     "stage": "box",
+     "param": "freq",
+     "from": 60,
+     "to": 170,
+     "curve": "exp"
+    }
+   ],
+   "readout": {
+    "label": "rings at ≈",
+    "from": 60,
+    "to": 170,
+    "unit": "Hz",
+    "digits": 0,
+    "curve": "exp"
+   }
+  },
+  {
+   "id": "damp",
+   "label": "Damping",
+   "part": "felt",
+   "default": 0.5,
+   "targets": [
+    {
+     "stage": "box",
+     "param": "q",
+     "from": 12,
+     "to": 1.5,
+     "curve": "exp"
+    }
+   ]
+  },
+  {
+   "id": "ratio",
+   "label": "Transformer turns ratio",
+   "part": "xp",
+   "default": 0.6,
+   "targets": [
+    {
+     "stage": "xfmr",
+     "param": "gain",
+     "from": 1.2,
+     "to": 30,
+     "curve": "exp"
+    }
+   ],
+   "readout": {
+    "label": "turns ratio 1 :",
+    "from": 1,
+    "to": 35,
+    "unit": "",
+    "digits": 0
+   }
+  }
+ ],
+ "sections": [
+  {
+   "id": "box",
+   "title": "The box",
+   "term": "mechanical resonator",
+   "eli5": "The drum you stomp.",
+   "blocks": [
+    "box"
+   ],
+   "tint": "#d6b98c",
+   "map": [
+    40,
+    180,
+    200,
+    150
+   ],
+   "honesty": {
+    "level": "behavioral",
+    "eli5": "Modeled as a ringing filter (a resonator) hit by a knock. A real box has several ring notes and buzzes; the model has one."
+   }
+  },
+  {
+   "id": "gen",
+   "title": "Speaker as generator",
+   "term": "transducer",
+   "eli5": "Motion into electricity.",
+   "blocks": [
+    "gen"
+   ],
+   "tint": "#2dd4bf",
+   "map": [
+    290,
+    180,
+    200,
+    150
+   ],
+   "honesty": {
+    "level": "approx",
+    "eli5": "Approximated as a fixed volume. A real speaker also filters what it picks up."
+   }
+  },
+  {
+   "id": "xfmr",
+   "title": "Transformer",
+   "term": "step-up transformer",
+   "eli5": "Low voltage, lots of current in; high voltage out.",
+   "blocks": [
+    "xfmr"
+   ],
+   "tint": "#a78bfa",
+   "map": [
+    540,
+    180,
+    190,
+    150
+   ],
+   "honesty": {
+    "level": "approx",
+    "eli5": "Approximated as a volume boost. A real transformer also rolls off the deepest lows and can saturate (squash) on hard stomps."
+   }
+  },
+  {
+   "id": "amp",
+   "title": "Cable + amp input",
+   "term": "high-impedance input",
+   "eli5": "The amp's ear.",
+   "blocks": [
+    "amp"
+   ],
+   "tint": "#a3e635",
+   "map": [
+    780,
+    180,
+    190,
+    150
+   ],
+   "honesty": {
+    "level": "behavioral",
+    "eli5": "Modeled as a gentle treble cut."
+   }
+  }
+ ],
+ "links": [
+  {
+   "id": "box-gen",
+   "from": "box",
+   "to": "gen",
+   "kind": "audio",
+   "label": "vibration (mechanical)",
+   "eli5": "Not a wire: the box physically shakes the cone.",
+   "detail": "This is the one link in the app that is pure motion, no electricity."
+  },
+  {
+   "id": "gen-x",
+   "from": "gen",
+   "to": "xfmr",
+   "kind": "audio",
+   "label": "two wires, tiny voltage",
+   "eli5": "The coil's small voltage goes into the transformer's few-turn side.",
+   "probe": "gen"
+  },
+  {
+   "id": "x-amp",
+   "from": "xfmr",
+   "to": "amp",
+   "kind": "audio",
+   "label": "cable, stepped-up voltage",
+   "eli5": "The many-turn side sends a bigger voltage down the cable.",
+   "probe": "xfmr"
+  }
+ ],
+ "board": {
+  "style": "p2p",
+  "color": "wood",
+  "w": 600,
+  "h": 380,
+  "view": [
+   -30,
+   -40,
+   980,
+   470
+  ],
+  "fidelity": "schematic",
+  "fidelityNote": "Generic point-to-point wiring inside a wooden box, drawn from the description (speaker → 8 Ω to high-impedance transformer → jack, no power). There is no published schematic or kit layout, so the positions are a clean guess.",
+  "parts": [
+   {
+    "id": "box",
+    "fp": "WOODBOX",
+    "x": 300,
+    "y": 190,
+    "part": "lid",
+    "label": "Wooden box (top removed)",
+    "w": 600,
+    "h": 360
+   },
+   {
+    "id": "f1",
+    "fp": "FELT",
+    "x": 40,
+    "y": 30,
+    "part": "felt"
+   },
+   {
+    "id": "f2",
+    "fp": "FELT",
+    "x": 560,
+    "y": 30,
+    "part": "felt"
+   },
+   {
+    "id": "f3",
+    "fp": "FELT",
+    "x": 40,
+    "y": 350,
+    "part": "felt"
+   },
+   {
+    "id": "f4",
+    "fp": "FELT",
+    "x": 560,
+    "y": 350,
+    "part": "felt"
+   },
+   {
+    "id": "spk",
+    "fp": "SPK",
+    "x": 200,
+    "y": 290,
+    "part": "cone",
+    "value": "8 Ω",
+    "label": "Speaker (face down)"
+   },
+   {
+    "id": "t1",
+    "fp": "XFMR",
+    "x": 430,
+    "y": 150,
+    "part": "xp",
+    "value": "8Ω : 10k",
+    "label": "T1"
+   },
+   {
+    "id": "jack",
+    "fp": "JACK",
+    "x": 560,
+    "y": 260,
+    "part": "jack",
+    "label": "¼\" OUT",
+    "rot": 90
+   },
+   {
+    "id": "amp",
+    "fp": "AMP",
+    "x": 820,
+    "y": 250,
+    "part": "zin",
+    "label": "Bass amp input",
+    "off": true
+   }
+  ],
+  "nets": [
+   {
+    "id": "coilp",
+    "name": "Coil + → T1 primary",
+    "kind": "audio",
+    "pins": [
+     "spk.+",
+     "t1.P1"
+    ],
+    "eli5": "The speaker coil's tiny voltage, into the transformer's few-turn side.",
+    "probe": "gen"
+   },
+   {
+    "id": "coilm",
+    "name": "Coil − → T1 primary",
+    "kind": "audio",
+    "pins": [
+     "spk.-",
+     "t1.P2"
+    ],
+    "eli5": "The return wire that completes the coil's loop."
+   },
+   {
+    "id": "sec",
+    "name": "T1 secondary → jack tip",
+    "kind": "audio",
+    "pins": [
+     "t1.S1",
+     "jack.T",
+     "amp.T"
+    ],
+    "eli5": "The stepped-up thump, on its way down the cable.",
+    "probe": "xfmr"
+   },
+   {
+    "id": "shield",
+    "name": "Shield / ground",
+    "kind": "minus",
+    "pins": [
+     "t1.S2",
+     "jack.S",
+     "amp.S"
+    ],
+    "eli5": "The cable's shield: the return path and the 0 V reference.",
+    "detail": "There is no battery here, so this is the only 'rail'."
+   }
+  ]
+ }
+}

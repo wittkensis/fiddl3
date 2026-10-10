@@ -1,0 +1,708 @@
+{
+ "id": "pt2399",
+ "name": "PT2399 echo",
+ "subtitle": "Archetype · digital delay chip in an analog-feeling circuit · resistor-set clock",
+ "kind": "effect",
+ "defaultInput": "pluck",
+ "keyIdea": {
+  "eli5": "One resistor on pin 6 sets the chip's clock, like the speed of a conveyor belt of tiny buckets. Slower belt, longer echo, but fewer buckets per second, so long echoes sound darker and grittier.",
+  "detail": "Feedback sends some of the echo back onto the belt for more repeats."
+ },
+ "summary": "The dry signal goes straight to the output. A copy goes through filter → chip memory → filter, and part of that is fed back in.",
+ "rails": {
+  "top": {
+   "label": "+5 V regulated (from 9 V)",
+   "sign": "+",
+   "ground": false,
+   "eli5": "Red is a calm 5 V made from the 9 V battery by a regulator, because the chip would fry on 9 V."
+  },
+  "bottom": {
+   "label": "0 V (ground)",
+   "sign": "-",
+   "ground": true,
+   "eli5": "Blue is the battery's − side and ground."
+  }
+ },
+ "source": {
+  "label": "ElectroSmash: PT2399 analysis",
+  "url": "https://electrosmash.com/pt2399-analysis"
+ },
+ "sim": null,
+ "notes": [
+  "There's no PT2399 model in Falstad, so this is behavioral only. Design equations: https://electricdruid.net/useful-design-equations-for-the-pt2399/"
+ ],
+ "blocks": [
+  {
+   "id": "in",
+   "title": "INPUT BUFFER",
+   "job": {
+    "eli5": "Splits the guitar into a dry road and a road into the chip."
+   },
+   "stage": {
+    "kind": "gain",
+    "params": {
+     "gain": 1
+    }
+   },
+   "wire": {
+    "eli5": "The guitar, split two ways: dry and into the chip."
+   }
+  },
+  {
+   "id": "dly",
+   "title": "FILTER → PT2399 → FILTER",
+   "job": {
+    "eli5": "Filter in, record into memory, play back later, filter out."
+   },
+   "stage": {
+    "kind": "delay",
+    "params": {
+     "time": 0.28,
+     "feedback": 0.45,
+     "wet": 0.7,
+     "dry": 1,
+     "tone": 3500
+    }
+   },
+   "wire": {
+    "eli5": "The echo."
+   }
+  },
+  {
+   "id": "fb",
+   "title": "FEEDBACK + MIX",
+   "job": {
+    "eli5": "Sends some echo back in for more repeats, and blends the echoes with the dry note."
+   },
+   "stage": null,
+   "onBypass": [
+    {
+     "stage": "dly",
+     "param": "feedback",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "id": "out",
+   "title": "OUTPUT",
+   "job": {
+    "eli5": "Out to the amp."
+   },
+   "stage": {
+    "kind": "gain",
+    "params": {
+     "gain": 0.85
+    }
+   },
+   "wire": {
+    "eli5": "Dry plus echoes."
+   }
+  }
+ ],
+ "parts": [
+  {
+   "id": "reg",
+   "ref": "U1",
+   "kind": "IC",
+   "label": "5 V regulator",
+   "block": "in",
+   "place": "up",
+   "job": {
+    "eli5": "A pressure reducer: it turns the battery's 9 V into a calm 5 V."
+   },
+   "connects": [
+    "pt"
+   ],
+   "order": {
+    "eli5": "Between the battery and the chip."
+   },
+   "breaks": {
+    "eli5": "The chip gets 9 V and dies, or gets nothing: no echo."
+   },
+   "onRemove": [
+    {
+     "stage": "dly",
+     "param": "wet",
+     "value": 0
+    }
+   ],
+   "term": "voltage regulator"
+  },
+  {
+   "id": "inbuf",
+   "ref": "IC2a",
+   "kind": "OPAMP",
+   "label": "Input buffer",
+   "block": "in",
+   "place": "active",
+   "job": {
+    "eli5": "A polite listener that copies the guitar for both roads."
+   },
+   "connects": [
+    "aa",
+    "mix"
+   ],
+   "order": {
+    "eli5": "First."
+   },
+   "breaks": {
+    "eli5": "The two roads pull on each other and the pickup."
+   },
+   "onRemove": [
+    {
+     "stage": "in",
+     "param": "gain",
+     "value": 0.6
+    }
+   ],
+   "term": "op-amp buffer",
+   "chip": {
+    "chip": "TL072",
+    "pins": [
+     1,
+     2,
+     3
+    ],
+    "note": "The source uses a dual op-amp here; a TL072 is a typical choice."
+   }
+  },
+  {
+   "id": "aa",
+   "ref": "R/C",
+   "kind": "C",
+   "label": "Anti-alias low-pass (chip's op-amp 1)",
+   "block": "dly",
+   "place": "shunt",
+   "job": {
+    "eli5": "A sieve that removes very high sounds before recording, so they don't come back as metallic junk."
+   },
+   "connects": [
+    "inbuf",
+    "pt"
+   ],
+   "order": {
+    "eli5": "Right before the chip records."
+   },
+   "breaks": {
+    "eli5": "Metallic, whistly echoes (aliasing: high sounds folding down into wrong notes)."
+   },
+   "onRemove": [
+    {
+     "stage": "dly",
+     "param": "tone",
+     "value": 12000
+    }
+   ],
+   "term": "anti-alias low-pass filter",
+   "tune": {
+    "unit": "F",
+    "nominal": 1e-08,
+    "series": "E6",
+    "min": 1e-09,
+    "max": 1e-07,
+    "higher": "Bigger anti-alias cap: darker echoes, less fizz from the digital part.",
+    "lower": "Smaller: brighter, with more digital grit.",
+    "tooFar": "Too small and the clock's whine sneaks in.",
+    "targets": [
+     {
+      "stage": "dly",
+      "param": "tone",
+      "exp": -0.6,
+      "min": 600,
+      "max": 12000
+     }
+    ],
+    "fund": "capacitance",
+    "typical": true
+   }
+  },
+  {
+   "id": "pt",
+   "ref": "U2",
+   "kind": "IC",
+   "label": "PT2399 (ADC → RAM → DAC)",
+   "block": "dly",
+   "place": "active",
+   "job": {
+    "eli5": "A tiny tape recorder: it turns sound into numbers, stores them, and plays them back a moment later.",
+    "detail": "ADC means analog-to-digital converter; DAC is the reverse."
+   },
+   "connects": [
+    "aa",
+    "rtime",
+    "recon"
+   ],
+   "order": {
+    "eli5": "Between the two sieves."
+   },
+   "breaks": {
+    "eli5": "No echo."
+   },
+   "onRemove": [
+    {
+     "stage": "dly",
+     "param": "wet",
+     "value": 0
+    }
+   ],
+   "term": "delay IC (ADC → memory → DAC)",
+   "chip": {
+    "chip": "PT2399",
+    "use": {
+     "6": "The Time pot plus its minimum resistor go from here to ground."
+    }
+   }
+  },
+  {
+   "id": "rtime",
+   "ref": "RV1 + Rmin",
+   "kind": "POT",
+   "label": "Time pot (pin 6) + minimum resistor",
+   "block": "dly",
+   "place": "shunt",
+   "job": {
+    "eli5": "The echo-time knob: more resistance slows the clock and stretches the echo.",
+    "detail": "A fixed resistor in series keeps the knob from going too low and locking the chip."
+   },
+   "connects": [
+    "pt"
+   ],
+   "order": {
+    "eli5": "From pin 6 to ground."
+   },
+   "breaks": {
+    "eli5": "Echo time stuck very short."
+   },
+   "onRemove": [
+    {
+     "stage": "dly",
+     "param": "time",
+     "value": 0.03
+    }
+   ],
+   "term": "timing resistor (sets the clock)",
+   "tune": {
+    "unit": "Ω",
+    "nominal": 50000.0,
+    "series": "pot",
+    "min": 5000.0,
+    "max": 100000.0,
+    "higher": "Bigger time resistance: the chip's clock slows, so the echo waits longer and gets darker and grittier.",
+    "lower": "Smaller: the clock speeds up, so the echo comes back sooner and cleaner.",
+    "tooFar": "The datasheet table runs from 0.5 Ω (31 ms) to 27.6k (342 ms) and warns against under 1k at power-on. Past the table the clock gets so slow the echo turns to crunchy, aliased lo-fi.",
+    "targets": [
+     {
+      "stage": "dly",
+      "param": "time",
+      "exp": 0.9,
+      "min": 0.02,
+      "max": 1.6
+     },
+     {
+      "stage": "dly",
+      "param": "tone",
+      "exp": -0.4,
+      "min": 600,
+      "max": 12000
+     }
+    ],
+    "fund": "resistance",
+    "calc": {
+     "kind": "pt2399",
+     "label": "at full turn"
+    },
+    "typical": true
+   }
+  },
+  {
+   "id": "recon",
+   "ref": "R/C",
+   "kind": "C",
+   "label": "Reconstruction low-pass (chip's op-amp 2)",
+   "block": "dly",
+   "place": "shunt",
+   "job": {
+    "eli5": "A second sieve that smooths the chip's tiny steps and hides its clock whine."
+   },
+   "connects": [
+    "pt",
+    "fbpot",
+    "mixpot"
+   ],
+   "order": {
+    "eli5": "Right after the chip plays back."
+   },
+   "breaks": {
+    "eli5": "A high whine and grainy steps."
+   },
+   "onRemove": [
+    {
+     "stage": "dly",
+     "param": "tone",
+     "value": 12000
+    }
+   ],
+   "term": "reconstruction low-pass filter",
+   "tune": {
+    "unit": "F",
+    "nominal": 1e-08,
+    "series": "E6",
+    "min": 1e-09,
+    "max": 1e-07,
+    "higher": "Bigger reconstruction cap: smoother, darker repeats.",
+    "lower": "Smaller: brighter repeats with more hiss.",
+    "tooFar": "Too small and you hear the chip's clock as a whine.",
+    "targets": [
+     {
+      "stage": "dly",
+      "param": "tone",
+      "exp": -0.6,
+      "min": 600,
+      "max": 12000
+     }
+    ],
+    "fund": "capacitance",
+    "typical": true
+   }
+  },
+  {
+   "id": "fbpot",
+   "ref": "RV2",
+   "kind": "POT",
+   "label": "Feedback (Repeats) pot",
+   "block": "fb",
+   "place": "fb",
+   "job": {
+    "eli5": "The repeats knob: how much echo goes back onto the belt.",
+    "detail": "Past a point it feeds itself and runs away into oscillation."
+   },
+   "connects": [
+    "recon",
+    "aa"
+   ],
+   "order": {
+    "eli5": "From the echo output back to the chip's input."
+   },
+   "breaks": {
+    "eli5": "One echo only."
+   },
+   "onRemove": [
+    {
+     "stage": "dly",
+     "param": "feedback",
+     "value": 0
+    }
+   ],
+   "term": "feedback pot",
+   "tune": {
+    "unit": "Ω",
+    "nominal": 100000.0,
+    "series": "pot",
+    "min": 10000.0,
+    "max": 1000000.0,
+    "higher": "Bigger: a wider repeats range.",
+    "lower": "Smaller: a narrower repeats range.",
+    "tooFar": "Far off and runaway oscillation sits at one end.",
+    "targets": [],
+    "fund": "resistance",
+    "real": "This sketch does not model it."
+   }
+  },
+  {
+   "id": "mixpot",
+   "ref": "RV3",
+   "kind": "POT",
+   "label": "Mix pot",
+   "block": "fb",
+   "place": "series",
+   "job": {
+    "eli5": "How loud the echoes are next to the dry note."
+   },
+   "connects": [
+    "recon",
+    "mix"
+   ],
+   "order": {
+    "eli5": "Between the echo and the mixer."
+   },
+   "breaks": {
+    "eli5": "Echo level stuck."
+   },
+   "term": "mix pot",
+   "tune": {
+    "unit": "Ω",
+    "nominal": 100000.0,
+    "series": "pot",
+    "min": 10000.0,
+    "max": 1000000.0,
+    "higher": "Bigger: a softer load.",
+    "lower": "Smaller: it loads the mixer a little.",
+    "tooFar": "Very small and it drags the level down.",
+    "targets": [],
+    "fund": "resistance",
+    "real": "This sketch does not model it."
+   }
+  },
+  {
+   "id": "mix",
+   "ref": "IC2b",
+   "kind": "OPAMP",
+   "label": "Summing amp",
+   "block": "out",
+   "place": "active",
+   "job": {
+    "eli5": "A mixing bowl that adds dry and echo without them pushing on each other."
+   },
+   "connects": [
+    "mixpot",
+    "inbuf"
+   ],
+   "order": {
+    "eli5": "Last."
+   },
+   "breaks": {
+    "eli5": "The two roads interfere; the mix gets unpredictable."
+   },
+   "onRemove": [
+    {
+     "stage": "out",
+     "param": "gain",
+     "scale": 0.6
+    }
+   ],
+   "term": "op-amp summing amplifier",
+   "chip": {
+    "chip": "TL072",
+    "pins": [
+     5,
+     6,
+     7
+    ],
+    "note": "The second half of the dual op-amp mixes the echo with the dry sound."
+   }
+  }
+ ],
+ "knobs": [
+  {
+   "id": "time",
+   "label": "Time (pin 6)",
+   "part": "rtime",
+   "default": 0.45,
+   "targets": [
+    {
+     "stage": "dly",
+     "param": "time",
+     "from": 0.035,
+     "to": 0.6,
+     "curve": "exp"
+    },
+    {
+     "stage": "dly",
+     "param": "tone",
+     "from": 7000,
+     "to": 1800,
+     "curve": "exp"
+    }
+   ],
+   "readout": {
+    "label": "delay ≈",
+    "from": 35,
+    "to": 600,
+    "unit": "ms",
+    "digits": 0,
+    "curve": "exp"
+   }
+  },
+  {
+   "id": "repeats",
+   "label": "Repeats",
+   "part": "fbpot",
+   "default": 0.45,
+   "targets": [
+    {
+     "stage": "dly",
+     "param": "feedback",
+     "from": 0,
+     "to": 1.02
+    }
+   ]
+  },
+  {
+   "id": "mix",
+   "label": "Mix",
+   "part": "mixpot",
+   "default": 0.6,
+   "targets": [
+    {
+     "stage": "dly",
+     "param": "wet",
+     "from": 0,
+     "to": 1.1
+    }
+   ]
+  }
+ ],
+ "groundNote": {
+  "eli5": "Ground here is the battery's − side (negative ground), the usual setup."
+ },
+ "honestyNote": {
+  "eli5": "The echo timing and darkening are right in spirit. Noise, grit and the chip's exact filters aren't simulated. The board view is an auto-generated perfboard sketch."
+ },
+ "sections": [
+  {
+   "id": "in",
+   "title": "Input + split",
+   "term": "buffer",
+   "eli5": "Copies the guitar into two roads.",
+   "blocks": [
+    "in"
+   ],
+   "tint": "#2dd4bf",
+   "map": [
+    120,
+    200,
+    170,
+    130
+   ],
+   "honesty": {
+    "level": "behavioral",
+    "eli5": "Modeled as a clean copy."
+   }
+  },
+  {
+   "id": "dly",
+   "title": "Echo engine",
+   "term": "PT2399 + filters",
+   "eli5": "Records and plays back.",
+   "blocks": [
+    "dly"
+   ],
+   "tint": "#a78bfa",
+   "map": [
+    380,
+    200,
+    200,
+    130
+   ],
+   "honesty": {
+    "level": "approx",
+    "eli5": "Approximated with a Web Audio delay line and a filter that darkens long delays. The real chip adds grit and noise that the model leaves out."
+   }
+  },
+  {
+   "id": "fb",
+   "title": "Repeats loop",
+   "term": "feedback",
+   "eli5": "Echo back onto the belt.",
+   "blocks": [
+    "fb"
+   ],
+   "tint": "#f472b6",
+   "map": [
+    390,
+    30,
+    180,
+    100
+   ],
+   "honesty": {
+    "level": "behavioral",
+    "eli5": "Modeled as real feedback in the delay line."
+   }
+  },
+  {
+   "id": "mix",
+   "title": "Mix + out",
+   "term": "summing amp",
+   "eli5": "Dry and echoes together.",
+   "blocks": [
+    "out"
+   ],
+   "tint": "#a3e635",
+   "map": [
+    680,
+    200,
+    170,
+    130
+   ],
+   "honesty": {
+    "level": "behavioral",
+    "eli5": "Modeled as a blend."
+   }
+  },
+  {
+   "id": "power",
+   "title": "5 V regulator",
+   "term": "voltage regulator",
+   "eli5": "Makes the chip's calm 5 V.",
+   "blocks": [],
+   "tint": "#d6b98c",
+   "map": [
+    300,
+    430,
+    400,
+    80
+   ],
+   "honesty": {
+    "level": "none",
+    "eli5": "Not modeled."
+   }
+  }
+ ],
+ "links": [
+  {
+   "id": "a",
+   "from": "in",
+   "to": "dly",
+   "kind": "audio",
+   "label": "into the chip",
+   "eli5": "One road goes to be recorded.",
+   "probe": "in"
+  },
+  {
+   "id": "b",
+   "from": "in",
+   "to": "mix",
+   "kind": "audio",
+   "label": "dry road (parallel)",
+   "eli5": "The other road skips the chip and waits at the mixer.",
+   "detail": "A parallel path: the dry note never gets recorded.",
+   "probe": "in"
+  },
+  {
+   "id": "c",
+   "from": "dly",
+   "to": "mix",
+   "kind": "audio",
+   "label": "echo",
+   "eli5": "The played-back echo goes to the mixer.",
+   "probe": "dly"
+  },
+  {
+   "id": "d",
+   "from": "dly",
+   "to": "fb",
+   "kind": "audio",
+   "label": "some echo",
+   "eli5": "Part of the echo heads back.",
+   "probe": "dly"
+  },
+  {
+   "id": "e",
+   "from": "fb",
+   "to": "dly",
+   "kind": "audio",
+   "label": "back onto the belt",
+   "eli5": "And gets recorded again, which makes the next repeat.",
+   "detail": "Backwards on the map: a loop."
+  },
+  {
+   "id": "p",
+   "from": "power",
+   "to": "dly",
+   "kind": "power",
+   "label": "+5 V / ground",
+   "eli5": "The chip drinks the calm 5 V."
+  }
+ ]
+}

@@ -1,0 +1,1339 @@
+{
+ "chips": {
+  "XR2206": {
+   "name": "XR2206",
+   "full": "XR2206 monolithic function generator",
+   "kind": "analog",
+   "dip": 16,
+   "pins": [
+    {
+     "n": 1,
+     "name": "AMSI",
+     "role": "control",
+     "eli5": "Amplitude-modulation input. A voltage here turns the output up and down."
+    },
+    {
+     "n": 2,
+     "name": "STO",
+     "role": "out",
+     "eli5": "Sine or triangle wave output: the sound leaves here."
+    },
+    {
+     "n": 3,
+     "name": "MO",
+     "role": "control",
+     "eli5": "Multiplier output. The resistor here sets how big the wave is and where it rests."
+    },
+    {
+     "n": 4,
+     "name": "VCC",
+     "role": "power",
+     "eli5": "Positive power supply."
+    },
+    {
+     "n": 5,
+     "name": "TC1",
+     "role": "timing",
+     "eli5": "Timing capacitor, one side. The bucket that fills and empties sits between pins 5 and 6."
+    },
+    {
+     "n": 6,
+     "name": "TC2",
+     "role": "timing",
+     "eli5": "Timing capacitor, the other side."
+    },
+    {
+     "n": 7,
+     "name": "TR1",
+     "role": "timing",
+     "eli5": "Timing resistor 1. The resistor from here to ground is the faucet that sets the pitch (f = 1 ÷ RC)."
+    },
+    {
+     "n": 8,
+     "name": "TR2",
+     "role": "timing",
+     "eli5": "Timing resistor 2. A second faucet, picked instead of pin 7 by the FSK pin."
+    },
+    {
+     "n": 9,
+     "name": "FSKI",
+     "role": "control",
+     "eli5": "Frequency-shift keying input: chooses pin 7's faucet or pin 8's."
+    },
+    {
+     "n": 10,
+     "name": "BIAS",
+     "role": "ref",
+     "eli5": "Internal reference voltage. A capacitor here keeps it calm."
+    },
+    {
+     "n": 11,
+     "name": "SYNCO",
+     "role": "out",
+     "eli5": "Square-wave sync output. It is open collector, so it needs a pull-up resistor to VCC."
+    },
+    {
+     "n": 12,
+     "name": "GND",
+     "role": "ground",
+     "eli5": "Ground."
+    },
+    {
+     "n": 13,
+     "name": "WAVEA1",
+     "role": "control",
+     "eli5": "Waveform adjust 1. Leave 13 and 14 open for a triangle; join them through a resistor for a sine."
+    },
+    {
+     "n": 14,
+     "name": "WAVEA2",
+     "role": "control",
+     "eli5": "Waveform adjust 2."
+    },
+    {
+     "n": 15,
+     "name": "SYMA1",
+     "role": "control",
+     "eli5": "Symmetry adjust 1: trims how even the wave's halves are."
+    },
+    {
+     "n": 16,
+     "name": "SYMA2",
+     "role": "control",
+     "eli5": "Symmetry adjust 2."
+    }
+   ],
+   "inside": {
+    "eli5": "A voltage-controlled oscillator plus a shaper: one part fills and empties a bucket to make a triangle, the next rounds it into a sine, and a buffer hands it out.",
+    "detail": "The datasheet lists four blocks: a VCO whose speed follows the current drawn from pin 7 or 8, an analog multiplier and sine shaper, a unity-gain buffer, and current switches that pick between the two timing resistors (that is the FSK trick).",
+    "blocks": [
+     {
+      "id": "sw",
+      "label": "current switches",
+      "x": 10,
+      "y": 20,
+      "w": 80,
+      "h": 44,
+      "shape": "box"
+     },
+     {
+      "id": "vco",
+      "label": "VCO",
+      "x": 110,
+      "y": 20,
+      "w": 70,
+      "h": 44,
+      "shape": "box"
+     },
+     {
+      "id": "mul",
+      "label": "multiplier + sine shaper",
+      "x": 110,
+      "y": 86,
+      "w": 110,
+      "h": 44,
+      "shape": "box"
+     },
+     {
+      "id": "buf",
+      "label": "+1 buffer",
+      "x": 230,
+      "y": 86,
+      "w": 60,
+      "h": 44,
+      "shape": "amp"
+     }
+    ],
+    "links": [
+     [
+      "sw",
+      "vco"
+     ],
+     [
+      "vco",
+      "mul"
+     ],
+     [
+      "mul",
+      "buf"
+     ]
+    ]
+   },
+   "logic": "Analog: it makes smooth waves, not just on and off.",
+   "standard": "Standard, off the shelf, with a public datasheet. Not bespoke.",
+   "lineage": "Made by Exar (later part of MaxLinear). Exar stopped making it; what you buy today is almost always a clone.",
+   "buying": "Watch for fake or clone XR2206s. Atommaker flagged this, and EEVblog forum threads describe clones with a weak, spiky sine or that get unstable above about 11 to 12 V. Use a socket so you can swap chips.",
+   "buyingLink": {
+    "label": "EEVblog: Don't buy any kit with XR2206",
+    "url": "https://www.eevblog.com/forum/dodgy-technology/dont-buy-any-kit-with-xr2206-wfg/"
+   },
+   "datasheet": {
+    "label": "Exar XR-2206 datasheet (Rev 1.04, hosted by SparkFun)",
+    "url": "https://www.sparkfun.com/datasheets/Kits/XR2206_104_020808.pdf"
+   }
+  },
+  "CD40106": {
+   "name": "CD40106B",
+   "full": "CD40106B CMOS hex Schmitt-trigger inverters",
+   "kind": "logic",
+   "dip": 14,
+   "pins": [
+    {
+     "n": 1,
+     "name": "A",
+     "role": "in",
+     "eli5": "Gate A input."
+    },
+    {
+     "n": 2,
+     "name": "G = Ā",
+     "role": "out",
+     "eli5": "Gate A output: the opposite of pin 1."
+    },
+    {
+     "n": 3,
+     "name": "B",
+     "role": "in",
+     "eli5": "Gate B input."
+    },
+    {
+     "n": 4,
+     "name": "H = B̄",
+     "role": "out",
+     "eli5": "Gate B output."
+    },
+    {
+     "n": 5,
+     "name": "C",
+     "role": "in",
+     "eli5": "Gate C input."
+    },
+    {
+     "n": 6,
+     "name": "I = C̄",
+     "role": "out",
+     "eli5": "Gate C output."
+    },
+    {
+     "n": 7,
+     "name": "VSS",
+     "role": "ground",
+     "eli5": "Ground."
+    },
+    {
+     "n": 8,
+     "name": "J = D̄",
+     "role": "out",
+     "eli5": "Gate D output. Note the flip: on this side the output comes before the input."
+    },
+    {
+     "n": 9,
+     "name": "D",
+     "role": "in",
+     "eli5": "Gate D input."
+    },
+    {
+     "n": 10,
+     "name": "K = Ē",
+     "role": "out",
+     "eli5": "Gate E output."
+    },
+    {
+     "n": 11,
+     "name": "E",
+     "role": "in",
+     "eli5": "Gate E input."
+    },
+    {
+     "n": 12,
+     "name": "L = F̄",
+     "role": "out",
+     "eli5": "Gate F output."
+    },
+    {
+     "n": 13,
+     "name": "F",
+     "role": "in",
+     "eli5": "Gate F input. Unused inputs must be tied high or low, never left floating."
+    },
+    {
+     "n": 14,
+     "name": "VDD",
+     "role": "power",
+     "eli5": "Power supply (3 V to 18 V)."
+    }
+   ],
+   "inside": {
+    "eli5": "Six Schmitt-trigger inverters: six doormen who only flip when the crowd passes a high line or a low line. Put a resistor from a doorman's output back to his input and a capacitor to ground, and he flips forever: an oscillator.",
+    "detail": "Each gate outputs the opposite of its input, with hysteresis: it switches high-to-low at a higher voltage than low-to-high. That gap is what lets one gate, one resistor and one capacitor make a square wave (the TI datasheet shows this astable circuit).",
+    "blocks": [
+     {
+      "id": "g1",
+      "label": "A→G",
+      "x": 15,
+      "y": 20,
+      "w": 80,
+      "h": 44,
+      "shape": "inv"
+     },
+     {
+      "id": "g2",
+      "label": "B→H",
+      "x": 110,
+      "y": 20,
+      "w": 80,
+      "h": 44,
+      "shape": "inv"
+     },
+     {
+      "id": "g3",
+      "label": "C→I",
+      "x": 205,
+      "y": 20,
+      "w": 80,
+      "h": 44,
+      "shape": "inv"
+     },
+     {
+      "id": "g4",
+      "label": "D→J",
+      "x": 15,
+      "y": 86,
+      "w": 80,
+      "h": 44,
+      "shape": "inv"
+     },
+     {
+      "id": "g5",
+      "label": "E→K",
+      "x": 110,
+      "y": 86,
+      "w": 80,
+      "h": 44,
+      "shape": "inv"
+     },
+     {
+      "id": "g6",
+      "label": "F→L",
+      "x": 205,
+      "y": 86,
+      "w": 80,
+      "h": 44,
+      "shape": "inv"
+     }
+    ],
+    "links": []
+   },
+   "logic": "A logic chip: CMOS digital gates built to say only high or low. Here it is used as an analog oscillator, because a gate plus a resistor plus a capacitor squares out a steady beat.",
+   "standard": "Standard, off the shelf, with a public datasheet. Not bespoke.",
+   "lineage": "Part of the CD4000-series CMOS logic family (started by RCA). TI makes the CD40106B; other makers sell the same part as 40106 or MC14106.",
+   "buying": "Cheap and easy to find. The 74HC14 does the same job at low voltages only (about 6 V maximum), so it is not a drop-in for a 9 V circuit. CMOS chips dislike static: touch something grounded first.",
+   "datasheet": {
+    "label": "TI CD40106B datasheet",
+    "url": "https://www.ti.com/lit/ds/symlink/cd40106b.pdf"
+   }
+  },
+  "TL072": {
+   "name": "TL072",
+   "full": "TL072 low-noise JFET-input dual op-amp",
+   "kind": "analog",
+   "dip": 8,
+   "pins": [
+    {
+     "n": 1,
+     "name": "1OUT",
+     "role": "out",
+     "eli5": "Op-amp A's output: the bigger copy comes out here."
+    },
+    {
+     "n": 2,
+     "name": "1IN−",
+     "role": "feedback",
+     "eli5": "Op-amp A's minus input. Feedback from the output comes back here and sets the gain."
+    },
+    {
+     "n": 3,
+     "name": "1IN+",
+     "role": "in",
+     "eli5": "Op-amp A's plus input: the signal it copies."
+    },
+    {
+     "n": 4,
+     "name": "VCC−",
+     "role": "ground",
+     "eli5": "The bottom supply. On a 9 V pedal this is ground; on a ± supply it is the negative rail."
+    },
+    {
+     "n": 5,
+     "name": "2IN+",
+     "role": "in",
+     "eli5": "Op-amp B's plus input."
+    },
+    {
+     "n": 6,
+     "name": "2IN−",
+     "role": "feedback",
+     "eli5": "Op-amp B's minus input, where its feedback lands."
+    },
+    {
+     "n": 7,
+     "name": "2OUT",
+     "role": "out",
+     "eli5": "Op-amp B's output."
+    },
+    {
+     "n": 8,
+     "name": "VCC+",
+     "role": "power",
+     "eli5": "The top supply: + 9 V on a pedal."
+    }
+   ],
+   "inside": {
+    "eli5": "Two op-amps in one package: two tireless copy machines that make whatever their plus input does, as big as their feedback allows.",
+    "detail": "JFET inputs draw almost no current, so the TL072 barely loads what feeds it. That makes it a favorite for buffers, filters and mixers in pedals and synths.",
+    "blocks": [
+     {
+      "id": "a",
+      "label": "op-amp A",
+      "x": 20,
+      "y": 30,
+      "w": 110,
+      "h": 80,
+      "shape": "amp"
+     },
+     {
+      "id": "b",
+      "label": "op-amp B",
+      "x": 170,
+      "y": 30,
+      "w": 110,
+      "h": 80,
+      "shape": "amp"
+     }
+    ],
+    "links": []
+   },
+   "logic": "Analog.",
+   "standard": "Standard, off the shelf, with a public datasheet. Not bespoke.",
+   "lineage": "Texas Instruments' TL07x JFET-input family (the datasheet dates from 1978). The TL082 is a close cousin with the same pinout.",
+   "buying": "Easy to find and cheap. Any standard dual op-amp with the same 8-pin layout (TL082, NE5532, 4558) usually fits, but they differ in noise, current draw and tone.",
+   "datasheet": {
+    "label": "TI TL072 datasheet",
+    "url": "https://www.ti.com/lit/ds/symlink/tl072.pdf"
+   }
+  },
+  "RC4558": {
+   "name": "4558",
+   "full": "4558 dual op-amp (JRC4558 / RC4558)",
+   "kind": "analog",
+   "dip": 8,
+   "pins": [
+    {
+     "n": 1,
+     "name": "1OUT",
+     "role": "out",
+     "eli5": "Op-amp A's output: the bigger copy comes out here."
+    },
+    {
+     "n": 2,
+     "name": "1IN−",
+     "role": "feedback",
+     "eli5": "Op-amp A's minus input. Feedback from the output comes back here and sets the gain."
+    },
+    {
+     "n": 3,
+     "name": "1IN+",
+     "role": "in",
+     "eli5": "Op-amp A's plus input: the signal it copies."
+    },
+    {
+     "n": 4,
+     "name": "VCC−",
+     "role": "ground",
+     "eli5": "The bottom supply. On a 9 V pedal this is ground; on a ± supply it is the negative rail."
+    },
+    {
+     "n": 5,
+     "name": "2IN+",
+     "role": "in",
+     "eli5": "Op-amp B's plus input."
+    },
+    {
+     "n": 6,
+     "name": "2IN−",
+     "role": "feedback",
+     "eli5": "Op-amp B's minus input, where its feedback lands."
+    },
+    {
+     "n": 7,
+     "name": "2OUT",
+     "role": "out",
+     "eli5": "Op-amp B's output."
+    },
+    {
+     "n": 8,
+     "name": "VCC+",
+     "role": "power",
+     "eli5": "The top supply: + 9 V on a pedal."
+    }
+   ],
+   "inside": {
+    "eli5": "Two op-amps in one package, like the TL072, but with older bipolar inputs.",
+    "detail": "In the Tube Screamer one half is the clipping amp with the diodes in its feedback, and the other half is the active tone stage.",
+    "blocks": [
+     {
+      "id": "a",
+      "label": "op-amp A",
+      "x": 20,
+      "y": 30,
+      "w": 110,
+      "h": 80,
+      "shape": "amp"
+     },
+     {
+      "id": "b",
+      "label": "op-amp B",
+      "x": 170,
+      "y": 30,
+      "w": 110,
+      "h": 80,
+      "shape": "amp"
+     }
+    ],
+    "links": []
+   },
+   "logic": "Analog.",
+   "standard": "Standard, off the shelf, with a public datasheet. Not bespoke.",
+   "lineage": "The JRC4558 from New Japan Radio is the famous Tube Screamer chip; TI makes the RC4558, which has the same pinout.",
+   "buying": "Easy to find. 'Vintage JRC4558D' is a collector's myth with a price tag; current 4558s work.",
+   "datasheet": {
+    "label": "TI RC4558 datasheet",
+    "url": "https://www.ti.com/lit/ds/symlink/rc4558.pdf"
+   }
+  },
+  "NE5532": {
+   "name": "NE5532",
+   "full": "NE5532 dual low-noise op-amp",
+   "kind": "analog",
+   "dip": 8,
+   "pins": [
+    {
+     "n": 1,
+     "name": "1OUT",
+     "role": "out",
+     "eli5": "Op-amp A's output: the bigger copy comes out here."
+    },
+    {
+     "n": 2,
+     "name": "1IN−",
+     "role": "feedback",
+     "eli5": "Op-amp A's minus input. Feedback from the output comes back here and sets the gain."
+    },
+    {
+     "n": 3,
+     "name": "1IN+",
+     "role": "in",
+     "eli5": "Op-amp A's plus input: the signal it copies."
+    },
+    {
+     "n": 4,
+     "name": "VCC−",
+     "role": "ground",
+     "eli5": "The bottom supply. On a 9 V pedal this is ground; on a ± supply it is the negative rail."
+    },
+    {
+     "n": 5,
+     "name": "2IN+",
+     "role": "in",
+     "eli5": "Op-amp B's plus input."
+    },
+    {
+     "n": 6,
+     "name": "2IN−",
+     "role": "feedback",
+     "eli5": "Op-amp B's minus input, where its feedback lands."
+    },
+    {
+     "n": 7,
+     "name": "2OUT",
+     "role": "out",
+     "eli5": "Op-amp B's output."
+    },
+    {
+     "n": 8,
+     "name": "VCC+",
+     "role": "power",
+     "eli5": "The top supply: + 9 V on a pedal."
+    }
+   ],
+   "inside": {
+    "eli5": "Two quiet, strong op-amps in one package.",
+    "detail": "It drives low-impedance loads well and draws more current than a TL072.",
+    "blocks": [
+     {
+      "id": "a",
+      "label": "op-amp A",
+      "x": 20,
+      "y": 30,
+      "w": 110,
+      "h": 80,
+      "shape": "amp"
+     },
+     {
+      "id": "b",
+      "label": "op-amp B",
+      "x": 170,
+      "y": 30,
+      "w": 110,
+      "h": 80,
+      "shape": "amp"
+     }
+    ],
+    "links": []
+   },
+   "logic": "Analog.",
+   "standard": "Standard, off the shelf, with a public datasheet. Not bespoke.",
+   "lineage": "First made by Signetics, now made by TI and others.",
+   "buying": "Easy to find. Draws more current, so a battery runs down sooner.",
+   "datasheet": {
+    "label": "TI NE5532 datasheet",
+    "url": "https://www.ti.com/lit/ds/symlink/ne5532.pdf"
+   }
+  },
+  "LM386": {
+   "name": "LM386",
+   "full": "LM386 low-voltage audio power amplifier",
+   "kind": "analog",
+   "dip": 8,
+   "pins": [
+    {
+     "n": 1,
+     "name": "GAIN",
+     "role": "control",
+     "eli5": "Gain setting. Pins 1 and 8 open: gain 20. A capacitor from 1 to 8: gain 200."
+    },
+    {
+     "n": 2,
+     "name": "−INPUT",
+     "role": "in",
+     "eli5": "Minus input. Often grounded when the signal goes into pin 3."
+    },
+    {
+     "n": 3,
+     "name": "+INPUT",
+     "role": "in",
+     "eli5": "Plus input: the sound to make louder."
+    },
+    {
+     "n": 4,
+     "name": "GND",
+     "role": "ground",
+     "eli5": "Ground."
+    },
+    {
+     "n": 5,
+     "name": "VOUT",
+     "role": "out",
+     "eli5": "Output to the speaker (through a big capacitor)."
+    },
+    {
+     "n": 6,
+     "name": "VS",
+     "role": "power",
+     "eli5": "Power supply."
+    },
+    {
+     "n": 7,
+     "name": "BYPASS",
+     "role": "ref",
+     "eli5": "Bypass: a capacitor here keeps supply hum out."
+    },
+    {
+     "n": 8,
+     "name": "GAIN",
+     "role": "control",
+     "eli5": "The other gain-setting pin."
+    }
+   ],
+   "inside": {
+    "eli5": "A small power amp: it turns a weak wiggle into enough push to move a speaker cone.",
+    "detail": "Unlike an op-amp it has its own fixed feedback inside (gain 20). Bypassing the internal 1.35 kΩ resistor between pins 1 and 8 raises the gain up to 200, per the TI datasheet.",
+    "blocks": [
+     {
+      "id": "in",
+      "label": "input stage",
+      "x": 15,
+      "y": 45,
+      "w": 80,
+      "h": 50,
+      "shape": "box"
+     },
+     {
+      "id": "amp",
+      "label": "power amp",
+      "x": 120,
+      "y": 30,
+      "w": 110,
+      "h": 80,
+      "shape": "amp"
+     },
+     {
+      "id": "fb",
+      "label": "gain network (1, 8)",
+      "x": 120,
+      "y": 112,
+      "w": 110,
+      "h": 30,
+      "shape": "box"
+     }
+    ],
+    "links": [
+     [
+      "in",
+      "amp"
+     ]
+    ]
+   },
+   "logic": "Analog.",
+   "standard": "Standard, off the shelf, with a public datasheet. Not bespoke.",
+   "lineage": "First made by National Semiconductor, now made by TI.",
+   "buying": "Easy to find. Give it its speaker capacitor and a 10 Ω + 47 nF network at the output if it squeals.",
+   "datasheet": {
+    "label": "TI LM386 datasheet",
+    "url": "https://www.ti.com/lit/ds/symlink/lm386.pdf"
+   }
+  },
+  "NE555": {
+   "name": "NE555",
+   "full": "NE555 precision timer",
+   "kind": "mixed",
+   "dip": 8,
+   "pins": [
+    {
+     "n": 1,
+     "name": "GND",
+     "role": "ground",
+     "eli5": "Ground."
+    },
+    {
+     "n": 2,
+     "name": "TRIG",
+     "role": "timing",
+     "eli5": "Trigger: when this dips below a third of the supply, the output goes high and timing starts."
+    },
+    {
+     "n": 3,
+     "name": "OUT",
+     "role": "out",
+     "eli5": "Output: a strong high-or-low."
+    },
+    {
+     "n": 4,
+     "name": "RESET",
+     "role": "control",
+     "eli5": "Reset: pull it low to force the output low. Tie it high if unused."
+    },
+    {
+     "n": 5,
+     "name": "CONT",
+     "role": "control",
+     "eli5": "Control voltage: moves the two trip points. A small capacitor here keeps them still."
+    },
+    {
+     "n": 6,
+     "name": "THRES",
+     "role": "timing",
+     "eli5": "Threshold: when this rises past two thirds of the supply, the output goes low."
+    },
+    {
+     "n": 7,
+     "name": "DISCH",
+     "role": "timing",
+     "eli5": "Discharge: a switch that empties the timing capacitor."
+    },
+    {
+     "n": 8,
+     "name": "VCC",
+     "role": "power",
+     "eli5": "Power supply (4.5 V to 16 V)."
+    }
+   ],
+   "inside": {
+    "eli5": "Two comparators, a flip-flop and a drain switch: two lifeguards watch the bucket's water level, one shouts at the top line and one at the bottom, and a memory switch remembers who shouted last and opens or closes the drain.",
+    "detail": "A resistor divider sets the lines at one third and two thirds of the supply. The flip-flop drives the output and the discharge transistor. A monostable pulse lasts about 1.1 × R × C.",
+    "blocks": [
+     {
+      "id": "div",
+      "label": "3-resistor divider",
+      "x": 10,
+      "y": 50,
+      "w": 60,
+      "h": 50,
+      "shape": "box"
+     },
+     {
+      "id": "c1",
+      "label": "comparator (top line)",
+      "x": 90,
+      "y": 15,
+      "w": 90,
+      "h": 40,
+      "shape": "amp"
+     },
+     {
+      "id": "c2",
+      "label": "comparator (bottom line)",
+      "x": 90,
+      "y": 95,
+      "w": 90,
+      "h": 40,
+      "shape": "amp"
+     },
+     {
+      "id": "ff",
+      "label": "flip-flop",
+      "x": 200,
+      "y": 55,
+      "w": 60,
+      "h": 40,
+      "shape": "box"
+     },
+     {
+      "id": "dis",
+      "label": "discharge",
+      "x": 200,
+      "y": 110,
+      "w": 60,
+      "h": 30,
+      "shape": "box"
+     },
+     {
+      "id": "out",
+      "label": "out",
+      "x": 270,
+      "y": 55,
+      "w": 25,
+      "h": 40,
+      "shape": "amp"
+     }
+    ],
+    "links": [
+     [
+      "div",
+      "c1"
+     ],
+     [
+      "div",
+      "c2"
+     ],
+     [
+      "c1",
+      "ff"
+     ],
+     [
+      "c2",
+      "ff"
+     ],
+     [
+      "ff",
+      "out"
+     ],
+     [
+      "ff",
+      "dis"
+     ]
+    ]
+   },
+   "logic": "Mixed: analog comparators that drive a digital flip-flop.",
+   "standard": "Standard, off the shelf, with a public datasheet. Not bespoke.",
+   "lineage": "First sold by Signetics around 1971, now made by TI and many others. Probably the most-made chip ever.",
+   "buying": "Easy to find. The CMOS versions (TLC555, LMC555) use less current and make fewer supply spikes.",
+   "datasheet": {
+    "label": "TI NE555 datasheet",
+    "url": "https://www.ti.com/lit/ds/symlink/ne555.pdf"
+   }
+  },
+  "NE556": {
+   "name": "NE556",
+   "full": "NE556 dual timer (two 555s)",
+   "kind": "mixed",
+   "dip": 14,
+   "pins": [
+    {
+     "n": 1,
+     "name": "1DISCH",
+     "role": "timing",
+     "eli5": "Timer 1 discharge: empties timer 1's bucket."
+    },
+    {
+     "n": 2,
+     "name": "1THRES",
+     "role": "timing",
+     "eli5": "Timer 1 threshold: the top line."
+    },
+    {
+     "n": 3,
+     "name": "1CONT",
+     "role": "control",
+     "eli5": "Timer 1 control voltage."
+    },
+    {
+     "n": 4,
+     "name": "1RESET",
+     "role": "control",
+     "eli5": "Timer 1 reset (active low)."
+    },
+    {
+     "n": 5,
+     "name": "1OUT",
+     "role": "out",
+     "eli5": "Timer 1 output."
+    },
+    {
+     "n": 6,
+     "name": "1TRIG",
+     "role": "timing",
+     "eli5": "Timer 1 trigger: the bottom line."
+    },
+    {
+     "n": 7,
+     "name": "GND",
+     "role": "ground",
+     "eli5": "Ground, shared by both timers."
+    },
+    {
+     "n": 8,
+     "name": "2TRIG",
+     "role": "timing",
+     "eli5": "Timer 2 trigger."
+    },
+    {
+     "n": 9,
+     "name": "2OUT",
+     "role": "out",
+     "eli5": "Timer 2 output."
+    },
+    {
+     "n": 10,
+     "name": "2RESET",
+     "role": "control",
+     "eli5": "Timer 2 reset (active low)."
+    },
+    {
+     "n": 11,
+     "name": "2CONT",
+     "role": "control",
+     "eli5": "Timer 2 control voltage."
+    },
+    {
+     "n": 12,
+     "name": "2THRES",
+     "role": "timing",
+     "eli5": "Timer 2 threshold."
+    },
+    {
+     "n": 13,
+     "name": "2DISCH",
+     "role": "timing",
+     "eli5": "Timer 2 discharge."
+    },
+    {
+     "n": 14,
+     "name": "VCC",
+     "role": "power",
+     "eli5": "Power supply, shared by both timers."
+    }
+   ],
+   "inside": {
+    "eli5": "Two 555 timers in one package, sharing power and ground.",
+    "detail": "Each half has its own comparators, flip-flop and discharge switch. The pin order is not the same as two 555s side by side; check the datasheet.",
+    "blocks": [
+     {
+      "id": "t1",
+      "label": "timer 1 (pins 1 to 6)",
+      "x": 15,
+      "y": 40,
+      "w": 120,
+      "h": 70,
+      "shape": "box"
+     },
+     {
+      "id": "t2",
+      "label": "timer 2 (pins 8 to 13)",
+      "x": 165,
+      "y": 40,
+      "w": 120,
+      "h": 70,
+      "shape": "box"
+     }
+    ],
+    "links": [
+     [
+      "t1",
+      "t2"
+     ]
+    ]
+   },
+   "logic": "Mixed: analog comparators that drive a digital flip-flop.",
+   "standard": "Standard, off the shelf, with a public datasheet. Not bespoke.",
+   "lineage": "The dual version of Signetics' 555, now made by TI and others.",
+   "buying": "Easy to find. Two separate 555s do the same job if you prefer 8-pin chips.",
+   "datasheet": {
+    "label": "TI NE556 datasheet",
+    "url": "https://www.ti.com/lit/ds/symlink/ne556.pdf"
+   }
+  },
+  "PT2399": {
+   "name": "PT2399",
+   "full": "PT2399 echo processor",
+   "kind": "mixed",
+   "dip": 16,
+   "pins": [
+    {
+     "n": 1,
+     "name": "VCC",
+     "role": "power",
+     "eli5": "Analog supply input (5 V)."
+    },
+    {
+     "n": 2,
+     "name": "REF",
+     "role": "ref",
+     "eli5": "Analog reference, half the supply. A capacitor keeps it steady."
+    },
+    {
+     "n": 3,
+     "name": "AGND",
+     "role": "ground",
+     "eli5": "Analog ground."
+    },
+    {
+     "n": 4,
+     "name": "DGND",
+     "role": "ground",
+     "eli5": "Digital ground."
+    },
+    {
+     "n": 5,
+     "name": "CLK_O",
+     "role": "control",
+     "eli5": "System clock output (handy for measuring the delay clock)."
+    },
+    {
+     "n": 6,
+     "name": "VCO",
+     "role": "timing",
+     "eli5": "VCO frequency adjustment. The resistor from here to ground sets the clock, so it sets the delay time."
+    },
+    {
+     "n": 7,
+     "name": "CC1",
+     "role": "control",
+     "eli5": "Current control 1 (the datasheet's name). Wire it as the application circuit shows."
+    },
+    {
+     "n": 8,
+     "name": "CC0",
+     "role": "control",
+     "eli5": "Current control 0."
+    },
+    {
+     "n": 9,
+     "name": "OP1-OUT",
+     "role": "feedback",
+     "eli5": "Op-amp 1 output, used as the modulator's integrator with a capacitor."
+    },
+    {
+     "n": 10,
+     "name": "OP1-IN",
+     "role": "feedback",
+     "eli5": "Op-amp 1 input."
+    },
+    {
+     "n": 11,
+     "name": "OP2-IN",
+     "role": "feedback",
+     "eli5": "Op-amp 2 input, used as the demodulator's integrator."
+    },
+    {
+     "n": 12,
+     "name": "OP2-OUT",
+     "role": "feedback",
+     "eli5": "Op-amp 2 output."
+    },
+    {
+     "n": 13,
+     "name": "LPF2-IN",
+     "role": "in",
+     "eli5": "Low-pass filter 2 input."
+    },
+    {
+     "n": 14,
+     "name": "LPF2-OUT",
+     "role": "out",
+     "eli5": "Low-pass filter 2 output: the smoothed echo comes out here."
+    },
+    {
+     "n": 15,
+     "name": "LPF1-OUT",
+     "role": "out",
+     "eli5": "Low-pass filter 1 output."
+    },
+    {
+     "n": 16,
+     "name": "LPF1-IN",
+     "role": "in",
+     "eli5": "Low-pass filter 1 input: the dry sound goes in here first."
+    }
+   ],
+   "inside": {
+    "eli5": "A tiny digital tape loop: it turns sound into a stream of numbers (ADC), parks them in memory (44 kbit RAM), and turns them back into sound a moment later (DAC). The clock speed sets how long they wait.",
+    "detail": "Per the datasheet: a high-rate ADC writes a bit stream into internal RAM, a DAC and low-pass filter turn it back into audio, and an internal VCO clock (set by the pin 6 resistor) sets the delay. The datasheet table runs from about 31 ms to 342 ms.",
+    "blocks": [
+     {
+      "id": "lpf1",
+      "label": "LPF 1",
+      "x": 5,
+      "y": 50,
+      "w": 45,
+      "h": 40,
+      "shape": "box"
+     },
+     {
+      "id": "adc",
+      "label": "ADC (modulator)",
+      "x": 60,
+      "y": 50,
+      "w": 60,
+      "h": 40,
+      "shape": "box"
+     },
+     {
+      "id": "ram",
+      "label": "44 kbit RAM",
+      "x": 130,
+      "y": 50,
+      "w": 55,
+      "h": 40,
+      "shape": "box"
+     },
+     {
+      "id": "dac",
+      "label": "DAC (demod.)",
+      "x": 195,
+      "y": 50,
+      "w": 55,
+      "h": 40,
+      "shape": "box"
+     },
+     {
+      "id": "lpf2",
+      "label": "LPF 2",
+      "x": 258,
+      "y": 50,
+      "w": 40,
+      "h": 40,
+      "shape": "box"
+     },
+     {
+      "id": "vco",
+      "label": "VCO clock (pin 6)",
+      "x": 100,
+      "y": 110,
+      "w": 110,
+      "h": 32,
+      "shape": "box"
+     }
+    ],
+    "links": [
+     [
+      "lpf1",
+      "adc"
+     ],
+     [
+      "adc",
+      "ram"
+     ],
+     [
+      "ram",
+      "dac"
+     ],
+     [
+      "dac",
+      "lpf2"
+     ],
+     [
+      "vco",
+      "ram"
+     ]
+    ]
+   },
+   "logic": "Mixed: analog filters around a digital memory. It is the digital chip in an otherwise analog echo.",
+   "standard": "Standard, off the shelf, with a public datasheet. Not bespoke.",
+   "lineage": "Made by Princeton Technology (Taiwan), originally for karaoke echo. Pedal builders adopted it.",
+   "buying": "Buy from pedal-parts shops you trust; remarked and reject parts turn up. It needs its own 5 V supply.",
+   "datasheet": {
+    "label": "Princeton Technology PT2399 datasheet",
+    "url": "https://www.princeton.com.tw/Portals/0/activeforums_Attach/PT2399-s.pdf"
+   }
+  },
+  "LM565": {
+   "name": "LM565",
+   "full": "LM565 phase-locked loop",
+   "kind": "analog",
+   "dip": 14,
+   "pins": [
+    {
+     "n": 1,
+     "name": "−VCC",
+     "role": "ground",
+     "eli5": "Negative supply (the CA-9 runs on ± supplies)."
+    },
+    {
+     "n": 2,
+     "name": "INPUT",
+     "role": "in",
+     "eli5": "Phase detector input."
+    },
+    {
+     "n": 3,
+     "name": "INPUT",
+     "role": "in",
+     "eli5": "Phase detector input (the other side)."
+    },
+    {
+     "n": 4,
+     "name": "VCO OUTPUT",
+     "role": "out",
+     "eli5": "The oscillator's square output."
+    },
+    {
+     "n": 5,
+     "name": "PHASE COMPARATOR VCO INPUT",
+     "role": "in",
+     "eli5": "Feeds the oscillator into the phase detector. Usually wired to pin 4."
+    },
+    {
+     "n": 6,
+     "name": "REFERENCE OUTPUT",
+     "role": "ref",
+     "eli5": "Reference output."
+    },
+    {
+     "n": 7,
+     "name": "VCO CONTROL VOLTAGE",
+     "role": "out",
+     "eli5": "Phase detector output, also the VCO's control voltage."
+    },
+    {
+     "n": 8,
+     "name": "TIMING RESISTOR",
+     "role": "timing",
+     "eli5": "The faucet that sets the oscillator speed."
+    },
+    {
+     "n": 9,
+     "name": "TIMING CAPACITOR",
+     "role": "timing",
+     "eli5": "The bucket that sets the oscillator speed."
+    },
+    {
+     "n": 10,
+     "name": "+VCC",
+     "role": "power",
+     "eli5": "Positive supply."
+    },
+    {
+     "n": 11,
+     "name": "NC",
+     "role": "nc",
+     "eli5": "Not connected."
+    },
+    {
+     "n": 12,
+     "name": "NC",
+     "role": "nc",
+     "eli5": "Not connected."
+    },
+    {
+     "n": 13,
+     "name": "NC",
+     "role": "nc",
+     "eli5": "Not connected."
+    },
+    {
+     "n": 14,
+     "name": "NC",
+     "role": "nc",
+     "eli5": "Not connected."
+    }
+   ],
+   "inside": {
+    "eli5": "An oscillator and a balanced phase detector in one chip. A balanced detector is a multiplier at heart, so one chip can be both the carrier and the ring modulator.",
+    "detail": "The datasheet describes a VCO, a double-balanced phase detector with good carrier suppression, and an amplifier. The loop can be broken between the VCO and the detector, which is how a ring mod can use the parts separately.",
+    "blocks": [
+     {
+      "id": "pd",
+      "label": "phase detector (multiplier)",
+      "x": 15,
+      "y": 30,
+      "w": 120,
+      "h": 50,
+      "shape": "box"
+     },
+     {
+      "id": "amp",
+      "label": "amp",
+      "x": 160,
+      "y": 30,
+      "w": 60,
+      "h": 50,
+      "shape": "amp"
+     },
+     {
+      "id": "vco",
+      "label": "VCO",
+      "x": 90,
+      "y": 100,
+      "w": 90,
+      "h": 40,
+      "shape": "box"
+     }
+    ],
+    "links": [
+     [
+      "pd",
+      "amp"
+     ],
+     [
+      "amp",
+      "vco"
+     ],
+     [
+      "vco",
+      "pd"
+     ]
+    ]
+   },
+   "logic": "Analog.",
+   "standard": "Standard part with a public datasheet, but discontinued.",
+   "lineage": "National Semiconductor; discontinued. New-old stock and clones are around.",
+   "buying": "Hard to find new. Check the seller and test it in a socket.",
+   "datasheet": {
+    "label": "National LM565 datasheet (hosted by Farnell)",
+    "url": "https://www.farnell.com/datasheets/16096.pdf"
+   }
+  }
+ },
+ "roles": {
+  "power": "Power (+)",
+  "ground": "Ground / −",
+  "in": "Signal in",
+  "out": "Signal out",
+  "timing": "Timing",
+  "control": "Control",
+  "feedback": "Feedback",
+  "ref": "Reference",
+  "nc": "Not connected"
+ }
+}

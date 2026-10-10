@@ -1,0 +1,653 @@
+{
+ "id": "atari-punk",
+ "name": "Atari Punk Console",
+ "subtitle": "Archetype · 556 dual timer (Forrest Mims 'Stepped Tone Generator')",
+ "kind": "generator",
+ "defaultInput": "off",
+ "keyIdea": {
+  "eli5": "Timer 1 is a steady drummer. Timer 2 makes one long beat each time it hears the drummer, and ignores the drummer until it's done. Make its beat longer than the drummer's gap and it skips beats, so the pitch drops in steps.",
+  "detail": "That stepping is why it sounds 8-bit."
+ },
+ "summary": "Two knobs, two RC timers. Pitch sets the trigger rate; Width sets the one-shot length. Sweeping Width gives stepped, 8-bit-ish tones.",
+ "rails": {
+  "top": {
+   "label": "+9 V",
+   "sign": "+",
+   "ground": false,
+   "eli5": "Red is the + side of the battery: the push every part drinks from."
+  },
+  "bottom": {
+   "label": "0 V (ground)",
+   "sign": "-",
+   "ground": true,
+   "eli5": "Blue is the battery's − side, and here it is also ground: the 0 V floor."
+  }
+ },
+ "source": {
+  "label": "Jameco: Making Music with an Atari Punk Console",
+  "url": "https://www.jameco.com/Jameco/workshop/diy/atari-punk-console.html"
+ },
+ "sim": {
+  "label": "Falstad: 555 square wave (timer 1) · see also 555monostable.txt",
+  "url": "https://www.falstad.com/circuit/circuitjs.html?startCircuit=555square.txt"
+ },
+ "blocks": [
+  {
+   "id": "astable",
+   "title": "TIMER 1 · ASTABLE (PITCH)",
+   "job": {
+    "eli5": "A bucket fills through the pitch knob until the timer dumps it, over and over: a steady stream of trigger clicks."
+   },
+   "stage": {
+    "kind": "osc",
+    "params": {
+     "freq": 400,
+     "wave": "pulse",
+     "duty": 0.85,
+     "level": 0.25
+    }
+   },
+   "wire": {
+    "eli5": "A stream of short clicks (triggers)."
+   }
+  },
+  {
+   "id": "mono",
+   "title": "TIMER 2 · ONE-SHOT (WIDTH)",
+   "job": {
+    "eli5": "Each click starts a pulse of fixed length; clicks that arrive mid-pulse are ignored. This is where the stepping happens."
+   },
+   "stage": {
+    "kind": "apc",
+    "params": {
+     "f1": 400,
+     "width": 0.004,
+     "level": 0.35
+    }
+   },
+   "wire": {
+    "eli5": "Pulses that skip some clicks: stepped pitches."
+   }
+  },
+  {
+   "id": "out",
+   "title": "OUTPUT",
+   "job": {
+    "eli5": "A door strips the steady push so only the wiggle reaches the speaker."
+   },
+   "stage": {
+    "kind": "hp",
+    "params": {
+     "freq": 30
+    }
+   },
+   "wire": {
+    "eli5": "The stepped tone, to the speaker."
+   }
+  }
+ ],
+ "parts": [
+  {
+   "id": "r1",
+   "ref": "R1",
+   "kind": "POT",
+   "label": "Pitch pot (timer 1)",
+   "block": "astable",
+   "place": "up",
+   "job": {
+    "eli5": "The pitch knob: more resistance fills the bucket slower, so fewer clicks per second."
+   },
+   "connects": [
+    "c1",
+    "t1"
+   ],
+   "order": {
+    "eli5": "Between the + rail and the timing cap."
+   },
+   "breaks": {
+    "eli5": "Pitch stuck."
+   },
+   "term": "pot as the charging resistor",
+   "tune": {
+    "unit": "Ω",
+    "nominal": 500000.0,
+    "series": "pot",
+    "min": 50000.0,
+    "max": 2200000.0,
+    "higher": "Bigger pitch pot: a tighter faucet at full turn, so the bottom of the range rumbles lower.",
+    "lower": "Smaller: the whole range sits higher.",
+    "tooFar": "Very big and half the knob is clicks. 555 timing resistors much below 1k waste current and heat the chip.",
+    "targets": [
+     {
+      "stage": "astable",
+      "param": "freq",
+      "exp": -1,
+      "min": 5,
+      "max": 20000
+     },
+     {
+      "stage": "mono",
+      "param": "f1",
+      "exp": -1,
+      "min": 5,
+      "max": 20000
+     }
+    ],
+    "fund": "resistance",
+    "typical": true
+   }
+  },
+  {
+   "id": "c1",
+   "ref": "C1",
+   "kind": "C",
+   "label": "Timing cap (timer 1)",
+   "block": "astable",
+   "place": "shunt",
+   "job": {
+    "eli5": "The bucket timer 1 fills and empties."
+   },
+   "connects": [
+    "r1",
+    "t1"
+   ],
+   "order": {
+    "eli5": "From the timer's watch pins to ground."
+   },
+   "breaks": {
+    "eli5": "No bucket, no clicks: silence."
+   },
+   "onRemove": [
+    {
+     "stage": "astable",
+     "param": "level",
+     "value": 0
+    },
+    {
+     "stage": "mono",
+     "param": "level",
+     "value": 0
+    }
+   ],
+   "term": "timing capacitor",
+   "tune": {
+    "unit": "F",
+    "nominal": 1e-08,
+    "series": "E6",
+    "min": 1e-09,
+    "max": 1e-06,
+    "higher": "Bigger timing cap: a bigger bucket, slower trigger beat, so the whole drone drops in pitch.",
+    "lower": "Smaller: it fills fast and the drone climbs into a squeal.",
+    "tooFar": "Huge and it ticks like a clock; tiny and it shrieks above hearing.",
+    "targets": [
+     {
+      "stage": "astable",
+      "param": "freq",
+      "exp": -1,
+      "min": 5,
+      "max": 20000
+     },
+     {
+      "stage": "mono",
+      "param": "f1",
+      "exp": -1,
+      "min": 5,
+      "max": 20000
+     }
+    ],
+    "fund": "capacitance",
+    "typical": true
+   }
+  },
+  {
+   "id": "t1",
+   "ref": "556 A",
+   "kind": "IC",
+   "label": "Timer A (astable)",
+   "block": "astable",
+   "place": "active",
+   "job": {
+    "eli5": "A bucket watcher: 'two-thirds full? dump it. one-third? let it fill.'"
+   },
+   "connects": [
+    "c1",
+    "r1",
+    "trig"
+   ],
+   "order": {
+    "eli5": "First: it sets the beat everything else follows."
+   },
+   "breaks": {
+    "eli5": "No beat at all: silence."
+   },
+   "onRemove": [
+    {
+     "stage": "astable",
+     "param": "level",
+     "value": 0
+    },
+    {
+     "stage": "mono",
+     "param": "level",
+     "value": 0
+    }
+   ],
+   "term": "555 timer, astable (free-running) mode",
+   "chip": {
+    "chip": "NE556",
+    "pins": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6
+    ],
+    "alt": "NE555",
+    "use": {
+     "5": "Timer A's output triggers timer B at pin 8 (my reading of the classic wiring)."
+    }
+   }
+  },
+  {
+   "id": "trig",
+   "ref": "pin 5→8",
+   "kind": "WIRE",
+   "label": "Trigger link (A out → B trigger)",
+   "block": "mono",
+   "place": "series",
+   "job": {
+    "eli5": "The wire that carries each click from timer 1 to timer 2."
+   },
+   "connects": [
+    "t1",
+    "t2"
+   ],
+   "order": {
+    "eli5": "From timer 1's output to timer 2's trigger pin."
+   },
+   "breaks": {
+    "eli5": "Timer 2 never fires: silence."
+   },
+   "onRemove": [
+    {
+     "stage": "mono",
+     "param": "level",
+     "value": 0
+    }
+   ],
+   "term": "trigger link"
+  },
+  {
+   "id": "t2",
+   "ref": "556 B",
+   "kind": "IC",
+   "label": "Timer B (monostable)",
+   "block": "mono",
+   "place": "active",
+   "job": {
+    "eli5": "A doorbell with a cooldown: one long ring per press, deaf until the ring ends."
+   },
+   "connects": [
+    "trig",
+    "r3",
+    "c2",
+    "cout"
+   ],
+   "order": {
+    "eli5": "After the trigger link."
+   },
+   "breaks": {
+    "eli5": "Just timer 1's thin clicks."
+   },
+   "onRemove": [
+    {
+     "stage": "mono",
+     "bypass": true
+    }
+   ],
+   "term": "555 timer, monostable (one-shot) mode",
+   "chip": {
+    "chip": "NE556",
+    "pins": [
+     8,
+     9,
+     10,
+     11,
+     12,
+     13
+    ],
+    "alt": "NE555",
+    "use": {
+     "8": "Triggered by timer A's output (pin 5).",
+     "9": "Timer B's output: the sound, toward the speaker."
+    }
+   }
+  },
+  {
+   "id": "r3",
+   "ref": "R3",
+   "kind": "POT",
+   "label": "Width pot (timer 2)",
+   "block": "mono",
+   "place": "up",
+   "job": {
+    "eli5": "The width knob: how long each ring lasts. Longer than the click gap means skipped clicks and pitch steps."
+   },
+   "connects": [
+    "t2",
+    "c2"
+   ],
+   "order": {
+    "eli5": "Between the + rail and timer 2's cap."
+   },
+   "breaks": {
+    "eli5": "Width stuck."
+   },
+   "term": "pot as the charging resistor",
+   "tune": {
+    "unit": "Ω",
+    "nominal": 500000.0,
+    "series": "pot",
+    "min": 50000.0,
+    "max": 2200000.0,
+    "higher": "Bigger width pot: longer pulses at full turn, so more of the knob lands in the deep stepped notes.",
+    "lower": "Smaller: shorter pulses, brighter and buzzier.",
+    "tooFar": "Very big and the one-shot swallows most triggers: long silences.",
+    "targets": [
+     {
+      "stage": "mono",
+      "param": "width",
+      "exp": 1,
+      "min": 1e-05,
+      "max": 0.2
+     }
+    ],
+    "fund": "resistance",
+    "typical": true
+   }
+  },
+  {
+   "id": "c2",
+   "ref": "C2",
+   "kind": "C",
+   "label": "Timing cap (timer 2)",
+   "block": "mono",
+   "place": "shunt",
+   "job": {
+    "eli5": "Timer 2's bucket, which sets ring length with the width knob."
+   },
+   "connects": [
+    "r3",
+    "t2"
+   ],
+   "order": {
+    "eli5": "From timer 2's watch pins to ground."
+   },
+   "breaks": {
+    "eli5": "Ring length collapses to nothing."
+   },
+   "onRemove": [
+    {
+     "stage": "mono",
+     "param": "width",
+     "value": 5e-05
+    }
+   ],
+   "term": "timing capacitor",
+   "tune": {
+    "unit": "F",
+    "nominal": 1e-07,
+    "series": "E6",
+    "min": 1e-09,
+    "max": 4.7e-06,
+    "higher": "Bigger one-shot cap: each pulse lasts longer (about 1.1 × R × C), so the steps drop lower.",
+    "lower": "Smaller: short pulses, thin and nasal.",
+    "tooFar": "Big and it skips so many triggers it stutters.",
+    "targets": [
+     {
+      "stage": "mono",
+      "param": "width",
+      "exp": 1,
+      "min": 1e-05,
+      "max": 0.2
+     }
+    ],
+    "fund": "capacitance",
+    "calc": {
+     "kind": "mono",
+     "with": 250000.0,
+     "label": "with the width pot half way (250k)"
+    },
+    "typical": true
+   }
+  },
+  {
+   "id": "cout",
+   "ref": "C3",
+   "kind": "CP",
+   "label": "Output cap",
+   "block": "out",
+   "place": "series",
+   "job": {
+    "eli5": "A door that passes the pulses but blocks the steady push."
+   },
+   "connects": [
+    "t2",
+    "spk"
+   ],
+   "order": {
+    "eli5": "Between the timer and the speaker."
+   },
+   "breaks": {
+    "eli5": "The speaker cone sits pushed out and the battery drains faster."
+   },
+   "term": "coupling capacitor",
+   "silentNote": "The steady push makes no sound, so the model can't show it. A real speaker would sit pushed out.",
+   "tune": {
+    "unit": "F",
+    "nominal": 1e-05,
+    "series": "E6",
+    "min": 1e-06,
+    "max": 0.00047,
+    "higher": "Bigger output cap: more low end into the speaker.",
+    "lower": "Smaller: thinner and buzzier.",
+    "tooFar": "Very small and the deep steps vanish.",
+    "targets": [
+     {
+      "stage": "out",
+      "param": "freq",
+      "exp": -1,
+      "min": 10,
+      "max": 3000
+     }
+    ],
+    "fund": "capacitance",
+    "typical": true
+   }
+  },
+  {
+   "id": "spk",
+   "ref": "SPK",
+   "kind": "SPK",
+   "label": "Speaker / jack",
+   "block": "out",
+   "place": "shunt",
+   "job": {
+    "eli5": "Out."
+   },
+   "connects": [
+    "cout"
+   ],
+   "order": {
+    "eli5": "The end."
+   },
+   "breaks": {
+    "eli5": "Silence."
+   },
+   "term": "speaker / output jack"
+  }
+ ],
+ "knobs": [
+  {
+   "id": "pitch",
+   "label": "Pitch (R1)",
+   "part": "r1",
+   "default": 0.5,
+   "targets": [
+    {
+     "stage": "astable",
+     "param": "freq",
+     "from": 60,
+     "to": 3000,
+     "curve": "exp"
+    },
+    {
+     "stage": "mono",
+     "param": "f1",
+     "from": 60,
+     "to": 3000,
+     "curve": "exp"
+    }
+   ]
+  },
+  {
+   "id": "width",
+   "label": "Width (R3)",
+   "part": "r3",
+   "default": 0.35,
+   "targets": [
+    {
+     "stage": "mono",
+     "param": "width",
+     "from": 0.0002,
+     "to": 0.03,
+     "curve": "exp"
+    }
+   ]
+  }
+ ],
+ "groundNote": {
+  "eli5": "Ground here is the battery's − side (negative ground), the usual setup."
+ },
+ "honestyNote": {
+  "eli5": "Close to the real thing in behavior, because the trick is timing, which is easy to model. The board view is an auto-generated perfboard sketch."
+ },
+ "sections": [
+  {
+   "id": "t1",
+   "title": "Timer 1 (pitch)",
+   "term": "555 astable",
+   "eli5": "The steady drummer.",
+   "blocks": [
+    "astable"
+   ],
+   "tint": "#2dd4bf",
+   "map": [
+    150,
+    200,
+    220,
+    140
+   ],
+   "honesty": {
+    "level": "behavioral",
+    "eli5": "Modeled as a pulse oscillator."
+   }
+  },
+  {
+   "id": "t2",
+   "title": "Timer 2 (width)",
+   "term": "555 monostable",
+   "eli5": "The doorbell with a cooldown.",
+   "blocks": [
+    "mono"
+   ],
+   "tint": "#f472b6",
+   "map": [
+    440,
+    200,
+    220,
+    140
+   ],
+   "honesty": {
+    "level": "behavioral",
+    "eli5": "Modeled by counting skipped triggers, which is the real mechanism, but with ideal timing."
+   }
+  },
+  {
+   "id": "out",
+   "title": "Output",
+   "term": "coupling + speaker",
+   "eli5": "Out.",
+   "blocks": [
+    "out"
+   ],
+   "tint": "#a3e635",
+   "map": [
+    730,
+    200,
+    160,
+    140
+   ],
+   "honesty": {
+    "level": "behavioral",
+    "eli5": "Modeled as a bass cut."
+   }
+  },
+  {
+   "id": "power",
+   "title": "Power",
+   "term": "supply",
+   "eli5": "Battery.",
+   "blocks": [],
+   "tint": "#d6b98c",
+   "map": [
+    300,
+    430,
+    400,
+    80
+   ],
+   "honesty": {
+    "level": "none",
+    "eli5": "Not modeled."
+   }
+  }
+ ],
+ "links": [
+  {
+   "id": "a",
+   "from": "t1",
+   "to": "t2",
+   "kind": "control",
+   "label": "trigger clicks",
+   "eli5": "Each click tells timer 2 to start a ring.",
+   "detail": "A control signal: it carries timing, not the final sound.",
+   "probe": "astable"
+  },
+  {
+   "id": "b",
+   "from": "t2",
+   "to": "out",
+   "kind": "audio",
+   "label": "stepped pulses",
+   "eli5": "The stepped tone.",
+   "probe": "mono"
+  },
+  {
+   "id": "p",
+   "from": "power",
+   "to": "t1",
+   "kind": "power",
+   "label": "+9 V / ground",
+   "eli5": "Both timers drink from the rails."
+  },
+  {
+   "id": "p2",
+   "from": "power",
+   "to": "t2",
+   "kind": "power",
+   "label": "+9 V / ground",
+   "eli5": "Timer 2 drinks from the same rails."
+  }
+ ]
+}

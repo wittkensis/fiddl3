@@ -1,0 +1,44 @@
+:root {
+  /* surfaces */
+  --bg: #0b0d0a;
+  --surface: #11140f;
+  --surface-2: #181d15;
+  --raised: #1d2319;
+  --line: #242b20;
+  --line-2: #353f2e;
+  /* ink */
+  --ink: #e8eddf;
+  --ink-2: #bcc5b1;
+  --muted: #7f8a76;
+  /* accents (wire colors match the board) */
+  --acc: #c8ff5a;
+  --acc-ink: #10140a;
+  --warm: #ffb020;
+  --red: #ff5a4f;
+  --blue: #4f8dff;
+  --cyan: #5ae0ff;
+  /* spacing scale */
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px;
+  /* type scale */
+  --t1: 11px; --t2: 12px; --t3: 13px; --t4: 15px; --t5: 18px; --t6: 22px;
+  --r1: 6px; --r2: 10px; --r3: 14px;
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --dur: 160ms;
+  --topbar: 60px;
+  font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  font-size: var(--t3);
+  line-height: 1.45;
+  color: var(--ink);
+  background: var(--bg);
+  -webkit-text-size-adjust: 100%;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body, #root { margin: 0; min-height: 100%; }
+body { background: var(--bg); }
+button { font: inherit; color: inherit; cursor: pointer; background: none; border: 0; padding: 0; }
+a { color: var(--cyan); text-underline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; border-radius: 4px; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}

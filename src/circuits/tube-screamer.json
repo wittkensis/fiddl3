@@ -1,0 +1,5689 @@
+{
+ "id": "tube-screamer",
+ "name": "Tube Screamer (TS808)",
+ "subtitle": "Ibanez TS808 · 74 parts · Layers from a bare diode clipper to the full pedal",
+ "kind": "effect",
+ "defaultInput": "pluck",
+ "keyIdea": {
+  "eli5": "The diodes sit inside the op-amp's feedback loop, so they gently cap the boost instead of chopping the voltage. Tops round off softly, and some clean signal always rides along.",
+  "detail": "A capacitor in the gain leg means bass barely gets boosted, and a sieve after the clipping trims the fizz: the famous mid hump. Step through Layers to watch the other 50-odd parts arrive."
+ },
+ "summary": "The real TS808 has 74 parts on ElectroSmash's schematic. Only 23 make the sound; the rest keep it quiet, protect it, buffer it and switch it. Layers builds it up one job at a time.",
+ "rails": {
+  "top": {
+   "label": "+9 V",
+   "sign": "+",
+   "ground": false,
+   "eli5": "Red is the + side of the battery."
+  },
+  "bottom": {
+   "label": "0 V (ground) · audio centered at 4.5 V",
+   "sign": "-",
+   "ground": true,
+   "eli5": "Blue is the battery's − side and ground.",
+   "detail": "The op-amps and transistors need a middle to swing around, so a divider (R32, R33) makes a 4.5 V 'fake ground' inside the circuit. Grey wires on the board carry it."
+  }
+ },
+ "groundNote": {
+  "eli5": "Ground here is the battery's − side (negative ground), the usual setup. The audio itself swings around the 4.5 V middle, not around ground."
+ },
+ "source": {
+  "label": "ElectroSmash: Tube Screamer analysis (archive copy)",
+  "url": "https://electrosmash.mas-effects.com/tube-screamer-analysis.html"
+ },
+ "sim": {
+  "label": "Falstad: waveform clipper (diodes)",
+  "url": "https://www.falstad.com/circuit/circuitjs.html?startCircuit=diodeclip.txt"
+ },
+ "notes": [
+  "The original electrosmash.com page did not load from my fetchers; every ElectroSmash link points to the ElectroSmash archive copy, which I read in full."
+ ],
+ "honestyNote": {
+  "eli5": "A reasonable sketch of the sound, not a circuit solve. The board is schematic-faithful: real parts and values, my layout."
+ },
+ "blocks": [
+  {
+   "id": "inbuf",
+   "title": "INPUT BUFFER",
+   "job": {
+    "eli5": "A transistor 'polite listener' gives the guitar an easy load and hands a strong copy on."
+   },
+   "stage": {
+    "kind": "hp",
+    "params": {
+     "freq": 40
+    }
+   },
+   "buffered": true,
+   "wire": {
+    "eli5": "The guitar, copied with more current behind it."
+   }
+  },
+  {
+   "id": "clip",
+   "title": "CLIPPING AMP",
+   "job": {
+    "eli5": "Op-amp boost with diodes that cap it. Where the diodes sit decides hard or soft clipping."
+   },
+   "stage": {
+    "kind": "tsclip",
+    "params": {
+     "hpFreq": 720,
+     "drive": 10,
+     "clipLevel": 0.5,
+     "clean": 0.6,
+     "level": 0.8,
+     "curve": "soft"
+    }
+   },
+   "wire": {
+    "eli5": "Clipped mids, plus clean guitar riding underneath (from L2 on)."
+   }
+  },
+  {
+   "id": "tone",
+   "title": "TONE + VOLUME",
+   "job": {
+    "eli5": "A sieve trims the fizz, a second op-amp runs the Tone knob, and the Level pot sets how loud."
+   },
+   "stage": {
+    "kind": "lp",
+    "params": {
+     "freq": 2200,
+     "q": 0.7
+    }
+   },
+   "wire": {
+    "eli5": "Smoothed overdrive at the level you picked."
+   }
+  },
+  {
+   "id": "out",
+   "title": "OUTPUT BUFFER",
+   "job": {
+    "eli5": "A second polite listener drives the cable and the next pedal."
+   },
+   "stage": {
+    "kind": "gain",
+    "params": {
+     "gain": 0.9
+    }
+   },
+   "buffered": true,
+   "wire": {
+    "eli5": "The finished overdrive, to the amp."
+   }
+  },
+  {
+   "id": "power",
+   "title": "POWER + 4.5 V MIDDLE",
+   "side": true,
+   "stage": null,
+   "job": {
+    "eli5": "The battery, a 4.5 V middle for the audio to swing around, tank caps and a guard diode."
+   },
+   "onBypass": []
+  },
+  {
+   "id": "bypass",
+   "title": "JFET BYPASS + TOGGLE",
+   "side": true,
+   "stage": null,
+   "job": {
+    "eli5": "A soft button flips a two-transistor memory that opens one JFET valve and closes the other: effect or clean."
+   },
+   "onBypass": []
+  }
+ ],
+ "parts": [
+  {
+   "id": "jin",
+   "ref": "IN (stereo)",
+   "kind": "JACK",
+   "label": "Input jack (stereo)",
+   "term": "stereo jack used as a power switch",
+   "block": "inbuf",
+   "place": "series",
+   "job": {
+    "eli5": "Where the guitar plugs in. Its ring lug doubles as the battery switch.",
+    "detail": "ElectroSmash: the stereo input jack switches the battery's minus side to ground when a guitar plug is in."
+   },
+   "connects": [
+    "c1",
+    "c2",
+    "dd",
+    "bat"
+   ],
+   "order": {
+    "eli5": "First thing the signal touches."
+   },
+   "breaks": {
+    "eli5": "No signal in, and from L1 on no power either."
+   },
+   "onRemove": [
+    {
+     "stage": "out",
+     "param": "gain",
+     "value": 0
+    }
+   ],
+   "lugs": {
+    "kind": "jack3",
+    "bp": "xin",
+    "eli5": "A stereo jack used as the power switch: plug in a mono cable and its sleeve bridges ring to sleeve, which turns the pedal on.",
+    "detail": "ElectroSmash: the stereo input jack switches the battery's − terminal to ground when a guitar plug is in.",
+    "standard": "Standard part: a ¼ inch stereo (TRS) jack, used this way in nearly every battery pedal.",
+    "lugs": [
+     {
+      "pin": "T",
+      "name": "tip",
+      "role": "audio",
+      "eli5": "Your guitar's signal."
+     },
+     {
+      "pin": "R",
+      "name": "ring",
+      "role": "power",
+      "eli5": "The battery's − side, waiting for a plug to complete it."
+     },
+     {
+      "pin": "S",
+      "name": "sleeve",
+      "role": "ground",
+      "eli5": "Ground and the cable shield."
+     }
+    ]
+   }
+  },
+  {
+   "id": "jout",
+   "ref": "OUT",
+   "kind": "JACK",
+   "label": "Output jack",
+   "term": "mono jack",
+   "block": "out",
+   "place": "series",
+   "job": {
+    "eli5": "Out to the amp."
+   },
+   "connects": [
+    "rc",
+    "p3",
+    "dd"
+   ],
+   "order": {
+    "eli5": "End of the line."
+   },
+   "breaks": {
+    "eli5": "No output."
+   },
+   "onRemove": [
+    {
+     "stage": "out",
+     "param": "gain",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "id": "c1",
+   "ref": "C1 20n",
+   "kind": "C",
+   "label": "Input cap",
+   "term": "coupling capacitor",
+   "block": "inbuf",
+   "place": "series",
+   "job": {
+    "eli5": "A door that lets the guitar's wiggles in but blocks any steady push, both ways.",
+    "detail": "ElectroSmash: it keeps the pedal's DC away from your pickups and trims the lowest hum."
+   },
+   "connects": [
+    "jin",
+    "r1"
+   ],
+   "order": {
+    "eli5": "First part on the board, right after the jack."
+   },
+   "breaks": {
+    "eli5": "The buffer's resting voltage leaks onto your pickups; the input crackles and the buffer drifts."
+   },
+   "silentNote": "The model has no pickup or cable to load, so you won't hear this one.",
+   "tune": {
+    "unit": "F",
+    "nominal": 2e-08,
+    "series": "E6",
+    "min": 1e-09,
+    "max": 1e-06,
+    "higher": "Bigger input cap: more deep bass gets into the pedal.",
+    "lower": "Smaller: the bass is cut before anything else happens.",
+    "tooFar": "Tiny and the pedal sounds like a telephone.",
+    "targets": [
+     {
+      "stage": "inbuf",
+      "param": "freq",
+      "exp": -1,
+      "min": 5,
+      "max": 2000
+     }
+    ],
+    "fund": "capacitance",
+    "calc": {
+     "kind": "rc",
+     "with": 446000.0,
+     "label": "into the 446k input"
+    }
+   }
+  },
+  {
+   "id": "r1",
+   "ref": "R1 1k",
+   "kind": "R",
+   "label": "Input series resistor",
+   "term": "series (base stopper) resistor",
+   "block": "inbuf",
+   "place": "series",
+   "job": {
+    "eli5": "A small speed bump in front of the transistor that keeps radio buzz and sharp zaps out.",
+    "detail": "My reading of its job: a base stopper, common in emitter followers. ElectroSmash doesn't single it out."
+   },
+   "connects": [
+    "c1",
+    "q1",
+    "r2"
+   ],
+   "order": {
+    "eli5": "Between C1 and Q1's base."
+   },
+   "breaks": {
+    "eli5": "Usually nothing you hear; the buffer is more likely to pick up radio or ring."
+   },
+   "silentNote": "The model has no pickup or cable to load, so you won't hear this one."
+  },
+  {
+   "id": "r2",
+   "ref": "R2 510k",
+   "kind": "R",
+   "label": "Input bias resistor",
+   "term": "bias resistor (to 4.5 V)",
+   "block": "inbuf",
+   "place": "up",
+   "job": {
+    "eli5": "A long leash that holds Q1's control pin at the 4.5 V middle, so the wave can swing both ways.",
+    "detail": "ElectroSmash: the input impedance is about 446k, and this resistor sets almost all of it."
+   },
+   "connects": [
+    "q1",
+    "r33"
+   ],
+   "order": {
+    "eli5": "From Q1's base up to the 4.5 V middle."
+   },
+   "breaks": {
+    "eli5": "Q1 has no resting point: it switches off and the signal nearly dies."
+   },
+   "onRemove": [
+    {
+     "stage": "clip",
+     "param": "level",
+     "scale": 0.12
+    },
+    {
+     "stage": "clip",
+     "param": "clean",
+     "scale": 0.12
+    }
+   ]
+  },
+  {
+   "id": "q1",
+   "ref": "Q1 2SC1815",
+   "kind": "Q",
+   "label": "Q1 · input buffer transistor",
+   "term": "NPN emitter follower (buffer)",
+   "block": "inbuf",
+   "place": "active",
+   "job": {
+    "eli5": "A polite listener: it copies the guitar's voltage, but with plenty of current behind it.",
+    "detail": "An emitter follower has a gain of about 1. ElectroSmash: the 2SC1815 is cheap, high gain (beta about 350) and low noise."
+   },
+   "connects": [
+    "r1",
+    "r2",
+    "r3",
+    "c2",
+    "c11a"
+   ],
+   "order": {
+    "eli5": "First active part, before anything that would pull on the pickup."
+   },
+   "breaks": {
+    "eli5": "Nothing gets past the input: silence."
+   },
+   "onRemove": [
+    {
+     "stage": "out",
+     "param": "gain",
+     "value": 0
+    }
+   ],
+   "lugs": {
+    "kind": "transistor",
+    "bp": "q1",
+    "eli5": "A transistor is a valve with three legs: a tiny flow into the base controls a big flow from collector to emitter.",
+    "detail": "The 2SC1815 is a small silicon NPN. Toshiba's datasheet gives the TO-92 lead order 1 emitter, 2 collector, 3 base (E C B), flat side facing you. Many NPNs (2N3904, BC547) use other orders, so check before you swap.",
+    "standard": "Standard part: 2SC1815 (Toshiba). Common swaps: 2N5088/2N5089 or MPSA18, with a different pin order.",
+    "lugs": [
+     {
+      "pin": "E",
+      "name": "emitter (pin 1)",
+      "role": "audio",
+      "eli5": "Out to C2 (and the dry switch at L6): the guitar's strong copy, across R3."
+     },
+     {
+      "pin": "C",
+      "name": "collector (pin 2)",
+      "role": "power",
+      "eli5": "Straight to +9 V."
+     },
+     {
+      "pin": "B",
+      "name": "base (pin 3)",
+      "role": "control",
+      "eli5": "In from R1, held at 4.5 V by R2."
+     }
+    ]
+   }
+  },
+  {
+   "id": "r3",
+   "ref": "R3 10k",
+   "kind": "R",
+   "label": "Q1 emitter resistor",
+   "term": "emitter resistor",
+   "block": "inbuf",
+   "place": "shunt",
+   "job": {
+    "eli5": "The path to ground that lets Q1 follow: the copy of the guitar appears across it."
+   },
+   "connects": [
+    "q1"
+   ],
+   "order": {
+    "eli5": "From Q1's emitter to ground."
+   },
+   "breaks": {
+    "eli5": "Q1's emitter has nowhere to send current: no signal."
+   },
+   "onRemove": [
+    {
+     "stage": "out",
+     "param": "gain",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "ref": "C2 1µ",
+   "kind": "CP",
+   "label": "Clipping-stage input cap",
+   "term": "coupling capacitor (non-polarized)",
+   "block": "clip",
+   "place": "series",
+   "job": {
+    "eli5": "A door between stages: wiggles pass, steady voltages stay on their own side.",
+    "detail": "ElectroSmash: 1 µF non-polarized, big enough to pass every guitar note. Before L5 it is the pedal's input cap."
+   },
+   "connects": [
+    "q1",
+    "ra",
+    "jin"
+   ],
+   "order": {
+    "eli5": "Right before the op-amp's plus input."
+   },
+   "breaks": {
+    "eli5": "The op-amp's 4.5 V middle and the guitar (or Q1) fight over the resting voltage: sputter or silence."
+   },
+   "onRemove": [
+    {
+     "stage": "clip",
+     "param": "level",
+     "scale": 0.3
+    },
+    {
+     "stage": "clip",
+     "param": "clean",
+     "scale": 0.3
+    }
+   ]
+  },
+  {
+   "id": "ra",
+   "ref": "RA 0Ω",
+   "kind": "R",
+   "label": "RA jumper",
+   "term": "0 Ω jumper",
+   "block": "clip",
+   "place": "series",
+   "job": {
+    "eli5": "A plain wire on a resistor spot.",
+    "detail": "ElectroSmash's schematic marks it RA with the note RA = 0 Ω. My reading: a spot kept for an input resistor in other versions."
+   },
+   "connects": [
+    "c2",
+    "r5",
+    "u1a"
+   ],
+   "order": {
+    "eli5": "Between C2 and the op-amp's plus input."
+   },
+   "breaks": {
+    "eli5": "The path to the op-amp breaks: silence."
+   },
+   "onRemove": [
+    {
+     "stage": "out",
+     "param": "gain",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "id": "r5",
+   "ref": "R5 10k",
+   "kind": "R",
+   "label": "Op-amp plus-input bias",
+   "term": "bias resistor (to 4.5 V)",
+   "block": "clip",
+   "place": "up",
+   "job": {
+    "eli5": "Ties the op-amp's plus input to the 4.5 V middle so it swings around half the battery.",
+    "detail": "ElectroSmash: a single moderate 10k does the job here."
+   },
+   "connects": [
+    "ra",
+    "u1a",
+    "r33"
+   ],
+   "order": {
+    "eli5": "From the plus input (pin 3) up to the 4.5 V middle."
+   },
+   "breaks": {
+    "eli5": "The plus input floats: hum, crackle, or an output stuck at one rail."
+   },
+   "onRemove": [
+    {
+     "stage": "clip",
+     "param": "level",
+     "scale": 0.2
+    },
+    {
+     "stage": "clip",
+     "param": "clean",
+     "scale": 0.2
+    }
+   ]
+  },
+  {
+   "id": "u1a",
+   "ref": "U1a 4558 (pins 1 to 3)",
+   "kind": "OPAMP",
+   "label": "Op-amp A · clipping amp",
+   "term": "op-amp (operational amplifier), non-inverting",
+   "block": "clip",
+   "place": "active",
+   "job": {
+    "eli5": "The engine: it boosts by the ratio of its feedback to its gain leg, and never drops below 1×.",
+    "detail": "That 1× floor is why clean guitar always rides under a Tube Screamer's clipping. ElectroSmash: gain 12 to 118 before the diodes step in."
+   },
+   "connects": [
+    "ra",
+    "r4",
+    "r6",
+    "p1",
+    "dd",
+    "c4",
+    "r7",
+    "c7"
+   ],
+   "order": {
+    "eli5": "The heart of the clipping block."
+   },
+   "breaks": {
+    "eli5": "No boost and no clipping: silence."
+   },
+   "onRemove": [
+    {
+     "stage": "out",
+     "param": "gain",
+     "value": 0
+    }
+   ],
+   "chip": {
+    "chip": "RC4558",
+    "bp": "u1",
+    "pins": [
+     1,
+     2,
+     3,
+     4,
+     8
+    ],
+    "use": {
+     "3": "The guitar in, resting at 4.5 V (R5).",
+     "2": "Feedback point: R4 + C3 to ground, R6 + Drive back from pin 1, and from L2 the diodes and C4.",
+     "1": "Clipping out, to R7 (or to C7 before L3).",
+     "4": "Ground (the chip's − supply).",
+     "8": "+9 V.",
+     "5": "Op-amp B: the tone stage (from L3).",
+     "6": "Op-amp B's feedback point.",
+     "7": "Op-amp B's output."
+    },
+    "note": "ElectroSmash's schematic says JRC4558 (labeled JNR4558); TI's RC4558 has the same pinout."
+   }
+  },
+  {
+   "id": "r6",
+   "ref": "R6 51k",
+   "kind": "R",
+   "label": "Minimum feedback resistor",
+   "term": "feedback resistor",
+   "block": "clip",
+   "place": "fb",
+   "job": {
+    "eli5": "The minimum boost: even with Drive at zero, this sets about 12× against the 4.7k gain leg."
+   },
+   "connects": [
+    "u1a",
+    "p1"
+   ],
+   "order": {
+    "eli5": "In the feedback, in series with the Drive pot."
+   },
+   "breaks": {
+    "eli5": "With no feedback path the op-amp boosts as hard as it can: everything slams into the diodes or the rails."
+   },
+   "onRemove": [
+    {
+     "stage": "clip",
+     "param": "drive",
+     "value": 200
+    }
+   ],
+   "tune": {
+    "unit": "Ω",
+    "nominal": 51000.0,
+    "series": "E12",
+    "min": 4700.0,
+    "max": 470000.0,
+    "higher": "Bigger minimum-feedback resistor: more gain even with Drive at zero.",
+    "lower": "Smaller: Drive at zero gets closer to a clean boost.",
+    "tooFar": "Very big and the bottom of the Drive knob is already heavy; zero and the bottom is almost clean (gain 1).",
+    "targets": [
+     {
+      "stage": "clip",
+      "param": "drive",
+      "exp": 0.25,
+      "min": 0.3,
+      "max": 200
+     }
+    ],
+    "fund": "resistance"
+   }
+  },
+  {
+   "id": "p1",
+   "ref": "P1 DRIVE 500k",
+   "kind": "POT",
+   "label": "Drive pot",
+   "term": "pot in the feedback path (log taper)",
+   "block": "clip",
+   "place": "fb",
+   "job": {
+    "eli5": "The Drive knob: more feedback resistance, more boost, the diodes get pushed harder.",
+    "detail": "ElectroSmash: 500k log. The wiper is tied to one end, so it works as a variable resistor."
+   },
+   "connects": [
+    "r6",
+    "u1a"
+   ],
+   "order": {
+    "eli5": "In the feedback, from the op-amp's output back toward its minus input."
+   },
+   "breaks": {
+    "eli5": "Drive stuck wherever it lands."
+   },
+   "onRemove": [
+    {
+     "stage": "clip",
+     "param": "drive",
+     "value": 12
+    }
+   ],
+   "tune": {
+    "unit": "Ω",
+    "nominal": 500000.0,
+    "series": "pot",
+    "min": 50000.0,
+    "max": 1000000.0,
+    "higher": "Bigger Drive pot: more gain at full turn.",
+    "lower": "Smaller: the Drive knob tops out lower, more like a boost.",
+    "tooFar": "Very big and the top of the knob gets noisy and squeally.",
+    "targets": [
+     {
+      "stage": "clip",
+      "param": "drive",
+      "exp": 0.8,
+      "min": 0.3,
+      "max": 200
+     }
+    ],
+    "fund": "resistance"
+   },
+   "lugs": {
+    "kind": "pot",
+    "bp": "p1",
+    "eli5": "A pot is a resistor with a slider: two end lugs and a wiper in the middle that rides along the track.",
+    "detail": "Use all three lugs and it is a voltage divider (a volume knob). Use one end and the wiper and it is a variable resistor (a faucet).",
+    "standard": "Standard part: a potentiometer (A = log taper for volume, B = linear).",
+    "knob": "drive",
+    "lugs": [
+     {
+      "pin": "1",
+      "name": "end 1",
+      "role": "end",
+      "eli5": "One end of the resistive track."
+     },
+     {
+      "pin": "2",
+      "name": "wiper",
+      "role": "wiper",
+      "eli5": "The middle lug rides along the track as you turn: here it is tied to end 3, so it is a faucet in the feedback."
+     },
+     {
+      "pin": "3",
+      "name": "end 3",
+      "role": "end",
+      "eli5": "The other end of the track."
+     }
+    ]
+   }
+  },
+  {
+   "id": "dd",
+   "ref": "D1 D2 MA150",
+   "kind": "DD",
+   "label": "Clipping diodes D1, D2",
+   "term": "anti-parallel diodes (clipping)",
+   "block": "clip",
+   "place": "fb",
+   "job": {
+    "eli5": "Two one-way valves facing opposite ways: when the swing gets too big, one opens and caps it.",
+    "detail": "On L0 and L1 they hang from the signal to ground and pin the voltage at about 0.6 V (hard clipping). From L2 they sit in the op-amp's feedback, so they cap the gain instead and the tops come out round. ElectroSmash: D1 clips the top half, D2 the bottom."
+   },
+   "connects": [
+    "u1a",
+    "c4",
+    "jin",
+    "jout"
+   ],
+   "order": {
+    "eli5": "Where they sit is the whole difference between hard and soft clipping.",
+    "detail": "To ground: the voltage itself gets chopped. In the feedback: the gain drops toward 1× once a diode turns on."
+   },
+   "breaks": {
+    "eli5": "No clipping: a clean, loud boost (from L1 on), or a plain cable (L0)."
+   },
+   "onRemove": [
+    {
+     "stage": "clip",
+     "param": "clipLevel",
+     "value": 1.6
+    }
+   ],
+   "tune": {
+    "choices": [
+     {
+      "id": "si",
+      "label": "silicon (MA150)",
+      "eli5": "The stock pair: clips at about 0.6 V, the classic smooth Tube Screamer.",
+      "effects": []
+     },
+     {
+      "id": "ge",
+      "label": "germanium",
+      "eli5": "Lower threshold, softer knee: earlier, mellower, quieter clipping (the Distortion+ uses 1N270s).",
+      "effects": [
+       {
+        "stage": "clip",
+        "param": "clipLevel",
+        "value": 0.32
+       }
+      ]
+     },
+     {
+      "id": "led",
+      "label": "red LEDs",
+      "eli5": "Higher threshold: louder, more open, more amp-like.",
+      "effects": [
+       {
+        "stage": "clip",
+        "param": "clipLevel",
+        "value": 0.95
+       }
+      ]
+     },
+     {
+      "id": "none",
+      "label": "none",
+      "eli5": "No diodes: just the op-amp's gain until it slams into the rails. Loud and raw.",
+      "effects": [
+       {
+        "stage": "clip",
+        "param": "clipLevel",
+        "value": 1.6
+       }
+      ]
+     }
+    ],
+    "default": "si",
+    "tooFar": "Mismatched diodes clip unevenly (that can be a nice asymmetric flavor). LEDs need more voltage swing than a 9 V op-amp likes.",
+    "fund": "voltage"
+   }
+  },
+  {
+   "id": "c4",
+   "ref": "C4 51p",
+   "kind": "C",
+   "label": "Feedback treble cap",
+   "term": "feedback capacitor (low-pass)",
+   "block": "clip",
+   "place": "fb",
+   "job": {
+    "eli5": "A shortcut for very fast wiggles across the diodes, so the fizz gets less boost.",
+    "detail": "ElectroSmash: it softens the clipped corners, most when Drive is up."
+   },
+   "connects": [
+    "dd",
+    "u1a"
+   ],
+   "order": {
+    "eli5": "Across the diodes, inside the feedback."
+   },
+   "breaks": {
+    "eli5": "Fizzier, more brittle highs."
+   },
+   "onRemove": [
+    {
+     "stage": "tone",
+     "param": "freq",
+     "scale": 1.6
+    }
+   ],
+   "tune": {
+    "unit": "F",
+    "nominal": 5.1e-11,
+    "series": "E6",
+    "min": 1e-11,
+    "max": 1e-09,
+    "higher": "Bigger feedback cap: the clipping gets darker and smoother.",
+    "lower": "Smaller: fizzier, brighter clipping.",
+    "tooFar": "Too big and it goes woolly; leave it out and the fizz gets harsh.",
+    "targets": [
+     {
+      "stage": "tone",
+      "param": "freq",
+      "exp": -0.35,
+      "min": 300,
+      "max": 12000
+     }
+    ],
+    "fund": "capacitance",
+    "calc": {
+     "kind": "rc",
+     "with": 551000.0,
+     "label": "with 51k + the 500k Drive pot"
+    }
+   }
+  },
+  {
+   "id": "r4",
+   "ref": "R4 4.7k",
+   "kind": "R",
+   "label": "Gain-leg resistor",
+   "term": "gain-leg resistor",
+   "block": "clip",
+   "place": "shunt",
+   "job": {
+    "eli5": "The bottom half of the boost ratio: smaller means more boost."
+   },
+   "connects": [
+    "u1a",
+    "c3"
+   ],
+   "order": {
+    "eli5": "From the op-amp's minus input toward ground, through C3."
+   },
+   "breaks": {
+    "eli5": "The ratio falls apart: no boost."
+   },
+   "onRemove": [
+    {
+     "stage": "clip",
+     "param": "drive",
+     "value": 1
+    }
+   ],
+   "tune": {
+    "unit": "Ω",
+    "nominal": 4700.0,
+    "series": "E12",
+    "min": 470,
+    "max": 47000.0,
+    "higher": "Bigger gain-leg resistor: less gain and a lower mid hump corner, so it gets smoother and cleaner.",
+    "lower": "Smaller: more gain, and the hump moves up: tight, nasal and loud.",
+    "tooFar": "Very small and the op-amp squeals or runs out of headroom; very big and the drive barely bites.",
+    "targets": [
+     {
+      "stage": "clip",
+      "param": "drive",
+      "exp": -1,
+      "min": 0.3,
+      "max": 200
+     },
+     {
+      "stage": "clip",
+      "param": "hpFreq",
+      "exp": -1,
+      "min": 20,
+      "max": 6000
+     }
+    ],
+    "fund": "resistance",
+    "calc": {
+     "kind": "rc",
+     "with": 4.7e-08,
+     "label": "with the 47 nF gain-leg cap"
+    }
+   }
+  },
+  {
+   "id": "c3",
+   "ref": "C3 47n",
+   "kind": "C",
+   "label": "Gain-leg cap (mid-hump maker)",
+   "term": "gain-leg capacitor (high-pass)",
+   "block": "clip",
+   "place": "shunt",
+   "job": {
+    "eli5": "A door that keeps bass out of the gain leg, so bass gets almost no boost and the mids get it all.",
+    "detail": "ElectroSmash: with 4.7k it sets about 720 Hz. The MXR Distortion+ uses the same 4.7k + 47 nF."
+   },
+   "connects": [
+    "r4"
+   ],
+   "order": {
+    "eli5": "In series with R4, to ground."
+   },
+   "breaks": {
+    "eli5": "No path to ground: the boost collapses to 1×."
+   },
+   "onRemove": [
+    {
+     "stage": "clip",
+     "param": "drive",
+     "value": 1
+    }
+   ],
+   "tune": {
+    "unit": "F",
+    "nominal": 4.7e-08,
+    "series": "E6",
+    "min": 4.7e-09,
+    "max": 1e-06,
+    "higher": "Bigger gain-leg cap: bass gets clipped too, so it gets fat and less 'Tube Screamer'.",
+    "lower": "Smaller: only the mids and highs clip, tight and nasal.",
+    "tooFar": "Large (1 µF) and it loses the famous mid hump; tiny and it sounds like a buzzing radio.",
+    "targets": [
+     {
+      "stage": "clip",
+      "param": "hpFreq",
+      "exp": -1,
+      "min": 20,
+      "max": 6000
+     }
+    ],
+    "fund": "capacitance",
+    "calc": {
+     "kind": "rc",
+     "with": 4700.0,
+     "label": "with the 4.7k gain-leg resistor"
+    }
+   }
+  },
+  {
+   "id": "r7",
+   "ref": "R7 1k",
+   "kind": "R",
+   "label": "Tone filter resistor",
+   "term": "RC low-pass (resistor half)",
+   "block": "tone",
+   "place": "series",
+   "job": {
+    "eli5": "Half of a sieve with C5: lows pass, the fizz above about 723 Hz gets held back.",
+    "detail": "ElectroSmash: 1k + 0.22 µF = 723 Hz, first order (6 dB per octave)."
+   },
+   "connects": [
+    "u1a",
+    "c5",
+    "u1b"
+   ],
+   "order": {
+    "eli5": "Right after the clipping amp."
+   },
+   "breaks": {
+    "eli5": "The signal can't reach the tone stage: silence."
+   },
+   "onRemove": [
+    {
+     "stage": "out",
+     "param": "gain",
+     "value": 0
+    }
+   ],
+   "tune": {
+    "unit": "Ω",
+    "nominal": 1000.0,
+    "series": "E12",
+    "min": 100,
+    "max": 10000.0,
+    "higher": "Bigger tone resistor: the treble corner drops, so it gets darker.",
+    "lower": "Smaller: brighter.",
+    "tooFar": "Very big and the Tone knob can't rescue the highs.",
+    "targets": [
+     {
+      "stage": "tone",
+      "param": "freq",
+      "exp": -1,
+      "min": 200,
+      "max": 15000
+     }
+    ],
+    "fund": "resistance",
+    "calc": {
+     "kind": "rc",
+     "with": 2.2e-07,
+     "label": "with C5, 0.22 µF"
+    }
+   }
+  },
+  {
+   "id": "c5",
+   "ref": "C5 0.22µ",
+   "kind": "CP",
+   "label": "Tone filter cap",
+   "term": "RC low-pass (capacitor half)",
+   "block": "tone",
+   "place": "shunt",
+   "job": {
+    "eli5": "The other half of the sieve: it hands the highs to ground."
+   },
+   "connects": [
+    "r7"
+   ],
+   "order": {
+    "eli5": "From after R7 to ground."
+   },
+   "breaks": {
+    "eli5": "Harsh, fizzy top end."
+   },
+   "onRemove": [
+    {
+     "stage": "tone",
+     "param": "freq",
+     "scale": 2.5
+    }
+   ],
+   "tune": {
+    "unit": "F",
+    "nominal": 2.2e-07,
+    "series": "E6",
+    "min": 1e-08,
+    "max": 4.7e-06,
+    "higher": "Bigger sieve cap: darker overdrive.",
+    "lower": "Smaller: brighter, fizzier.",
+    "tooFar": "Very big and it's muffled; tiny and the fizz pours through.",
+    "targets": [
+     {
+      "stage": "tone",
+      "param": "freq",
+      "exp": -1,
+      "min": 200,
+      "max": 15000
+     }
+    ],
+    "fund": "capacitance",
+    "calc": {
+     "kind": "rc",
+     "with": 1000.0,
+     "label": "with R7, 1k"
+    }
+   }
+  },
+  {
+   "id": "r9",
+   "ref": "R9 10k",
+   "kind": "R",
+   "label": "Tone op-amp bias",
+   "term": "bias resistor (to 4.5 V)",
+   "block": "tone",
+   "place": "up",
+   "job": {
+    "eli5": "Ties the tone op-amp's plus input to the 4.5 V middle."
+   },
+   "connects": [
+    "u1b",
+    "r33"
+   ],
+   "order": {
+    "eli5": "From pin 5 up to the 4.5 V middle."
+   },
+   "breaks": {
+    "eli5": "Pin 5 floats: hum, crackle, or a stuck output."
+   },
+   "onRemove": [
+    {
+     "stage": "out",
+     "param": "gain",
+     "scale": 0.2
+    }
+   ]
+  },
+  {
+   "id": "u1b",
+   "ref": "U1b 4558 (pins 5 to 7)",
+   "kind": "OPAMP",
+   "label": "Op-amp B · active tone stage",
+   "term": "op-amp (active tone control)",
+   "block": "tone",
+   "place": "active",
+   "job": {
+    "eli5": "The second op-amp in the same chip runs the tone control, so the knob can hand treble back as well as take it.",
+    "detail": "ElectroSmash: the tone network sits between its two inputs."
+   },
+   "connects": [
+    "r7",
+    "p2",
+    "r11a",
+    "c7"
+   ],
+   "order": {
+    "eli5": "After the passive sieve."
+   },
+   "breaks": {
+    "eli5": "No path through the tone stage: silence."
+   },
+   "onRemove": [
+    {
+     "stage": "out",
+     "param": "gain",
+     "value": 0
+    }
+   ],
+   "chip": {
+    "chip": "RC4558",
+    "bp": "u1",
+    "pins": [
+     5,
+     6,
+     7
+    ],
+    "use": {
+     "5": "The sieved signal from R7 + C5, resting at 4.5 V (R9), plus one end of the Tone pot.",
+     "6": "The Tone pot's other end and the R11 feedback.",
+     "7": "Tone out, to C7."
+    },
+    "note": "The second op-amp in the same chip."
+   }
+  },
+  {
+   "id": "p2",
+   "ref": "P2 TONE 20k",
+   "kind": "POT",
+   "label": "Tone pot",
+   "term": "tone control (G taper)",
+   "block": "tone",
+   "place": "fb",
+   "job": {
+    "eli5": "The Tone knob: toward treble it hands back highs, toward bass it takes more away.",
+    "detail": "ElectroSmash: 20k with a G (S) taper, so the middle of the sweep gets the finest control."
+   },
+   "connects": [
+    "u1b",
+    "r8"
+   ],
+   "order": {
+    "eli5": "Strung between the tone op-amp's two inputs, with R8 + C6 on the wiper."
+   },
+   "breaks": {
+    "eli5": "Tone stuck in one place."
+   },
+   "onRemove": [
+    {
+     "stage": "tone",
+     "param": "freq",
+     "value": 1500
+    }
+   ],
+   "tune": {
+    "unit": "Ω",
+    "nominal": 20000.0,
+    "series": "pot",
+    "min": 5000.0,
+    "max": 100000.0,
+    "higher": "Bigger tone pot: a wider sweep, darker at one end.",
+    "lower": "Smaller: a subtler tone control.",
+    "tooFar": "Far off and one end of the knob does nothing useful.",
+    "targets": [
+     {
+      "stage": "tone",
+      "param": "freq",
+      "exp": -0.3,
+      "min": 200,
+      "max": 15000
+     }
+    ],
+    "fund": "resistance",
+    "real": "On the real board the active tone stage also boosts; the sketch only moves the treble corner."
+   },
+   "lugs": {
+    "kind": "pot",
+    "bp": "p2",
+    "eli5": "A pot is a resistor with a slider: two end lugs and a wiper in the middle that rides along the track.",
+    "detail": "Use all three lugs and it is a voltage divider (a volume knob). Use one end and the wiper and it is a variable resistor (a faucet).",
+    "standard": "Standard part: a potentiometer (A = log taper for volume, B = linear).",
+    "knob": "tone",
+    "lugs": [
+     {
+      "pin": "1",
+      "name": "end 1",
+      "role": "end",
+      "eli5": "One end of the resistive track."
+     },
+     {
+      "pin": "2",
+      "name": "wiper",
+      "role": "wiper",
+      "eli5": "The middle lug rides along the track as you turn: it drains treble to ground through C6 and R8."
+     },
+     {
+      "pin": "3",
+      "name": "end 3",
+      "role": "end",
+      "eli5": "The other end of the track."
+     }
+    ]
+   }
+  },
+  {
+   "id": "r8",
+   "ref": "R8 220",
+   "kind": "R",
+   "label": "Tone network resistor",
+   "term": "tone network resistor",
+   "block": "tone",
+   "place": "shunt",
+   "job": {
+    "eli5": "With C6, a little drain for treble on the Tone pot's wiper.",
+    "detail": "ElectroSmash: 220 Ω + 0.22 µF, about 3.2 kHz."
+   },
+   "connects": [
+    "c6"
+   ],
+   "order": {
+    "eli5": "From C6 to ground."
+   },
+   "breaks": {
+    "eli5": "The Tone knob stops doing much."
+   },
+   "onRemove": [
+    {
+     "stage": "tone",
+     "param": "freq",
+     "value": 1500
+    }
+   ]
+  },
+  {
+   "id": "c6",
+   "ref": "C6 0.22µ",
+   "kind": "CP",
+   "label": "Tone network cap",
+   "term": "tone network capacitor",
+   "block": "tone",
+   "place": "shunt",
+   "job": {
+    "eli5": "The other half of the treble drain on the Tone wiper."
+   },
+   "connects": [
+    "p2",
+    "r8"
+   ],
+   "order": {
+    "eli5": "Between the Tone pot's wiper and R8."
+   },
+   "breaks": {
+    "eli5": "The Tone knob stops doing much."
+   },
+   "onRemove": [
+    {
+     "stage": "tone",
+     "param": "freq",
+     "value": 1500
+    }
+   ]
+  },
+  {
+   "id": "r11a",
+   "ref": "R11 1k (tone feedback)",
+   "kind": "R",
+   "label": "Tone op-amp feedback",
+   "term": "feedback resistor",
+   "block": "tone",
+   "place": "fb",
+   "job": {
+    "eli5": "Closes the tone op-amp's loop, so it works at about 1×.",
+    "detail": "ElectroSmash's drawing labels both 1k resistors around the tone op-amp R11; I call this one R11 (tone feedback)."
+   },
+   "connects": [
+    "u1b",
+    "p2"
+   ],
+   "order": {
+    "eli5": "From the tone op-amp's output (pin 7) back to its minus input (pin 6)."
+   },
+   "breaks": {
+    "eli5": "No feedback: the tone op-amp slams into its rails."
+   },
+   "onRemove": [
+    {
+     "stage": "out",
+     "param": "gain",
+     "scale": 2.5
+    }
+   ]
+  },
+  {
+   "id": "c7",
+   "ref": "C7 1µ",
+   "kind": "CP",
+   "label": "Output coupling cap",
+   "term": "coupling capacitor (non-polarized)",
+   "block": "tone",
+   "place": "series",
+   "job": {
+    "eli5": "A door that passes the overdrive but keeps the op-amp's 4.5 V middle away from the Level pot."
+   },
+   "connects": [
+    "u1b",
+    "r11b"
+   ],
+   "order": {
+    "eli5": "After the tone op-amp (before L3: after the clipping amp)."
+   },
+   "breaks": {
+    "eli5": "Steady push on the Level pot: scratchy knob and a thump when you switch."
+   },
+   "silentNote": "The steady push makes no sound, so the model can't show it."
+  },
+  {
+   "id": "r11b",
+   "ref": "R11b 1k (to Level)",
+   "kind": "R",
+   "label": "Level feed resistor",
+   "term": "series resistor",
+   "block": "tone",
+   "place": "series",
+   "job": {
+    "eli5": "A small bump between the tone stage and the Level pot.",
+    "detail": "On L1 it also feeds the diodes to ground, like the 10k in front of the MXR Distortion+'s diodes. ElectroSmash labels it R11 too."
+   },
+   "connects": [
+    "c7",
+    "p3",
+    "dd"
+   ],
+   "order": {
+    "eli5": "Between C7 and the top of the Level pot."
+   },
+   "breaks": {
+    "eli5": "No signal reaches the Level pot: silence."
+   },
+   "onRemove": [
+    {
+     "stage": "out",
+     "param": "gain",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "id": "p3",
+   "ref": "P3 LEVEL 100k",
+   "kind": "POT",
+   "label": "Level pot",
+   "term": "pot as a voltage divider",
+   "block": "tone",
+   "place": "shunt",
+   "job": {
+    "eli5": "The volume slider: the wiper picks how much of the overdrive goes on.",
+    "detail": "ElectroSmash: a 100k pot that bleeds part of the signal to ground."
+   },
+   "connects": [
+    "r11b",
+    "c8",
+    "jfa",
+    "jout"
+   ],
+   "order": {
+    "eli5": "Last stop before the output buffer (or the jack, before L5)."
+   },
+   "breaks": {
+    "eli5": "Full blast always."
+   },
+   "onRemove": [
+    {
+     "stage": "out",
+     "param": "gain",
+     "value": 1.3
+    }
+   ],
+   "tune": {
+    "unit": "Ω",
+    "nominal": 100000.0,
+    "series": "pot",
+    "min": 10000.0,
+    "max": 1000000.0,
+    "higher": "Bigger: a softer load, a touch brighter.",
+    "lower": "Smaller: it loads the tone stage a little.",
+    "tooFar": "Very small and it drags the output down.",
+    "targets": [],
+    "fund": "resistance",
+    "real": "This sketch does not model it."
+   },
+   "lugs": {
+    "kind": "pot",
+    "bp": "p3",
+    "eli5": "A pot is a resistor with a slider: two end lugs and a wiper in the middle that rides along the track.",
+    "detail": "Use all three lugs and it is a voltage divider (a volume knob). Use one end and the wiper and it is a variable resistor (a faucet).",
+    "standard": "Standard part: a potentiometer (A = log taper for volume, B = linear).",
+    "knob": "level",
+    "lugs": [
+     {
+      "pin": "1",
+      "name": "end 1",
+      "role": "end",
+      "eli5": "One end of the resistive track."
+     },
+     {
+      "pin": "2",
+      "name": "wiper",
+      "role": "wiper",
+      "eli5": "The middle lug rides along the track as you turn: it taps off as much overdrive as you want."
+     },
+     {
+      "pin": "3",
+      "name": "end 3",
+      "role": "end",
+      "eli5": "The other end of the track."
+     }
+    ]
+   }
+  },
+  {
+   "id": "c8",
+   "ref": "C8 0.1µ",
+   "kind": "C",
+   "label": "Output buffer input cap",
+   "term": "coupling capacitor",
+   "block": "out",
+   "place": "series",
+   "job": {
+    "eli5": "A door into the output buffer.",
+    "detail": "ElectroSmash: with C11 it keeps the JFET switches' DC conditions separate from the rest of the circuit."
+   },
+   "connects": [
+    "p3",
+    "q3",
+    "jfa",
+    "jfb"
+   ],
+   "order": {
+    "eli5": "Between the switches (or the Level pot) and Q3's base."
+   },
+   "breaks": {
+    "eli5": "Q3 loses its resting point to whatever feeds it: weak, uneven output."
+   },
+   "silentNote": "The model has no pickup or cable to load, so you won't hear this one."
+  },
+  {
+   "id": "r12",
+   "ref": "R12 510k",
+   "kind": "R",
+   "label": "Output buffer bias",
+   "term": "bias resistor (to 4.5 V)",
+   "block": "out",
+   "place": "up",
+   "job": {
+    "eli5": "Holds Q3's control pin at the 4.5 V middle.",
+    "detail": "ElectroSmash: the output buffer is biased from the 4.5 V source through 510k."
+   },
+   "connects": [
+    "q3",
+    "r33"
+   ],
+   "order": {
+    "eli5": "From Q3's base up to the 4.5 V middle."
+   },
+   "breaks": {
+    "eli5": "Q3 switches off: almost no output."
+   },
+   "onRemove": [
+    {
+     "stage": "out",
+     "param": "gain",
+     "scale": 0.1
+    }
+   ]
+  },
+  {
+   "id": "q3",
+   "ref": "Q3 2SC1815",
+   "kind": "Q",
+   "label": "Q3 · output buffer transistor",
+   "term": "NPN emitter follower (output buffer)",
+   "block": "out",
+   "place": "active",
+   "job": {
+    "eli5": "A second polite listener, so the cable and the next pedal can't drag the sound down.",
+    "detail": "ElectroSmash: unity gain, output impedance about 1.2k."
+   },
+   "connects": [
+    "c8",
+    "r12",
+    "r13",
+    "rb"
+   ],
+   "order": {
+    "eli5": "Last active part."
+   },
+   "breaks": {
+    "eli5": "Nothing reaches the output jack: silence."
+   },
+   "onRemove": [
+    {
+     "stage": "out",
+     "param": "gain",
+     "value": 0
+    }
+   ],
+   "lugs": {
+    "kind": "transistor",
+    "bp": "q3",
+    "eli5": "A transistor is a valve with three legs: a tiny flow into the base controls a big flow from collector to emitter.",
+    "detail": "The 2SC1815 is a small silicon NPN. Toshiba's datasheet gives the TO-92 lead order 1 emitter, 2 collector, 3 base (E C B), flat side facing you. Many NPNs (2N3904, BC547) use other orders, so check before you swap.",
+    "standard": "Standard part: 2SC1815 (Toshiba). Common swaps: 2N5088/2N5089 or MPSA18, with a different pin order.",
+    "lugs": [
+     {
+      "pin": "E",
+      "name": "emitter (pin 1)",
+      "role": "audio",
+      "eli5": "Out through RB and C9 to the jack, across R13."
+     },
+     {
+      "pin": "C",
+      "name": "collector (pin 2)",
+      "role": "power",
+      "eli5": "Straight to +9 V."
+     },
+     {
+      "pin": "B",
+      "name": "base (pin 3)",
+      "role": "control",
+      "eli5": "In from C8, held at 4.5 V by R12."
+     }
+    ]
+   }
+  },
+  {
+   "id": "r13",
+   "ref": "R13 10k",
+   "kind": "R",
+   "label": "Q3 emitter resistor",
+   "term": "emitter resistor",
+   "block": "out",
+   "place": "shunt",
+   "job": {
+    "eli5": "The path to ground that lets Q3 follow."
+   },
+   "connects": [
+    "q3"
+   ],
+   "order": {
+    "eli5": "From Q3's emitter to ground."
+   },
+   "breaks": {
+    "eli5": "No output."
+   },
+   "onRemove": [
+    {
+     "stage": "out",
+     "param": "gain",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "id": "rb",
+   "ref": "RB 100",
+   "kind": "R",
+   "label": "Output series resistor",
+   "term": "output series resistor",
+   "block": "out",
+   "place": "series",
+   "job": {
+    "eli5": "A small bump that keeps the output buffer calm into long cables.",
+    "detail": "ElectroSmash: it slightly limits drive and forms an inaudible divider with RC. The TS9 uses 470 Ω here."
+   },
+   "connects": [
+    "q3",
+    "c9"
+   ],
+   "order": {
+    "eli5": "Between Q3's emitter and C9."
+   },
+   "breaks": {
+    "eli5": "A slightly hotter, touchier output; often no audible change."
+   },
+   "silentNote": "The model has no pickup or cable to load, so you won't hear this one.",
+   "tune": {
+    "unit": "Ω",
+    "nominal": 100,
+    "series": "E12",
+    "min": 10,
+    "max": 4700.0,
+    "higher": "Bigger output resistor (the TS9 uses 470 Ω): a hair less drive into the cable.",
+    "lower": "Smaller: a touch more drive.",
+    "tooFar": "Large values start to eat level and highs into a long cable.",
+    "targets": [
+     {
+      "stage": "out",
+      "param": "gain",
+      "exp": -0.03,
+      "min": 0,
+      "max": 2
+     }
+    ],
+    "fund": "resistance",
+    "real": "On a real rig the TS808/TS9 output difference is subtle; the sketch nudges level only."
+   }
+  },
+  {
+   "id": "c9",
+   "ref": "C9 10µ",
+   "kind": "CP",
+   "label": "Output cap",
+   "term": "coupling capacitor",
+   "block": "out",
+   "place": "series",
+   "job": {
+    "eli5": "A door that passes the sound but keeps the buffer's resting voltage off your amp."
+   },
+   "connects": [
+    "rb",
+    "rc",
+    "jout"
+   ],
+   "order": {
+    "eli5": "Between RB and the output jack."
+   },
+   "breaks": {
+    "eli5": "Steady push on the output: a thump at the amp and scratchy switching."
+   },
+   "silentNote": "The steady push makes no sound, so the model can't show it."
+  },
+  {
+   "id": "rc",
+   "ref": "RC 10k",
+   "kind": "R",
+   "label": "Output pulldown",
+   "term": "pulldown resistor",
+   "block": "out",
+   "place": "shunt",
+   "job": {
+    "eli5": "A slow leak to ground at the jack, so the output cap has nothing stored up to pop.",
+    "detail": "ElectroSmash: it shunts the output after C9. The TS9 uses 100k here."
+   },
+   "connects": [
+    "c9",
+    "jout"
+   ],
+   "order": {
+    "eli5": "From the output jack to ground."
+   },
+   "breaks": {
+    "eli5": "A pop when you plug in or switch."
+   },
+   "silentNote": "The model has no pickup or cable to load, so you won't hear this one.",
+   "tune": {
+    "unit": "Ω",
+    "nominal": 10000.0,
+    "series": "E12",
+    "min": 1000.0,
+    "max": 1000000.0,
+    "higher": "Bigger pulldown (the TS9 uses 100k): a lighter load, a little hotter output.",
+    "lower": "Smaller: it loads the output more.",
+    "tooFar": "Very small and it eats level; leave it out and the output cap pops.",
+    "targets": [
+     {
+      "stage": "out",
+      "param": "gain",
+      "exp": 0.02,
+      "min": 0,
+      "max": 2
+     }
+    ],
+    "fund": "resistance"
+   }
+  },
+  {
+   "id": "bat",
+   "ref": "9V",
+   "kind": "BAT",
+   "label": "Battery + DC jack",
+   "term": "9 V battery and power jack",
+   "block": "power",
+   "place": "up",
+   "job": {
+    "eli5": "The fuel tank. The DC jack lets a wall supply take over from the battery."
+   },
+   "connects": [
+    "jin",
+    "d8",
+    "c17",
+    "r33"
+   ],
+   "order": {
+    "eli5": "Feeds every rail."
+   },
+   "breaks": {
+    "eli5": "No power: silence from L1 on."
+   },
+   "onRemove": [
+    {
+     "stage": "out",
+     "param": "gain",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "id": "r33",
+   "ref": "R33 10k",
+   "kind": "R",
+   "label": "4.5 V divider (top)",
+   "term": "voltage divider resistor",
+   "block": "power",
+   "place": "up",
+   "job": {
+    "eli5": "The top half of a two-step ladder that splits 9 V into a 4.5 V middle.",
+    "detail": "ElectroSmash: R32 and R33 make the 4.5 V bias for the stages."
+   },
+   "connects": [
+    "bat",
+    "r32",
+    "c16"
+   ],
+   "order": {
+    "eli5": "From +9 V to the 4.5 V node."
+   },
+   "breaks": {
+    "eli5": "No middle voltage: every stage rests at 0 V, so half of each wave gets cut off."
+   },
+   "onRemove": [
+    {
+     "stage": "clip",
+     "param": "clipLevel",
+     "scale": 0.25
+    },
+    {
+     "stage": "clip",
+     "param": "clean",
+     "scale": 0.2
+    }
+   ]
+  },
+  {
+   "id": "r32",
+   "ref": "R32 10k",
+   "kind": "R",
+   "label": "4.5 V divider (bottom)",
+   "term": "voltage divider resistor",
+   "block": "power",
+   "place": "up",
+   "job": {
+    "eli5": "The bottom half of the ladder, down to ground."
+   },
+   "connects": [
+    "r33",
+    "c16"
+   ],
+   "order": {
+    "eli5": "From the 4.5 V node to ground."
+   },
+   "breaks": {
+    "eli5": "The middle floats up to 9 V: every stage jams against its top rail."
+   },
+   "onRemove": [
+    {
+     "stage": "clip",
+     "param": "clipLevel",
+     "scale": 0.25
+    },
+    {
+     "stage": "clip",
+     "param": "clean",
+     "scale": 0.2
+    }
+   ]
+  },
+  {
+   "id": "c16",
+   "ref": "C16 47µ",
+   "kind": "CP",
+   "label": "4.5 V tank cap",
+   "term": "decoupling capacitor (bias filter)",
+   "block": "power",
+   "place": "up",
+   "job": {
+    "eli5": "A tank on the 4.5 V middle, so every stage sees a calm, steady middle.",
+    "detail": "ElectroSmash: 47 µF to ground removes ripple. Without it the stages talk to each other through the shared middle."
+   },
+   "connects": [
+    "r32",
+    "r33"
+   ],
+   "order": {
+    "eli5": "Across R32, from the 4.5 V node to ground."
+   },
+   "breaks": {
+    "eli5": "Hiss and hum ride in on the middle; with high gain the pedal can squeal or motorboat."
+   },
+   "silentNote": "Power hygiene isn't modeled (the sketch has no hum, ripple or battery sag), so you won't hear this."
+  },
+  {
+   "id": "c17",
+   "ref": "C17 100µ",
+   "kind": "CP",
+   "label": "9 V tank cap",
+   "term": "decoupling capacitor (supply filter)",
+   "block": "power",
+   "place": "up",
+   "job": {
+    "eli5": "A tank on the 9 V line that smooths out supply ripple and long-cable dips.",
+    "detail": "ElectroSmash: 100 µF to ground removes ripple from the supply."
+   },
+   "connects": [
+    "bat",
+    "d8"
+   ],
+   "order": {
+    "eli5": "From +9 V to ground, right at the power input."
+   },
+   "breaks": {
+    "eli5": "Wall-wart hum and a fizzy, sagging edge when the battery is weak."
+   },
+   "silentNote": "Power hygiene isn't modeled (the sketch has no hum, ripple or battery sag), so you won't hear this."
+  },
+  {
+   "id": "d8",
+   "ref": "D8 W03C",
+   "kind": "D",
+   "label": "Reverse-polarity diode",
+   "term": "protection diode (shunt)",
+   "block": "power",
+   "place": "up",
+   "job": {
+    "eli5": "A guard: plug in a supply backwards and it shorts the wrong way round instead of the chip.",
+    "detail": "ElectroSmash: D8 protects the pedal against reverse polarity. It sits across the supply, so a backwards supply goes through it, not the circuit."
+   },
+   "connects": [
+    "bat",
+    "c17"
+   ],
+   "order": {
+    "eli5": "Across the supply, pointing so it only conducts when the polarity is wrong."
+   },
+   "breaks": {
+    "eli5": "Nothing changes until someone plugs in the wrong supply. Then the 4558 can die."
+   },
+   "silentNote": "Power hygiene isn't modeled (the sketch has no hum, ripple or battery sag), so you won't hear this."
+  },
+  {
+   "id": "c11a",
+   "ref": "C11 0.1µ (dry)",
+   "kind": "C",
+   "label": "Dry path cap",
+   "term": "coupling capacitor",
+   "block": "bypass",
+   "place": "series",
+   "job": {
+    "eli5": "A door between the input buffer and the bypass switch.",
+    "detail": "ElectroSmash's drawing names two caps C11. This one (0.1 µF) keeps the JFET's DC conditions apart from Q1."
+   },
+   "connects": [
+    "q1",
+    "jfb",
+    "r18"
+   ],
+   "order": {
+    "eli5": "From Q1's emitter to switch B."
+   },
+   "breaks": {
+    "eli5": "When bypassed, the switch's 4.5 V resting point fights Q1's: weak or crackly bypass."
+   },
+   "silentNote": "The model doesn't simulate the switching circuit, so pulling this changes nothing you hear. On the real board, see 'If pulled'."
+  },
+  {
+   "id": "r18",
+   "ref": "R18 510k",
+   "kind": "R",
+   "label": "Switch B bias",
+   "term": "bias resistor (to 4.5 V)",
+   "block": "bypass",
+   "place": "up",
+   "job": {
+    "eli5": "Holds switch B's input at the 4.5 V middle.",
+    "detail": "ElectroSmash: the JFETs' drains and sources rest at 4.5 V through 510k (R17, R18, R12)."
+   },
+   "connects": [
+    "c11a",
+    "jfb",
+    "r33"
+   ],
+   "order": {
+    "eli5": "From switch B's input up to 4.5 V."
+   },
+   "breaks": {
+    "eli5": "Switch B drifts: bypass gets crackly or won't fully open."
+   },
+   "silentNote": "The model doesn't simulate the switching circuit, so pulling this changes nothing you hear. On the real board, see 'If pulled'."
+  },
+  {
+   "id": "jfa",
+   "ref": "Q2 2SK44 (switch A)",
+   "kind": "JFET",
+   "label": "Q2 · JFET switch A (effect)",
+   "term": "N-channel JFET switch",
+   "block": "bypass",
+   "place": "series",
+   "job": {
+    "eli5": "A valve in the effect path: wide open when the pedal is on, shut when it's off.",
+    "detail": "ElectroSmash: on when its gate sits at 0 V against its channel, off when the gate is pulled down near 0 V absolute so diode D3 forward-biases."
+   },
+   "connects": [
+    "p3",
+    "d3",
+    "c8",
+    "r17"
+   ],
+   "order": {
+    "eli5": "Between the Level pot and the output buffer."
+   },
+   "breaks": {
+    "eli5": "The effect never reaches the output: you only hear the bypass path."
+   },
+   "onRemove": [
+    {
+     "stage": "clip",
+     "bypass": true
+    },
+    {
+     "stage": "tone",
+     "bypass": true
+    }
+   ],
+   "lugs": {
+    "kind": "transistor",
+    "bp": "jfa",
+    "eli5": "A JFET switch is a valve that is wide open when its gate matches the channel, and shut when the gate is pulled well below it.",
+    "detail": "The 2SK44 is an N-channel JFET in TO-92. Lead order S G D comes from a pinout listing (pinout.net), not a maker datasheet I could open, so check yours with a meter. Drain and source are interchangeable in a switch like this.",
+    "standard": "Obsolete Sanyo/Toshiba part. Clones use 2N5457, J201 or 2SK30A, each with its own pin order.",
+    "lugs": [
+     {
+      "pin": "S",
+      "name": "source (pin 1)",
+      "role": "audio",
+      "eli5": "To C8 and the output buffer."
+     },
+     {
+      "pin": "G",
+      "name": "gate (pin 2)",
+      "role": "control",
+      "eli5": "Through D3 to the control line."
+     },
+     {
+      "pin": "D",
+      "name": "drain (pin 3)",
+      "role": "audio",
+      "eli5": "From the Level pot's wiper: the effect."
+     }
+    ]
+   }
+  },
+  {
+   "id": "jfb",
+   "ref": "Q4 2SK44 (switch B)",
+   "kind": "JFET",
+   "label": "Q4 · JFET switch B (bypass)",
+   "term": "N-channel JFET switch",
+   "block": "bypass",
+   "place": "series",
+   "job": {
+    "eli5": "The other valve, in the dry path: open when the pedal is bypassed."
+   },
+   "connects": [
+    "c11a",
+    "d4",
+    "c8",
+    "r17"
+   ],
+   "order": {
+    "eli5": "Between the dry cap C11 and the output buffer."
+   },
+   "breaks": {
+    "eli5": "Bypass goes silent; the effect still works when on."
+   },
+   "silentNote": "The model's bypass is a plain switch, so it can't go silent; on the real board, bypass would.",
+   "lugs": {
+    "kind": "transistor",
+    "bp": "jfb",
+    "eli5": "A JFET switch is a valve that is wide open when its gate matches the channel, and shut when the gate is pulled well below it.",
+    "detail": "The 2SK44 is an N-channel JFET in TO-92. Lead order S G D comes from a pinout listing (pinout.net), not a maker datasheet I could open, so check yours with a meter. Drain and source are interchangeable in a switch like this.",
+    "standard": "Obsolete Sanyo/Toshiba part. Clones use 2N5457, J201 or 2SK30A, each with its own pin order.",
+    "lugs": [
+     {
+      "pin": "S",
+      "name": "source (pin 1)",
+      "role": "audio",
+      "eli5": "To C8 and the output buffer."
+     },
+     {
+      "pin": "G",
+      "name": "gate (pin 2)",
+      "role": "control",
+      "eli5": "Through D4 to the control line."
+     },
+     {
+      "pin": "D",
+      "name": "drain (pin 3)",
+      "role": "audio",
+      "eli5": "From C11: the dry, buffered guitar."
+     }
+    ]
+   }
+  },
+  {
+   "id": "r17",
+   "ref": "R17 510k",
+   "kind": "R",
+   "label": "Switch output bias",
+   "term": "bias resistor (to 4.5 V)",
+   "block": "bypass",
+   "place": "up",
+   "job": {
+    "eli5": "Holds the two switches' shared output at 4.5 V."
+   },
+   "connects": [
+    "jfa",
+    "jfb",
+    "c8",
+    "r33"
+   ],
+   "order": {
+    "eli5": "From the shared switch output up to 4.5 V."
+   },
+   "breaks": {
+    "eli5": "The switch output floats: clicks and crackle on every switch."
+   },
+   "silentNote": "The model doesn't simulate the switching circuit, so pulling this changes nothing you hear. On the real board, see 'If pulled'."
+  },
+  {
+   "id": "d3",
+   "ref": "D3 MA150",
+   "kind": "D",
+   "label": "Switch A gate diode",
+   "term": "gate steering diode",
+   "block": "bypass",
+   "place": "up",
+   "job": {
+    "eli5": "A one-way valve: it can pull switch A's gate down to shut it, but can't push the gate up into the audio.",
+    "detail": "ElectroSmash: the JFET switches are controlled by biasing D3 and D4."
+   },
+   "connects": [
+    "jfa",
+    "r16",
+    "c11b"
+   ],
+   "order": {
+    "eli5": "Between switch A's gate and its control line."
+   },
+   "breaks": {
+    "eli5": "Switch A can't be shut: effect and dry play together when bypassed."
+   },
+   "silentNote": "The model doesn't simulate the switching circuit, so pulling this changes nothing you hear. On the real board, see 'If pulled'."
+  },
+  {
+   "id": "d4",
+   "ref": "D4 MA150",
+   "kind": "D",
+   "label": "Switch B gate diode",
+   "term": "gate steering diode",
+   "block": "bypass",
+   "place": "up",
+   "job": {
+    "eli5": "Same job for switch B."
+   },
+   "connects": [
+    "jfb",
+    "r47",
+    "c12",
+    "d11"
+   ],
+   "order": {
+    "eli5": "Between switch B's gate and its control line."
+   },
+   "breaks": {
+    "eli5": "Switch B can't be shut: dry guitar leaks under the effect."
+   },
+   "silentNote": "The model doesn't simulate the switching circuit, so pulling this changes nothing you hear. On the real board, see 'If pulled'."
+  },
+  {
+   "id": "r16",
+   "ref": "R16 1M",
+   "kind": "R",
+   "label": "Switch A control resistor",
+   "term": "gate resistor",
+   "block": "bypass",
+   "place": "up",
+   "job": {
+    "eli5": "A slow, gentle feed to switch A's gate, so the switch can't be slammed.",
+    "detail": "ElectroSmash: the control signal comes through 1M resistors (R16, R47) that protect the gates."
+   },
+   "connects": [
+    "d3",
+    "c11b",
+    "q6"
+   ],
+   "order": {
+    "eli5": "From the toggle's A output to D3."
+   },
+   "breaks": {
+    "eli5": "Switch A loses its control: stuck open or shut."
+   },
+   "silentNote": "The model doesn't simulate the switching circuit, so pulling this changes nothing you hear. On the real board, see 'If pulled'."
+  },
+  {
+   "id": "c11b",
+   "ref": "C11 0.047µ (soft A)",
+   "kind": "C",
+   "label": "Switch A soft-start cap",
+   "term": "anti-pop capacitor",
+   "block": "bypass",
+   "place": "shunt",
+   "job": {
+    "eli5": "A small tank that makes switch A fade instead of snap, so stomping doesn't pop.",
+    "detail": "ElectroSmash: it slows the switch so it doesn't flip in nanoseconds. (The drawing names it C11 too.)"
+   },
+   "connects": [
+    "d3",
+    "r16"
+   ],
+   "order": {
+    "eli5": "From switch A's control line to ground."
+   },
+   "breaks": {
+    "eli5": "A pop through the amp every time you switch."
+   },
+   "silentNote": "The model doesn't simulate the switching circuit, so pulling this changes nothing you hear. On the real board, see 'If pulled'."
+  },
+  {
+   "id": "r47",
+   "ref": "R47 1M",
+   "kind": "R",
+   "label": "Switch B control resistor",
+   "term": "gate resistor",
+   "block": "bypass",
+   "place": "up",
+   "job": {
+    "eli5": "Same gentle feed for switch B."
+   },
+   "connects": [
+    "d4",
+    "d11",
+    "c12",
+    "q5"
+   ],
+   "order": {
+    "eli5": "From the toggle's B output to D4."
+   },
+   "breaks": {
+    "eli5": "Switch B loses its control: stuck open or shut."
+   },
+   "silentNote": "The model doesn't simulate the switching circuit, so pulling this changes nothing you hear. On the real board, see 'If pulled'."
+  },
+  {
+   "id": "d11",
+   "ref": "D11",
+   "kind": "D",
+   "label": "Switch B fast-off diode",
+   "term": "speed diode (across R47)",
+   "block": "bypass",
+   "place": "up",
+   "job": {
+    "eli5": "A shortcut so switch B can close quickly while opening slowly.",
+    "detail": "My reading of ElectroSmash's drawing: D11 sits beside R47, so pulling the gate down skips the 1M. The drawing also shows a second resistor shape here without its own label; I count R47 and D11."
+   },
+   "connects": [
+    "r47",
+    "d4"
+   ],
+   "order": {
+    "eli5": "Beside R47."
+   },
+   "breaks": {
+    "eli5": "Switch B closes as slowly as it opens: a brief overlap where effect and dry both play."
+   },
+   "silentNote": "The model doesn't simulate the switching circuit, so pulling this changes nothing you hear. On the real board, see 'If pulled'."
+  },
+  {
+   "id": "c12",
+   "ref": "C12 0.047µ",
+   "kind": "C",
+   "label": "Switch B soft-start cap",
+   "term": "anti-pop capacitor",
+   "block": "bypass",
+   "place": "shunt",
+   "job": {
+    "eli5": "The soft-start tank for switch B."
+   },
+   "connects": [
+    "d4",
+    "r47"
+   ],
+   "order": {
+    "eli5": "From switch B's control line to ground."
+   },
+   "breaks": {
+    "eli5": "A pop on every switch."
+   },
+   "silentNote": "The model doesn't simulate the switching circuit, so pulling this changes nothing you hear. On the real board, see 'If pulled'."
+  },
+  {
+   "id": "q6",
+   "ref": "Q6 2SC1815",
+   "kind": "Q",
+   "label": "Q6 · toggle transistor A",
+   "term": "NPN, bistable flip-flop half",
+   "block": "bypass",
+   "place": "active",
+   "job": {
+    "eli5": "One half of a seesaw memory: when Q6 is on, Q5 is off, and that's the pedal's state.",
+    "detail": "ElectroSmash: Q5 and Q6 feed each other in a loop, a flip-flop (bistable multivibrator)."
+   },
+   "connects": [
+    "r27",
+    "r41",
+    "c41",
+    "r28",
+    "c15",
+    "d6",
+    "r16",
+    "q7"
+   ],
+   "order": {
+    "eli5": "Its collector drives switch A and the LED driver."
+   },
+   "breaks": {
+    "eli5": "The toggle can't flip or can't hold, so the pedal sticks on or off, or flickers between them."
+   },
+   "silentNote": "The model doesn't simulate the switching circuit, so pulling this changes nothing you hear. On the real board, see 'If pulled'.",
+   "lugs": {
+    "kind": "transistor",
+    "bp": "q6",
+    "eli5": "A transistor is a valve with three legs: a tiny flow into the base controls a big flow from collector to emitter.",
+    "detail": "The 2SC1815 is a small silicon NPN. Toshiba's datasheet gives the TO-92 lead order 1 emitter, 2 collector, 3 base (E C B), flat side facing you. Many NPNs (2N3904, BC547) use other orders, so check before you swap.",
+    "standard": "Standard part: 2SC1815 (Toshiba). Common swaps: 2N5088/2N5089 or MPSA18, with a different pin order.",
+    "lugs": [
+     {
+      "pin": "E",
+      "name": "emitter (pin 1)",
+      "role": "ground",
+      "eli5": "Shared emitters, down through D6 and R29."
+     },
+     {
+      "pin": "C",
+      "name": "collector (pin 2)",
+      "role": "control",
+      "eli5": "Toggle side A: drives switch A and Q7, lifted by R27."
+     },
+     {
+      "pin": "B",
+      "name": "base (pin 3)",
+      "role": "control",
+      "eli5": "From the Q5 cross-link (R41, C41), R28 and the trigger cap C15."
+     }
+    ]
+   }
+  },
+  {
+   "id": "q5",
+   "ref": "Q5 2SC1815",
+   "kind": "Q",
+   "label": "Q5 · toggle transistor B",
+   "term": "NPN, bistable flip-flop half",
+   "block": "bypass",
+   "place": "active",
+   "job": {
+    "eli5": "The other half of the seesaw."
+   },
+   "connects": [
+    "r26",
+    "r40",
+    "c40",
+    "r25",
+    "c14",
+    "d6",
+    "r47"
+   ],
+   "order": {
+    "eli5": "Its collector drives switch B."
+   },
+   "breaks": {
+    "eli5": "The toggle can't flip or can't hold, so the pedal sticks on or off, or flickers between them."
+   },
+   "silentNote": "The model doesn't simulate the switching circuit, so pulling this changes nothing you hear. On the real board, see 'If pulled'.",
+   "lugs": {
+    "kind": "transistor",
+    "bp": "q5",
+    "eli5": "A transistor is a valve with three legs: a tiny flow into the base controls a big flow from collector to emitter.",
+    "detail": "The 2SC1815 is a small silicon NPN. Toshiba's datasheet gives the TO-92 lead order 1 emitter, 2 collector, 3 base (E C B), flat side facing you. Many NPNs (2N3904, BC547) use other orders, so check before you swap.",
+    "standard": "Standard part: 2SC1815 (Toshiba). Common swaps: 2N5088/2N5089 or MPSA18, with a different pin order.",
+    "lugs": [
+     {
+      "pin": "E",
+      "name": "emitter (pin 1)",
+      "role": "ground",
+      "eli5": "Shared emitters, down through D6 and R29."
+     },
+     {
+      "pin": "C",
+      "name": "collector (pin 2)",
+      "role": "control",
+      "eli5": "Toggle side B: drives switch B, lifted by R26."
+     },
+     {
+      "pin": "B",
+      "name": "base (pin 3)",
+      "role": "control",
+      "eli5": "From the Q6 cross-link (R40, C40), R25 and the trigger cap C14."
+     }
+    ]
+   }
+  },
+  {
+   "id": "r27",
+   "ref": "R27 56k",
+   "kind": "R",
+   "label": "Q6 collector load",
+   "term": "collector resistor",
+   "block": "bypass",
+   "place": "up",
+   "job": {
+    "eli5": "Lifts Q6's collector toward 9 V when Q6 is off."
+   },
+   "connects": [
+    "q6",
+    "r40"
+   ],
+   "order": {
+    "eli5": "From 9 V to Q6's collector."
+   },
+   "breaks": {
+    "eli5": "The toggle can't flip or can't hold, so the pedal sticks on or off, or flickers between them."
+   },
+   "silentNote": "The model doesn't simulate the switching circuit, so pulling this changes nothing you hear. On the real board, see 'If pulled'."
+  },
+  {
+   "id": "r26",
+   "ref": "R26 56k",
+   "kind": "R",
+   "label": "Q5 collector load",
+   "term": "collector resistor",
+   "block": "bypass",
+   "place": "up",
+   "job": {
+    "eli5": "Lifts Q5's collector toward 9 V when Q5 is off."
+   },
+   "connects": [
+    "q5",
+    "r41"
+   ],
+   "order": {
+    "eli5": "From 9 V to Q5's collector."
+   },
+   "breaks": {
+    "eli5": "The toggle can't flip or can't hold, so the pedal sticks on or off, or flickers between them."
+   },
+   "silentNote": "The model doesn't simulate the switching circuit, so pulling this changes nothing you hear. On the real board, see 'If pulled'."
+  },
+  {
+   "id": "r40",
+   "ref": "R40 47k",
+   "kind": "R",
+   "label": "Cross-link Q6 → Q5",
+   "term": "cross-coupling resistor",
+   "block": "bypass",
+   "place": "fb",
+   "job": {
+    "eli5": "The arm of the seesaw: Q6's collector holds Q5's base down or lets it up.",
+    "detail": "ElectroSmash describes R40, R41, R26 and R27 holding the two states."
+   },
+   "connects": [
+    "r27",
+    "q5",
+    "c40"
+   ],
+   "order": {
+    "eli5": "From Q6's collector to Q5's base."
+   },
+   "breaks": {
+    "eli5": "The toggle can't flip or can't hold, so the pedal sticks on or off, or flickers between them."
+   },
+   "silentNote": "The model doesn't simulate the switching circuit, so pulling this changes nothing you hear. On the real board, see 'If pulled'."
+  },
+  {
+   "id": "r41",
+   "ref": "R41 47k",
+   "kind": "R",
+   "label": "Cross-link Q5 → Q6",
+   "term": "cross-coupling resistor",
+   "block": "bypass",
+   "place": "fb",
+   "job": {
+    "eli5": "The other arm of the seesaw."
+   },
+   "connects": [
+    "r26",
+    "q6",
+    "c41"
+   ],
+   "order": {
+    "eli5": "From Q5's collector to Q6's base."
+   },
+   "breaks": {
+    "eli5": "The toggle can't flip or can't hold, so the pedal sticks on or off, or flickers between them."
+   },
+   "silentNote": "The model doesn't simulate the switching circuit, so pulling this changes nothing you hear. On the real board, see 'If pulled'."
+  },
+  {
+   "id": "c40",
+   "ref": "C40 100p",
+   "kind": "C",
+   "label": "Speed-up cap (Q6 → Q5)",
+   "term": "speed-up capacitor",
+   "block": "bypass",
+   "place": "fb",
+   "job": {
+    "eli5": "A shove that makes the seesaw flip fast and clean.",
+    "detail": "ElectroSmash: C40 and C41 make the toggling faster and surer. A slight mismatch between them makes the pedal always power up bypassed."
+   },
+   "connects": [
+    "r40"
+   ],
+   "order": {
+    "eli5": "Across R40."
+   },
+   "breaks": {
+    "eli5": "Sluggish or unreliable flips, and the pedal may power up in a random state."
+   },
+   "silentNote": "The model doesn't simulate the switching circuit, so pulling this changes nothing you hear. On the real board, see 'If pulled'."
+  },
+  {
+   "id": "c41",
+   "ref": "C41 100p",
+   "kind": "C",
+   "label": "Speed-up cap (Q5 → Q6)",
+   "term": "speed-up capacitor",
+   "block": "bypass",
+   "place": "fb",
+   "job": {
+    "eli5": "The matching shove for the other side."
+   },
+   "connects": [
+    "r41"
+   ],
+   "order": {
+    "eli5": "Across R41."
+   },
+   "breaks": {
+    "eli5": "Sluggish or unreliable flips."
+   },
+   "silentNote": "The model doesn't simulate the switching circuit, so pulling this changes nothing you hear. On the real board, see 'If pulled'."
+  },
+  {
+   "id": "r28",
+   "ref": "R28 56k",
+   "kind": "R",
+   "label": "Q6 base pulldown",
+   "term": "base resistor",
+   "block": "bypass",
+   "place": "shunt",
+   "job": {
+    "eli5": "Drains Q6's base so it switches off cleanly."
+   },
+   "connects": [
+    "q6"
+   ],
+   "order": {
+    "eli5": "From Q6's base to ground."
+   },
+   "breaks": {
+    "eli5": "The toggle can't flip or can't hold, so the pedal sticks on or off, or flickers between them."
+   },
+   "silentNote": "The model doesn't simulate the switching circuit, so pulling this changes nothing you hear. On the real board, see 'If pulled'."
+  },
+  {
+   "id": "r25",
+   "ref": "R25 56k",
+   "kind": "R",
+   "label": "Q5 base pulldown",
+   "term": "base resistor",
+   "block": "bypass",
+   "place": "shunt",
+   "job": {
+    "eli5": "Drains Q5's base so it switches off cleanly."
+   },
+   "connects": [
+    "q5"
+   ],
+   "order": {
+    "eli5": "From Q5's base to ground."
+   },
+   "breaks": {
+    "eli5": "The toggle can't flip or can't hold, so the pedal sticks on or off, or flickers between them."
+   },
+   "silentNote": "The model doesn't simulate the switching circuit, so pulling this changes nothing you hear. On the real board, see 'If pulled'."
+  },
+  {
+   "id": "c15",
+   "ref": "C15 1n",
+   "kind": "C",
+   "label": "Trigger cap to Q6",
+   "term": "trigger coupling capacitor",
+   "block": "bypass",
+   "place": "series",
+   "job": {
+    "eli5": "Passes the footswitch's quick dip to Q6's base.",
+    "detail": "ElectroSmash: C14 and C15 connect the bases to the footswitch signal."
+   },
+   "connects": [
+    "q6",
+    "c13"
+   ],
+   "order": {
+    "eli5": "From the trigger line to Q6's base."
+   },
+   "breaks": {
+    "eli5": "The switch can't flip that side: it won't toggle."
+   },
+   "silentNote": "The model doesn't simulate the switching circuit, so pulling this changes nothing you hear. On the real board, see 'If pulled'."
+  },
+  {
+   "id": "c14",
+   "ref": "C14 1n",
+   "kind": "C",
+   "label": "Trigger cap to Q5",
+   "term": "trigger coupling capacitor",
+   "block": "bypass",
+   "place": "series",
+   "job": {
+    "eli5": "Passes the same dip to Q5's base."
+   },
+   "connects": [
+    "q5",
+    "c13"
+   ],
+   "order": {
+    "eli5": "From the trigger line to Q5's base."
+   },
+   "breaks": {
+    "eli5": "It won't toggle."
+   },
+   "silentNote": "The model doesn't simulate the switching circuit, so pulling this changes nothing you hear. On the real board, see 'If pulled'."
+  },
+  {
+   "id": "d6",
+   "ref": "D6 MA150",
+   "kind": "D",
+   "label": "Emitter diode",
+   "term": "emitter level-shift diode",
+   "block": "bypass",
+   "place": "shunt",
+   "job": {
+    "eli5": "Lifts both toggle emitters a little off ground so the off transistor stays firmly off.",
+    "detail": "My reading: one diode drop plus R29 sets the shared emitter level. ElectroSmash draws it without comment."
+   },
+   "connects": [
+    "q5",
+    "q6",
+    "r29"
+   ],
+   "order": {
+    "eli5": "From the shared emitters toward R29."
+   },
+   "breaks": {
+    "eli5": "The toggle gets touchy and may not hold its state."
+   },
+   "silentNote": "The model doesn't simulate the switching circuit, so pulling this changes nothing you hear. On the real board, see 'If pulled'."
+  },
+  {
+   "id": "r29",
+   "ref": "R29 100",
+   "kind": "R",
+   "label": "Emitter resistor",
+   "term": "emitter resistor",
+   "block": "bypass",
+   "place": "shunt",
+   "job": {
+    "eli5": "A small resistor from D6 to ground."
+   },
+   "connects": [
+    "d6"
+   ],
+   "order": {
+    "eli5": "From D6 to ground."
+   },
+   "breaks": {
+    "eli5": "The toggle loses its path to ground: it stops working."
+   },
+   "silentNote": "The model doesn't simulate the switching circuit, so pulling this changes nothing you hear. On the real board, see 'If pulled'."
+  },
+  {
+   "id": "sw",
+   "ref": "SW (momentary)",
+   "kind": "SW",
+   "label": "Footswitch (momentary)",
+   "term": "momentary push switch",
+   "block": "bypass",
+   "place": "shunt",
+   "job": {
+    "eli5": "A soft button, not a latching switch: each press is just a quick tap to ground.",
+    "detail": "ElectroSmash: the TS808 uses a push button plus the toggle, not true bypass. A 3PDT is the true-bypass alternative."
+   },
+   "connects": [
+    "r24"
+   ],
+   "order": {
+    "eli5": "From the trigger line to ground."
+   },
+   "breaks": {
+    "eli5": "Nothing can change the state: the pedal stays bypassed."
+   },
+   "silentNote": "The model doesn't simulate the switching circuit, so pulling this changes nothing you hear. On the real board, see 'If pulled'."
+  },
+  {
+   "id": "r24",
+   "ref": "R24 22",
+   "kind": "R",
+   "label": "Switch series resistor",
+   "term": "series resistor",
+   "block": "bypass",
+   "place": "series",
+   "job": {
+    "eli5": "A tiny bump that keeps the switch's tap from sparking the cap."
+   },
+   "connects": [
+    "sw",
+    "c13",
+    "r23"
+   ],
+   "order": {
+    "eli5": "Between the switch and the trigger node."
+   },
+   "breaks": {
+    "eli5": "The switch can't reach the trigger: it never toggles."
+   },
+   "silentNote": "The model doesn't simulate the switching circuit, so pulling this changes nothing you hear. On the real board, see 'If pulled'."
+  },
+  {
+   "id": "c13",
+   "ref": "C13 1n",
+   "kind": "C",
+   "label": "Trigger cap",
+   "term": "debounce capacitor",
+   "block": "bypass",
+   "place": "shunt",
+   "job": {
+    "eli5": "A tiny tank that turns a bouncy press into one clean dip.",
+    "detail": "ElectroSmash: R21 to R24, SW and C13 apply a negative-going blip to both bases."
+   },
+   "connects": [
+    "r24",
+    "c14",
+    "c15"
+   ],
+   "order": {
+    "eli5": "From the trigger node to ground."
+   },
+   "breaks": {
+    "eli5": "Switch bounce can flip the pedal twice: on-off in one stomp."
+   },
+   "silentNote": "The model doesn't simulate the switching circuit, so pulling this changes nothing you hear. On the real board, see 'If pulled'."
+  },
+  {
+   "id": "r23",
+   "ref": "R23 1M",
+   "kind": "R",
+   "label": "Trigger hold resistor",
+   "term": "pull-up resistor",
+   "block": "bypass",
+   "place": "up",
+   "job": {
+    "eli5": "A slow refill that lifts the trigger node back up after each press."
+   },
+   "connects": [
+    "r21",
+    "r22",
+    "r24"
+   ],
+   "order": {
+    "eli5": "From the R21/R22 divider to the trigger node."
+   },
+   "breaks": {
+    "eli5": "The trigger never recovers: the next press does nothing."
+   },
+   "silentNote": "The model doesn't simulate the switching circuit, so pulling this changes nothing you hear. On the real board, see 'If pulled'."
+  },
+  {
+   "id": "r21",
+   "ref": "R21 62k",
+   "kind": "R",
+   "label": "Trigger divider (top)",
+   "term": "divider resistor",
+   "block": "bypass",
+   "place": "up",
+   "job": {
+    "eli5": "Top of a little ladder that sets the trigger's resting voltage."
+   },
+   "connects": [
+    "r22",
+    "r23"
+   ],
+   "order": {
+    "eli5": "From 9 V to the divider node."
+   },
+   "breaks": {
+    "eli5": "The trigger rests at the wrong level: unreliable toggling."
+   },
+   "silentNote": "The model doesn't simulate the switching circuit, so pulling this changes nothing you hear. On the real board, see 'If pulled'."
+  },
+  {
+   "id": "r22",
+   "ref": "R22 22k",
+   "kind": "R",
+   "label": "Trigger divider (bottom)",
+   "term": "divider resistor",
+   "block": "bypass",
+   "place": "shunt",
+   "job": {
+    "eli5": "Bottom of the same ladder."
+   },
+   "connects": [
+    "r21",
+    "r23"
+   ],
+   "order": {
+    "eli5": "From the divider node to ground."
+   },
+   "breaks": {
+    "eli5": "The trigger rests too high: unreliable toggling."
+   },
+   "silentNote": "The model doesn't simulate the switching circuit, so pulling this changes nothing you hear. On the real board, see 'If pulled'."
+  },
+  {
+   "id": "q7",
+   "ref": "Q7 2SC1815",
+   "kind": "Q",
+   "label": "Q7 · LED driver",
+   "term": "NPN switch (LED driver)",
+   "block": "bypass",
+   "place": "active",
+   "job": {
+    "eli5": "A helper that lights the LED, so the LED never drags on the seesaw.",
+    "detail": "ElectroSmash: Q7 drives the LED from the toggle; D7 and R31 lower the load on it."
+   },
+   "connects": [
+    "q6",
+    "d7"
+   ],
+   "order": {
+    "eli5": "Its base follows the toggle's A side."
+   },
+   "breaks": {
+    "eli5": "The LED stays dark; the pedal still switches."
+   },
+   "silentNote": "The model doesn't simulate the switching circuit, so pulling this changes nothing you hear. On the real board, see 'If pulled'.",
+   "lugs": {
+    "kind": "transistor",
+    "bp": "q7",
+    "eli5": "A transistor is a valve with three legs: a tiny flow into the base controls a big flow from collector to emitter.",
+    "detail": "The 2SC1815 is a small silicon NPN. Toshiba's datasheet gives the TO-92 lead order 1 emitter, 2 collector, 3 base (E C B), flat side facing you. Many NPNs (2N3904, BC547) use other orders, so check before you swap.",
+    "standard": "Standard part: 2SC1815 (Toshiba). Common swaps: 2N5088/2N5089 or MPSA18, with a different pin order.",
+    "lugs": [
+     {
+      "pin": "E",
+      "name": "emitter (pin 1)",
+      "role": "ground",
+      "eli5": "Shared emitters."
+     },
+     {
+      "pin": "C",
+      "name": "collector (pin 2)",
+      "role": "control",
+      "eli5": "Pulls the LED's path (D7, R31) down so it lights."
+     },
+     {
+      "pin": "B",
+      "name": "base (pin 3)",
+      "role": "control",
+      "eli5": "From toggle side A: high means effect on."
+     }
+    ]
+   }
+  },
+  {
+   "id": "d7",
+   "ref": "D7 RD4.7E",
+   "kind": "D",
+   "label": "Zener diode (LED)",
+   "term": "Zener diode (4.7 V)",
+   "block": "bypass",
+   "place": "series",
+   "job": {
+    "eli5": "A step the current has to climb, so the LED only lights in the right state.",
+    "detail": "ElectroSmash: D7 and R31 keep the LED from disturbing the toggle."
+   },
+   "connects": [
+    "q7",
+    "r31"
+   ],
+   "order": {
+    "eli5": "Between Q7 and R31."
+   },
+   "breaks": {
+    "eli5": "The LED may glow faintly when off, or upset the toggle."
+   },
+   "silentNote": "The model doesn't simulate the switching circuit, so pulling this changes nothing you hear. On the real board, see 'If pulled'."
+  },
+  {
+   "id": "r31",
+   "ref": "R31 36k",
+   "kind": "R",
+   "label": "LED resistor",
+   "term": "current-limiting resistor",
+   "block": "bypass",
+   "place": "series",
+   "job": {
+    "eli5": "Limits the LED's current, which also saves battery.",
+    "detail": "36k is large for an LED: a dim, frugal glow."
+   },
+   "connects": [
+    "d7",
+    "led"
+   ],
+   "order": {
+    "eli5": "Between D7 and the LED."
+   },
+   "breaks": {
+    "eli5": "The LED stays dark (or, shorted, burns bright and drains the battery)."
+   },
+   "silentNote": "The model doesn't simulate the switching circuit, so pulling this changes nothing you hear. On the real board, see 'If pulled'."
+  },
+  {
+   "id": "led",
+   "ref": "D9 LED",
+   "kind": "LED",
+   "label": "On LED (D9)",
+   "term": "LED (light-emitting diode)",
+   "block": "bypass",
+   "place": "up",
+   "job": {
+    "eli5": "The red light: on means the effect is on."
+   },
+   "connects": [
+    "r31"
+   ],
+   "order": {
+    "eli5": "From 9 V down through R31, D7 and Q7."
+   },
+   "breaks": {
+    "eli5": "No light; the sound doesn't change."
+   },
+   "silentNote": "The model doesn't simulate the switching circuit, so pulling this changes nothing you hear. On the real board, see 'If pulled'."
+  }
+ ],
+ "knobs": [
+  {
+   "id": "drive",
+   "label": "Drive",
+   "part": "p1",
+   "default": 0.6,
+   "targets": [
+    {
+     "stage": "clip",
+     "param": "drive",
+     "from": 1,
+     "to": 40,
+     "curve": "exp"
+    }
+   ]
+  },
+  {
+   "id": "tone",
+   "label": "Tone",
+   "part": "p2",
+   "default": 0.5,
+   "targets": [
+    {
+     "stage": "tone",
+     "param": "freq",
+     "from": 700,
+     "to": 5000,
+     "curve": "exp"
+    }
+   ]
+  },
+  {
+   "id": "level",
+   "label": "Level",
+   "part": "p3",
+   "default": 0.65,
+   "targets": [
+    {
+     "stage": "out",
+     "param": "gain",
+     "from": 0,
+     "to": 1.3
+    }
+   ]
+  }
+ ],
+ "sections": [
+  {
+   "id": "injack",
+   "title": "IN jack",
+   "term": "stereo jack",
+   "eli5": "Guitar in; its ring also switches the battery on.",
+   "blocks": [
+    "inbuf"
+   ],
+   "tint": "#cfd8c4",
+   "map": [
+    10,
+    200,
+    100,
+    60
+   ],
+   "io": true
+  },
+  {
+   "id": "inbuf",
+   "title": "Input buffer",
+   "term": "emitter follower (Q1)",
+   "eli5": "The polite listener.",
+   "blocks": [
+    "inbuf"
+   ],
+   "tint": "#2dd4bf",
+   "map": [
+    140,
+    170,
+    140,
+    120
+   ],
+   "honesty": {
+    "level": "none",
+    "eli5": "Not modeled as a sound: the sketch has no pickup or cable for it to protect. On a real board it keeps the highs with long cables."
+   }
+  },
+  {
+   "id": "clip",
+   "title": "Clipping amp",
+   "term": "op-amp + feedback diodes",
+   "eli5": "Boost, then cap it softly (from L2) or hard (L0, L1).",
+   "blocks": [
+    "clip"
+   ],
+   "tint": "#f472b6",
+   "map": [
+    310,
+    150,
+    170,
+    160
+   ],
+   "honesty": {
+    "level": "approx",
+    "eli5": "A waveshaper plus filters. The real op-amp also clips at its rails, which the sketch only hints at."
+   }
+  },
+  {
+   "id": "tone",
+   "title": "Tone + Level",
+   "term": "RC low-pass + active tone",
+   "eli5": "Trim the fizz, tilt the tone, set the volume.",
+   "blocks": [
+    "tone"
+   ],
+   "tint": "#60a5fa",
+   "map": [
+    510,
+    150,
+    170,
+    160
+   ],
+   "honesty": {
+    "level": "approx",
+    "eli5": "Modeled as a single treble corner the Tone knob moves."
+   }
+  },
+  {
+   "id": "out",
+   "title": "Output buffer",
+   "term": "emitter follower (Q3)",
+   "eli5": "Drives the cable.",
+   "blocks": [
+    "out"
+   ],
+   "tint": "#a78bfa",
+   "map": [
+    710,
+    170,
+    140,
+    120
+   ],
+   "honesty": {
+    "level": "behavioral",
+    "eli5": "Modeled as a level stage."
+   }
+  },
+  {
+   "id": "outjack",
+   "title": "OUT jack",
+   "term": "mono jack",
+   "eli5": "To the amp.",
+   "blocks": [
+    "out"
+   ],
+   "tint": "#cfd8c4",
+   "map": [
+    880,
+    200,
+    110,
+    60
+   ],
+   "io": true
+  },
+  {
+   "id": "power",
+   "title": "Power + 4.5 V",
+   "term": "divider + decoupling + protection",
+   "eli5": "Splits 9 V into a 4.5 V middle and keeps it calm.",
+   "blocks": [
+    "power"
+   ],
+   "tint": "#fbbf24",
+   "map": [
+    120,
+    400,
+    260,
+    120
+   ],
+   "honesty": {
+    "level": "none",
+    "eli5": "Not modeled: no hum, ripple or sag in the sketch."
+   }
+  },
+  {
+   "id": "bypass",
+   "title": "JFET bypass",
+   "term": "JFET switches + flip-flop",
+   "eli5": "A soft button flips which valve is open: effect or clean.",
+   "blocks": [
+    "bypass"
+   ],
+   "tint": "#94a3b8",
+   "map": [
+    460,
+    400,
+    380,
+    120
+   ],
+   "honesty": {
+    "level": "behavioral",
+    "eli5": "Modeled as a buffered bypass: off keeps the buffers in the path. Pops, soft-switching and LED draw aren't simulated."
+   }
+  }
+ ],
+ "links": [
+  {
+   "id": "in-buf",
+   "from": "injack",
+   "to": "inbuf",
+   "kind": "audio",
+   "label": "guitar → C1 → Q1",
+   "eli5": "The guitar into the polite listener.",
+   "probe": "__input"
+  },
+  {
+   "id": "buf-clip",
+   "from": "inbuf",
+   "to": "clip",
+   "kind": "audio",
+   "label": "Q1 → C2 → op-amp",
+   "eli5": "The buffered guitar into the clipping amp.",
+   "probe": "inbuf"
+  },
+  {
+   "id": "clip-tone",
+   "from": "clip",
+   "to": "tone",
+   "kind": "audio",
+   "label": "op-amp A → R7",
+   "eli5": "Clipped mids into the sieve and tone stage.",
+   "probe": "clip"
+  },
+  {
+   "id": "tone-out",
+   "from": "tone",
+   "to": "out",
+   "kind": "audio",
+   "label": "Level → switch A → Q3",
+   "eli5": "The finished overdrive to the output buffer.",
+   "probe": "tone"
+  },
+  {
+   "id": "out-jack",
+   "from": "out",
+   "to": "outjack",
+   "kind": "audio",
+   "label": "Q3 → C9 → OUT",
+   "eli5": "Out to the amp.",
+   "probe": "out"
+  },
+  {
+   "id": "dry",
+   "from": "inbuf",
+   "to": "out",
+   "kind": "audio",
+   "label": "OFF: dry via switch B",
+   "eli5": "Bypassed, the buffered guitar skips the core through switch B, but still passes both buffers.",
+   "optional": true,
+   "bend": -150,
+   "probe": "inbuf",
+   "layers": [
+    "L6"
+   ]
+  },
+  {
+   "id": "pw-all",
+   "from": "power",
+   "to": "clip",
+   "kind": "power",
+   "label": "9 V + 4.5 V middle",
+   "eli5": "Power and the 4.5 V middle for the op-amp and the buffers."
+  },
+  {
+   "id": "byp-tone",
+   "from": "bypass",
+   "to": "tone",
+   "kind": "control",
+   "label": "switch A",
+   "eli5": "The toggle opens or shuts the effect's valve."
+  },
+  {
+   "id": "byp-out",
+   "from": "bypass",
+   "to": "out",
+   "kind": "control",
+   "label": "switch B",
+   "eli5": "The toggle opens or shuts the dry valve."
+  },
+  {
+   "id": "jack-pw",
+   "from": "injack",
+   "to": "power",
+   "kind": "power",
+   "label": "ring → battery −",
+   "eli5": "Plugging in a guitar connects the battery.",
+   "optional": true
+  },
+  {
+   "id": "in-clip",
+   "from": "injack",
+   "to": "clip",
+   "kind": "audio",
+   "label": "guitar → C2 → op-amp",
+   "eli5": "No buffer yet: the guitar goes straight into the clipper.",
+   "detail": "On L0 there is no op-amp: the guitar wire just has the diodes hanging off it.",
+   "probe": "__input",
+   "layers": [
+    "L0",
+    "L1",
+    "L2",
+    "L3",
+    "L4"
+   ]
+  },
+  {
+   "id": "clip-outjack",
+   "from": "clip",
+   "to": "outjack",
+   "kind": "audio",
+   "label": "→ Level → OUT",
+   "eli5": "Straight out to the amp: no tone stage, no buffer.",
+   "probe": "clip",
+   "layers": [
+    "L0",
+    "L1",
+    "L2"
+   ]
+  },
+  {
+   "id": "tone-outjack",
+   "from": "tone",
+   "to": "outjack",
+   "kind": "audio",
+   "label": "Level → OUT",
+   "eli5": "Straight from the Level pot to the amp: no output buffer yet.",
+   "probe": "tone",
+   "layers": [
+    "L3",
+    "L4"
+   ]
+  }
+ ],
+ "board": {
+  "style": "pcb",
+  "color": "green",
+  "w": 1434,
+  "h": 680,
+  "view": [
+   -200,
+   -40,
+   1834,
+   980
+  ],
+  "fidelity": "schematic",
+  "fidelityNote": "Schematic-faithful, not traced: every part, value and connection follows ElectroSmash's TS808 schematic, but the placement is mine, grouped by stage in signal order. I didn't find a verified photo or trace of the original Ibanez/Maxon PCB to copy. 2SC1815 pins follow the Toshiba datasheet (E C B); the 2SK44 order (S G D) comes from a pinout listing, not a maker datasheet.",
+  "reference": {
+   "label": "ElectroSmash: TS808 schematic (archive copy)",
+   "url": "https://electrosmash.mas-effects.com/tube-screamer-analysis.html"
+  },
+  "parts": [
+   {
+    "id": "c1",
+    "fp": "CC",
+    "x": 52,
+    "y": 250,
+    "part": "c1",
+    "value": "20n",
+    "label": "C1",
+    "rot": 90,
+    "span": 40
+   },
+   {
+    "id": "r1",
+    "fp": "R",
+    "x": 94,
+    "y": 250,
+    "part": "r1",
+    "value": "1k",
+    "label": "R1",
+    "rot": 90,
+    "span": 60
+   },
+   {
+    "id": "r2",
+    "fp": "R",
+    "x": 134,
+    "y": 250,
+    "part": "r2",
+    "value": "510k",
+    "label": "R2",
+    "rot": 90,
+    "span": 60
+   },
+   {
+    "id": "q1",
+    "fp": "TO92",
+    "x": 187,
+    "y": 250,
+    "part": "q1",
+    "value": "2SC1815",
+    "label": "Q1",
+    "pinout": "ECB"
+   },
+   {
+    "id": "r3",
+    "fp": "R",
+    "x": 240,
+    "y": 250,
+    "part": "r3",
+    "value": "10k",
+    "label": "R3",
+    "rot": 90,
+    "span": 60
+   },
+   {
+    "id": "c2",
+    "fp": "CF",
+    "x": 282,
+    "y": 250,
+    "part": "c2",
+    "value": "1µ",
+    "label": "C2"
+   },
+   {
+    "id": "ra",
+    "fp": "R",
+    "x": 322,
+    "y": 250,
+    "part": "ra",
+    "value": "0",
+    "label": "RA",
+    "rot": 90,
+    "span": 60
+   },
+   {
+    "id": "r5",
+    "fp": "R",
+    "x": 362,
+    "y": 250,
+    "part": "r5",
+    "value": "10k",
+    "label": "R5",
+    "rot": 90,
+    "span": 60
+   },
+   {
+    "id": "u1",
+    "fp": "DIP",
+    "x": 442,
+    "y": 250,
+    "part": "u1a",
+    "value": "JRC4558",
+    "label": "U1 4558",
+    "span": 8
+   },
+   {
+    "id": "r4",
+    "fp": "R",
+    "x": 522,
+    "y": 250,
+    "part": "r4",
+    "value": "4.7k",
+    "label": "R4",
+    "rot": 90,
+    "span": 60
+   },
+   {
+    "id": "c3",
+    "fp": "CC",
+    "x": 564,
+    "y": 250,
+    "part": "c3",
+    "value": "47n",
+    "label": "C3",
+    "rot": 90,
+    "span": 40
+   },
+   {
+    "id": "r6",
+    "fp": "R",
+    "x": 606,
+    "y": 250,
+    "part": "r6",
+    "value": "51k",
+    "label": "R6",
+    "rot": 90,
+    "span": 60
+   },
+   {
+    "id": "c4",
+    "fp": "CC",
+    "x": 648,
+    "y": 250,
+    "part": "c4",
+    "value": "51p",
+    "label": "C4",
+    "rot": 90,
+    "span": 40
+   },
+   {
+    "id": "d1",
+    "fp": "D",
+    "x": 690,
+    "y": 250,
+    "part": "dd",
+    "value": "MA150",
+    "label": "D1",
+    "rot": 90,
+    "span": 60
+   },
+   {
+    "id": "d2",
+    "fp": "D",
+    "x": 730,
+    "y": 250,
+    "part": "dd",
+    "value": "MA150",
+    "label": "D2",
+    "rot": 90,
+    "span": 60
+   },
+   {
+    "id": "r7",
+    "fp": "R",
+    "x": 780,
+    "y": 250,
+    "part": "r7",
+    "value": "1k",
+    "label": "R7",
+    "rot": 90,
+    "span": 60
+   },
+   {
+    "id": "c5",
+    "fp": "CF",
+    "x": 820,
+    "y": 250,
+    "part": "c5",
+    "value": "0.22µ",
+    "label": "C5"
+   },
+   {
+    "id": "r9",
+    "fp": "R",
+    "x": 860,
+    "y": 250,
+    "part": "r9",
+    "value": "10k",
+    "label": "R9",
+    "rot": 90,
+    "span": 60
+   },
+   {
+    "id": "c6",
+    "fp": "CF",
+    "x": 900,
+    "y": 250,
+    "part": "c6",
+    "value": "0.22µ",
+    "label": "C6"
+   },
+   {
+    "id": "r8",
+    "fp": "R",
+    "x": 940,
+    "y": 250,
+    "part": "r8",
+    "value": "220",
+    "label": "R8",
+    "rot": 90,
+    "span": 60
+   },
+   {
+    "id": "r11a",
+    "fp": "R",
+    "x": 980,
+    "y": 250,
+    "part": "r11a",
+    "value": "1k",
+    "label": "R11",
+    "rot": 90,
+    "span": 60
+   },
+   {
+    "id": "c7",
+    "fp": "CF",
+    "x": 1020,
+    "y": 250,
+    "part": "c7",
+    "value": "1µ",
+    "label": "C7"
+   },
+   {
+    "id": "r11b",
+    "fp": "R",
+    "x": 1060,
+    "y": 250,
+    "part": "r11b",
+    "value": "1k",
+    "label": "R11",
+    "rot": 90,
+    "span": 60
+   },
+   {
+    "id": "c8",
+    "fp": "CC",
+    "x": 1112,
+    "y": 250,
+    "part": "c8",
+    "value": "0.1µ",
+    "label": "C8",
+    "rot": 90,
+    "span": 40
+   },
+   {
+    "id": "r12",
+    "fp": "R",
+    "x": 1154,
+    "y": 250,
+    "part": "r12",
+    "value": "510k",
+    "label": "R12",
+    "rot": 90,
+    "span": 60
+   },
+   {
+    "id": "q3",
+    "fp": "TO92",
+    "x": 1207,
+    "y": 250,
+    "part": "q3",
+    "value": "2SC1815",
+    "label": "Q3",
+    "pinout": "ECB"
+   },
+   {
+    "id": "r13",
+    "fp": "R",
+    "x": 1260,
+    "y": 250,
+    "part": "r13",
+    "value": "10k",
+    "label": "R13",
+    "rot": 90,
+    "span": 60
+   },
+   {
+    "id": "rb",
+    "fp": "R",
+    "x": 1300,
+    "y": 250,
+    "part": "rb",
+    "value": "100",
+    "label": "RB",
+    "rot": 90,
+    "span": 60
+   },
+   {
+    "id": "c9",
+    "fp": "CP",
+    "x": 1342,
+    "y": 250,
+    "part": "c9",
+    "value": "10µ",
+    "label": "C9",
+    "rot": 90
+   },
+   {
+    "id": "rc",
+    "fp": "R",
+    "x": 1384,
+    "y": 250,
+    "part": "rc",
+    "value": "10k",
+    "label": "RC",
+    "rot": 90,
+    "span": 60
+   },
+   {
+    "id": "r33",
+    "fp": "R",
+    "x": 50,
+    "y": 420,
+    "part": "r33",
+    "value": "10k",
+    "label": "R33",
+    "rot": 90,
+    "span": 60
+   },
+   {
+    "id": "r32",
+    "fp": "R",
+    "x": 90,
+    "y": 420,
+    "part": "r32",
+    "value": "10k",
+    "label": "R32",
+    "rot": 90,
+    "span": 60
+   },
+   {
+    "id": "c16",
+    "fp": "CP",
+    "x": 139,
+    "y": 420,
+    "part": "c16",
+    "value": "47µ",
+    "label": "C16",
+    "rot": 90,
+    "span": 30
+   },
+   {
+    "id": "c17",
+    "fp": "CP",
+    "x": 197,
+    "y": 420,
+    "part": "c17",
+    "value": "100µ",
+    "label": "C17",
+    "rot": 90,
+    "span": 30
+   },
+   {
+    "id": "d8",
+    "fp": "D",
+    "x": 246,
+    "y": 420,
+    "part": "d8",
+    "value": "W03C",
+    "label": "D8",
+    "rot": 90,
+    "span": 60
+   },
+   {
+    "id": "c11a",
+    "fp": "CC",
+    "x": 318,
+    "y": 420,
+    "part": "c11a",
+    "value": "0.1µ",
+    "label": "C11",
+    "rot": 90,
+    "span": 40
+   },
+   {
+    "id": "r18",
+    "fp": "R",
+    "x": 360,
+    "y": 420,
+    "part": "r18",
+    "value": "510k",
+    "label": "R18",
+    "rot": 90,
+    "span": 60
+   },
+   {
+    "id": "jfb",
+    "fp": "TO92",
+    "x": 413,
+    "y": 420,
+    "part": "jfb",
+    "value": "2SK44",
+    "label": "Q4",
+    "pinout": "SGD"
+   },
+   {
+    "id": "d4",
+    "fp": "D",
+    "x": 466,
+    "y": 420,
+    "part": "d4",
+    "value": "MA150",
+    "label": "D4",
+    "rot": 90,
+    "span": 60
+   },
+   {
+    "id": "d11",
+    "fp": "D",
+    "x": 506,
+    "y": 420,
+    "part": "d11",
+    "label": "D11",
+    "rot": 90,
+    "span": 60
+   },
+   {
+    "id": "r47",
+    "fp": "R",
+    "x": 546,
+    "y": 420,
+    "part": "r47",
+    "value": "1M",
+    "label": "R47",
+    "rot": 90,
+    "span": 60
+   },
+   {
+    "id": "c12",
+    "fp": "CC",
+    "x": 588,
+    "y": 420,
+    "part": "c12",
+    "value": "47n",
+    "label": "C12",
+    "rot": 90,
+    "span": 40
+   },
+   {
+    "id": "r17",
+    "fp": "R",
+    "x": 630,
+    "y": 420,
+    "part": "r17",
+    "value": "510k",
+    "label": "R17",
+    "rot": 90,
+    "span": 60
+   },
+   {
+    "id": "jfa",
+    "fp": "TO92",
+    "x": 683,
+    "y": 420,
+    "part": "jfa",
+    "value": "2SK44",
+    "label": "Q2",
+    "pinout": "SGD"
+   },
+   {
+    "id": "d3",
+    "fp": "D",
+    "x": 736,
+    "y": 420,
+    "part": "d3",
+    "value": "MA150",
+    "label": "D3",
+    "rot": 90,
+    "span": 60
+   },
+   {
+    "id": "c11b",
+    "fp": "CC",
+    "x": 778,
+    "y": 420,
+    "part": "c11b",
+    "value": "47n",
+    "label": "C11",
+    "rot": 90,
+    "span": 40
+   },
+   {
+    "id": "r16",
+    "fp": "R",
+    "x": 820,
+    "y": 420,
+    "part": "r16",
+    "value": "1M",
+    "label": "R16",
+    "rot": 90,
+    "span": 60
+   },
+   {
+    "id": "r21",
+    "fp": "R",
+    "x": 50,
+    "y": 570,
+    "part": "r21",
+    "value": "62k",
+    "label": "R21",
+    "rot": 90,
+    "span": 60
+   },
+   {
+    "id": "r22",
+    "fp": "R",
+    "x": 90,
+    "y": 570,
+    "part": "r22",
+    "value": "22k",
+    "label": "R22",
+    "rot": 90,
+    "span": 60
+   },
+   {
+    "id": "r23",
+    "fp": "R",
+    "x": 130,
+    "y": 570,
+    "part": "r23",
+    "value": "1M",
+    "label": "R23",
+    "rot": 90,
+    "span": 60
+   },
+   {
+    "id": "r24",
+    "fp": "R",
+    "x": 170,
+    "y": 570,
+    "part": "r24",
+    "value": "22",
+    "label": "R24",
+    "rot": 90,
+    "span": 60
+   },
+   {
+    "id": "c13",
+    "fp": "CC",
+    "x": 212,
+    "y": 570,
+    "part": "c13",
+    "value": "1n",
+    "label": "C13",
+    "rot": 90,
+    "span": 40
+   },
+   {
+    "id": "q7",
+    "fp": "TO92",
+    "x": 267,
+    "y": 570,
+    "part": "q7",
+    "value": "2SC1815",
+    "label": "Q7",
+    "pinout": "ECB"
+   },
+   {
+    "id": "d7",
+    "fp": "D",
+    "x": 320,
+    "y": 570,
+    "part": "d7",
+    "value": "4.7V",
+    "label": "D7",
+    "rot": 90,
+    "span": 60
+   },
+   {
+    "id": "r31",
+    "fp": "R",
+    "x": 360,
+    "y": 570,
+    "part": "r31",
+    "value": "36k",
+    "label": "R31",
+    "rot": 90,
+    "span": 60
+   },
+   {
+    "id": "r27",
+    "fp": "R",
+    "x": 430,
+    "y": 570,
+    "part": "r27",
+    "value": "56k",
+    "label": "R27",
+    "rot": 90,
+    "span": 60
+   },
+   {
+    "id": "c40",
+    "fp": "CC",
+    "x": 472,
+    "y": 570,
+    "part": "c40",
+    "value": "100p",
+    "label": "C40",
+    "rot": 90,
+    "span": 40
+   },
+   {
+    "id": "r40",
+    "fp": "R",
+    "x": 514,
+    "y": 570,
+    "part": "r40",
+    "value": "47k",
+    "label": "R40",
+    "rot": 90,
+    "span": 60
+   },
+   {
+    "id": "q6",
+    "fp": "TO92",
+    "x": 567,
+    "y": 570,
+    "part": "q6",
+    "value": "2SC1815",
+    "label": "Q6",
+    "pinout": "ECB"
+   },
+   {
+    "id": "r28",
+    "fp": "R",
+    "x": 620,
+    "y": 570,
+    "part": "r28",
+    "value": "56k",
+    "label": "R28",
+    "rot": 90,
+    "span": 60
+   },
+   {
+    "id": "c15",
+    "fp": "CC",
+    "x": 662,
+    "y": 570,
+    "part": "c15",
+    "value": "1n",
+    "label": "C15",
+    "rot": 90,
+    "span": 40
+   },
+   {
+    "id": "c14",
+    "fp": "CC",
+    "x": 706,
+    "y": 570,
+    "part": "c14",
+    "value": "1n",
+    "label": "C14",
+    "rot": 90,
+    "span": 40
+   },
+   {
+    "id": "r25",
+    "fp": "R",
+    "x": 748,
+    "y": 570,
+    "part": "r25",
+    "value": "56k",
+    "label": "R25",
+    "rot": 90,
+    "span": 60
+   },
+   {
+    "id": "q5",
+    "fp": "TO92",
+    "x": 801,
+    "y": 570,
+    "part": "q5",
+    "value": "2SC1815",
+    "label": "Q5",
+    "pinout": "ECB"
+   },
+   {
+    "id": "r41",
+    "fp": "R",
+    "x": 854,
+    "y": 570,
+    "part": "r41",
+    "value": "47k",
+    "label": "R41",
+    "rot": 90,
+    "span": 60
+   },
+   {
+    "id": "c41",
+    "fp": "CC",
+    "x": 896,
+    "y": 570,
+    "part": "c41",
+    "value": "100p",
+    "label": "C41",
+    "rot": 90,
+    "span": 40
+   },
+   {
+    "id": "r26",
+    "fp": "R",
+    "x": 938,
+    "y": 570,
+    "part": "r26",
+    "value": "56k",
+    "label": "R26",
+    "rot": 90,
+    "span": 60
+   },
+   {
+    "id": "d6",
+    "fp": "D",
+    "x": 978,
+    "y": 570,
+    "part": "d6",
+    "value": "MA150",
+    "label": "D6",
+    "rot": 90,
+    "span": 60
+   },
+   {
+    "id": "r29",
+    "fp": "R",
+    "x": 1018,
+    "y": 570,
+    "part": "r29",
+    "value": "100",
+    "label": "R29",
+    "rot": 90,
+    "span": 60
+   },
+   {
+    "id": "p1",
+    "fp": "POT",
+    "x": 420,
+    "y": 120,
+    "part": "p1",
+    "value": "A500k",
+    "label": "DRIVE"
+   },
+   {
+    "id": "p2",
+    "fp": "POT",
+    "x": 700,
+    "y": 120,
+    "part": "p2",
+    "value": "20k",
+    "label": "TONE"
+   },
+   {
+    "id": "p3",
+    "fp": "POT",
+    "x": 960,
+    "y": 120,
+    "part": "p3",
+    "value": "B100k",
+    "label": "LEVEL"
+   },
+   {
+    "id": "led",
+    "fp": "LED",
+    "x": 1374,
+    "y": 640,
+    "part": "led",
+    "label": "D9",
+    "color": "#ff4d4d",
+    "blink": "fsw"
+   },
+   {
+    "id": "pIN",
+    "fp": "PAD",
+    "x": 30,
+    "y": 120,
+    "part": "jin",
+    "label": "IN"
+   },
+   {
+    "id": "pOUT",
+    "fp": "PAD",
+    "x": 1404,
+    "y": 120,
+    "part": "jout",
+    "label": "OUT"
+   },
+   {
+    "id": "pB+",
+    "fp": "PAD",
+    "x": 30,
+    "y": 640,
+    "part": "bat",
+    "label": "9V"
+   },
+   {
+    "id": "pB-",
+    "fp": "PAD",
+    "x": 80,
+    "y": 640,
+    "part": "bat",
+    "label": "BAT−"
+   },
+   {
+    "id": "pGND",
+    "fp": "PAD",
+    "x": 130,
+    "y": 640,
+    "label": "GND"
+   },
+   {
+    "id": "pSW",
+    "fp": "PAD",
+    "x": 520,
+    "y": 640,
+    "part": "sw",
+    "label": "SW"
+   },
+   {
+    "id": "xin",
+    "fp": "JACK3",
+    "x": -110,
+    "y": 150,
+    "part": "jin",
+    "label": "IN (stereo)",
+    "rot": 90,
+    "off": true
+   },
+   {
+    "id": "xout",
+    "fp": "JACK",
+    "x": 1544,
+    "y": 150,
+    "part": "jout",
+    "label": "OUT",
+    "rot": 270,
+    "off": true
+   },
+   {
+    "id": "xbat",
+    "fp": "BAT",
+    "x": 120,
+    "y": 850,
+    "part": "bat",
+    "value": "9V",
+    "label": "Battery",
+    "off": true
+   },
+   {
+    "id": "sw",
+    "fp": "PUSH",
+    "x": 520,
+    "y": 790,
+    "part": "sw",
+    "label": "SW (soft button)",
+    "off": true
+   }
+  ],
+  "nets": [
+   {
+    "id": "gnd",
+    "name": "Ground (0 V)",
+    "kind": "minus",
+    "pins": [
+     "xin.S",
+     "xout.S",
+     "pGND.p",
+     "d1.2",
+     "d2.1"
+    ],
+    "eli5": "The battery's − side once a plug is in: every signal returns here.",
+    "pour": true,
+    "layers": [
+     "L0"
+    ]
+   },
+   {
+    "id": "gnd~L1",
+    "name": "Ground (0 V)",
+    "kind": "minus",
+    "pins": [
+     "xin.S",
+     "xout.S",
+     "pGND.p",
+     "d1.2",
+     "d2.1",
+     "u1.4",
+     "c3.2",
+     "p3.1",
+     "r32.2"
+    ],
+    "eli5": "The battery's − side once a plug is in: every signal returns here.",
+    "pour": true,
+    "layers": [
+     "L1"
+    ]
+   },
+   {
+    "id": "gnd~L2",
+    "name": "Ground (0 V)",
+    "kind": "minus",
+    "pins": [
+     "xin.S",
+     "xout.S",
+     "pGND.p",
+     "u1.4",
+     "c3.2",
+     "p3.1",
+     "r32.2"
+    ],
+    "eli5": "The battery's − side once a plug is in: every signal returns here.",
+    "pour": true,
+    "layers": [
+     "L2"
+    ]
+   },
+   {
+    "id": "gnd~L3",
+    "name": "Ground (0 V)",
+    "kind": "minus",
+    "pins": [
+     "xin.S",
+     "xout.S",
+     "pGND.p",
+     "u1.4",
+     "c3.2",
+     "p3.1",
+     "r32.2",
+     "c5.2",
+     "r8.2"
+    ],
+    "eli5": "The battery's − side once a plug is in: every signal returns here.",
+    "pour": true,
+    "layers": [
+     "L3"
+    ]
+   },
+   {
+    "id": "gnd~L4",
+    "name": "Ground (0 V)",
+    "kind": "minus",
+    "pins": [
+     "xin.S",
+     "xout.S",
+     "pGND.p",
+     "u1.4",
+     "c3.2",
+     "p3.1",
+     "r32.2",
+     "c5.2",
+     "r8.2",
+     "c16.-",
+     "c17.-",
+     "d8.1"
+    ],
+    "eli5": "The battery's − side once a plug is in: every signal returns here.",
+    "pour": true,
+    "layers": [
+     "L4"
+    ]
+   },
+   {
+    "id": "gnd~L5",
+    "name": "Ground (0 V)",
+    "kind": "minus",
+    "pins": [
+     "xin.S",
+     "xout.S",
+     "pGND.p",
+     "u1.4",
+     "c3.2",
+     "p3.1",
+     "r32.2",
+     "c5.2",
+     "r8.2",
+     "c16.-",
+     "c17.-",
+     "d8.1",
+     "r3.2",
+     "r13.2",
+     "rc.2"
+    ],
+    "eli5": "The battery's − side once a plug is in: every signal returns here.",
+    "pour": true,
+    "layers": [
+     "L5"
+    ]
+   },
+   {
+    "id": "gnd~L6",
+    "name": "Ground (0 V)",
+    "kind": "minus",
+    "pins": [
+     "xin.S",
+     "xout.S",
+     "pGND.p",
+     "u1.4",
+     "c3.2",
+     "p3.1",
+     "r32.2",
+     "c5.2",
+     "r8.2",
+     "c16.-",
+     "c17.-",
+     "d8.1",
+     "r3.2",
+     "r13.2",
+     "rc.2",
+     "c11b.2",
+     "c12.2",
+     "r28.2",
+     "r25.2",
+     "r29.2",
+     "c13.2",
+     "r22.2",
+     "sw.2"
+    ],
+    "eli5": "The battery's − side once a plug is in: every signal returns here.",
+    "pour": true,
+    "layers": [
+     "L6"
+    ]
+   },
+   {
+    "id": "l0",
+    "name": "Guitar → diodes → amp",
+    "kind": "audio",
+    "pins": [
+     "xin.T",
+     "pIN.p",
+     "d1.1",
+     "d2.2",
+     "pOUT.p",
+     "xout.T"
+    ],
+    "eli5": "L0's whole circuit: the guitar wire with two diodes hanging to ground.",
+    "detail": "No power, no gain: the diodes only clip what the pickup already gives them, and they load it.",
+    "probe": "clip",
+    "layers": [
+     "L0"
+    ]
+   },
+   {
+    "id": "v9",
+    "name": "+9 V",
+    "kind": "plus",
+    "pins": [
+     "xbat.+",
+     "pB+.p",
+     "u1.8",
+     "r33.1"
+    ],
+    "eli5": "The battery's + side: power for the chip and the transistors.",
+    "layers": [
+     "L1",
+     "L2",
+     "L3"
+    ]
+   },
+   {
+    "id": "v9~L4",
+    "name": "+9 V",
+    "kind": "plus",
+    "pins": [
+     "xbat.+",
+     "pB+.p",
+     "u1.8",
+     "r33.1",
+     "c17.+",
+     "d8.2"
+    ],
+    "eli5": "The battery's + side: power for the chip and the transistors.",
+    "layers": [
+     "L4"
+    ]
+   },
+   {
+    "id": "v9~L5",
+    "name": "+9 V",
+    "kind": "plus",
+    "pins": [
+     "xbat.+",
+     "pB+.p",
+     "u1.8",
+     "r33.1",
+     "c17.+",
+     "d8.2",
+     "q1.C",
+     "q3.C"
+    ],
+    "eli5": "The battery's + side: power for the chip and the transistors.",
+    "layers": [
+     "L5"
+    ]
+   },
+   {
+    "id": "v9~L6",
+    "name": "+9 V",
+    "kind": "plus",
+    "pins": [
+     "xbat.+",
+     "pB+.p",
+     "u1.8",
+     "r33.1",
+     "c17.+",
+     "d8.2",
+     "q1.C",
+     "q3.C",
+     "r27.1",
+     "r26.1",
+     "r21.1",
+     "led.A"
+    ],
+    "eli5": "The battery's + side: power for the chip and the transistors.",
+    "layers": [
+     "L6"
+    ]
+   },
+   {
+    "id": "batneg",
+    "name": "Battery − → IN ring",
+    "kind": "minus",
+    "pins": [
+     "xbat.-",
+     "pB-.p",
+     "xin.R"
+    ],
+    "eli5": "The battery's − side waits at the input jack's ring.",
+    "detail": "A mono guitar plug bridges ring to sleeve, which connects the battery to ground and turns the pedal on.",
+    "layers": [
+     "L1",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "L6"
+    ]
+   },
+   {
+    "id": "vref",
+    "name": "4.5 V middle (Vref)",
+    "kind": "bias",
+    "pins": [
+     "r33.2",
+     "r32.1",
+     "r5.2"
+    ],
+    "eli5": "The fake ground halfway up the battery: the audio swings around it.",
+    "detail": "Made by R32 + R33; C16 keeps it calm from L4.",
+    "layers": [
+     "L1",
+     "L2"
+    ]
+   },
+   {
+    "id": "vref~L3",
+    "name": "4.5 V middle (Vref)",
+    "kind": "bias",
+    "pins": [
+     "r33.2",
+     "r32.1",
+     "r5.2",
+     "r9.2"
+    ],
+    "eli5": "The fake ground halfway up the battery: the audio swings around it.",
+    "detail": "Made by R32 + R33; C16 keeps it calm from L4.",
+    "layers": [
+     "L3"
+    ]
+   },
+   {
+    "id": "vref~L4",
+    "name": "4.5 V middle (Vref)",
+    "kind": "bias",
+    "pins": [
+     "r33.2",
+     "r32.1",
+     "r5.2",
+     "r9.2",
+     "c16.+"
+    ],
+    "eli5": "The fake ground halfway up the battery: the audio swings around it.",
+    "detail": "Made by R32 + R33; C16 keeps it calm from L4.",
+    "layers": [
+     "L4"
+    ]
+   },
+   {
+    "id": "vref~L5",
+    "name": "4.5 V middle (Vref)",
+    "kind": "bias",
+    "pins": [
+     "r33.2",
+     "r32.1",
+     "r5.2",
+     "r9.2",
+     "c16.+",
+     "r2.2",
+     "r12.1"
+    ],
+    "eli5": "The fake ground halfway up the battery: the audio swings around it.",
+    "detail": "Made by R32 + R33; C16 keeps it calm from L4.",
+    "layers": [
+     "L5"
+    ]
+   },
+   {
+    "id": "vref~L6",
+    "name": "4.5 V middle (Vref)",
+    "kind": "bias",
+    "pins": [
+     "r33.2",
+     "r32.1",
+     "r5.2",
+     "r9.2",
+     "c16.+",
+     "r2.2",
+     "r12.1",
+     "r18.2",
+     "r17.2"
+    ],
+    "eli5": "The fake ground halfway up the battery: the audio swings around it.",
+    "detail": "Made by R32 + R33; C16 keeps it calm from L4.",
+    "layers": [
+     "L6"
+    ]
+   },
+   {
+    "id": "in",
+    "name": "IN tip",
+    "kind": "audio",
+    "pins": [
+     "xin.T",
+     "pIN.p",
+     "c2.1"
+    ],
+    "eli5": "The raw guitar signal.",
+    "probe": "__input",
+    "layers": [
+     "L1",
+     "L2",
+     "L3",
+     "L4"
+    ]
+   },
+   {
+    "id": "in~L5",
+    "name": "IN tip",
+    "kind": "audio",
+    "pins": [
+     "xin.T",
+     "pIN.p",
+     "c1.1"
+    ],
+    "eli5": "The raw guitar signal.",
+    "probe": "__input",
+    "layers": [
+     "L5",
+     "L6"
+    ]
+   },
+   {
+    "id": "c2ra",
+    "name": "C2 → RA",
+    "kind": "audio",
+    "pins": [
+     "c2.2",
+     "ra.1"
+    ],
+    "eli5": "Into the clipping stage.",
+    "probe": "inbuf",
+    "layers": [
+     "L1",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "L6"
+    ]
+   },
+   {
+    "id": "pin3",
+    "name": "U1 pin 3 (+ in)",
+    "kind": "audio",
+    "pins": [
+     "ra.2",
+     "u1.3",
+     "r5.1"
+    ],
+    "eli5": "The op-amp's plus input, resting at 4.5 V.",
+    "probe": "inbuf",
+    "layers": [
+     "L1",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "L6"
+    ]
+   },
+   {
+    "id": "pin2",
+    "name": "U1 pin 2 (− in)",
+    "kind": "audio",
+    "pins": [
+     "u1.2",
+     "r4.1",
+     "r6.1"
+    ],
+    "eli5": "The feedback point: the gain leg and the feedback meet here.",
+    "detail": "From L2 the diodes sit between here and pin 1.",
+    "layers": [
+     "L1"
+    ]
+   },
+   {
+    "id": "pin2~L2",
+    "name": "U1 pin 2 (− in)",
+    "kind": "audio",
+    "pins": [
+     "u1.2",
+     "r4.1",
+     "r6.1",
+     "d1.2",
+     "d2.1",
+     "c4.1"
+    ],
+    "eli5": "The feedback point: the gain leg and the feedback meet here.",
+    "detail": "From L2 the diodes sit between here and pin 1.",
+    "layers": [
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "L6"
+    ]
+   },
+   {
+    "id": "leg",
+    "name": "Gain leg (R4 → C3)",
+    "kind": "bias",
+    "pins": [
+     "r4.2",
+     "c3.1"
+    ],
+    "eli5": "The 4.7k + 47 nF leg to ground that sets the boost and the mid hump.",
+    "layers": [
+     "L1",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "L6"
+    ]
+   },
+   {
+    "id": "r6p1",
+    "name": "R6 → Drive pot",
+    "kind": "audio",
+    "pins": [
+     "r6.2",
+     "p1.1"
+    ],
+    "eli5": "The feedback path through the Drive pot.",
+    "layers": [
+     "L1",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "L6"
+    ]
+   },
+   {
+    "id": "out1",
+    "name": "U1 pin 1 (clipping out)",
+    "kind": "audio",
+    "pins": [
+     "u1.1",
+     "p1.2",
+     "p1.3",
+     "c7.1"
+    ],
+    "eli5": "The boosted, clipped signal.",
+    "detail": "On L1 it isn't clipped yet: the diodes wait further down.",
+    "probe": "clip",
+    "layers": [
+     "L1"
+    ]
+   },
+   {
+    "id": "out1~L2",
+    "name": "U1 pin 1 (clipping out)",
+    "kind": "audio",
+    "pins": [
+     "u1.1",
+     "p1.2",
+     "p1.3",
+     "d1.1",
+     "d2.2",
+     "c4.2",
+     "c7.1"
+    ],
+    "eli5": "The boosted, clipped signal.",
+    "detail": "On L1 it isn't clipped yet: the diodes wait further down.",
+    "probe": "clip",
+    "layers": [
+     "L2"
+    ]
+   },
+   {
+    "id": "out1~L3",
+    "name": "U1 pin 1 (clipping out)",
+    "kind": "audio",
+    "pins": [
+     "u1.1",
+     "p1.2",
+     "p1.3",
+     "d1.1",
+     "d2.2",
+     "c4.2",
+     "r7.1"
+    ],
+    "eli5": "The boosted, clipped signal.",
+    "detail": "On L1 it isn't clipped yet: the diodes wait further down.",
+    "probe": "clip",
+    "layers": [
+     "L3",
+     "L4",
+     "L5",
+     "L6"
+    ]
+   },
+   {
+    "id": "c7r11",
+    "name": "C7 → R11",
+    "kind": "audio",
+    "pins": [
+     "c7.2",
+     "r11b.1"
+    ],
+    "eli5": "Overdrive with the 4.5 V middle blocked.",
+    "probe": "tone",
+    "layers": [
+     "L1",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "L6"
+    ]
+   },
+   {
+    "id": "lvl",
+    "name": "Level pot top",
+    "kind": "audio",
+    "pins": [
+     "r11b.2",
+     "p3.3",
+     "d1.1",
+     "d2.2"
+    ],
+    "eli5": "The top of the volume slider.",
+    "detail": "On L1 the diodes hang here to ground: hard clipping.",
+    "probe": "tone",
+    "layers": [
+     "L1"
+    ]
+   },
+   {
+    "id": "lvl~L2",
+    "name": "Level pot top",
+    "kind": "audio",
+    "pins": [
+     "r11b.2",
+     "p3.3"
+    ],
+    "eli5": "The top of the volume slider.",
+    "detail": "On L1 the diodes hang here to ground: hard clipping.",
+    "probe": "tone",
+    "layers": [
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "L6"
+    ]
+   },
+   {
+    "id": "wip",
+    "name": "Level wiper",
+    "kind": "audio",
+    "pins": [
+     "p3.2",
+     "pOUT.p",
+     "xout.T"
+    ],
+    "eli5": "The overdrive at your chosen level.",
+    "probe": "tone",
+    "layers": [
+     "L1",
+     "L2",
+     "L3",
+     "L4"
+    ]
+   },
+   {
+    "id": "wip~L5",
+    "name": "Level wiper",
+    "kind": "audio",
+    "pins": [
+     "p3.2",
+     "c8.1"
+    ],
+    "eli5": "The overdrive at your chosen level.",
+    "probe": "tone",
+    "layers": [
+     "L5"
+    ]
+   },
+   {
+    "id": "wip~L6",
+    "name": "Level wiper",
+    "kind": "audio",
+    "pins": [
+     "p3.2",
+     "jfa.D"
+    ],
+    "eli5": "The overdrive at your chosen level.",
+    "probe": "tone",
+    "layers": [
+     "L6"
+    ]
+   },
+   {
+    "id": "pin5",
+    "name": "U1 pin 5 (+ in, tone)",
+    "kind": "audio",
+    "pins": [
+     "r7.2",
+     "c5.1",
+     "u1.5",
+     "r9.1",
+     "p2.1"
+    ],
+    "eli5": "The sieved signal into the tone op-amp.",
+    "probe": "clip",
+    "layers": [
+     "L3",
+     "L4",
+     "L5",
+     "L6"
+    ]
+   },
+   {
+    "id": "pin6",
+    "name": "U1 pin 6 (− in, tone)",
+    "kind": "audio",
+    "pins": [
+     "p2.3",
+     "u1.6",
+     "r11a.1"
+    ],
+    "eli5": "The tone op-amp's feedback point.",
+    "layers": [
+     "L3",
+     "L4",
+     "L5",
+     "L6"
+    ]
+   },
+   {
+    "id": "twip",
+    "name": "Tone wiper → C6",
+    "kind": "audio",
+    "pins": [
+     "p2.2",
+     "c6.1"
+    ],
+    "eli5": "The treble drain on the Tone pot's wiper.",
+    "layers": [
+     "L3",
+     "L4",
+     "L5",
+     "L6"
+    ]
+   },
+   {
+    "id": "c6r8",
+    "name": "C6 → R8",
+    "kind": "audio",
+    "pins": [
+     "c6.2",
+     "r8.1"
+    ],
+    "eli5": "The treble drain to ground.",
+    "layers": [
+     "L3",
+     "L4",
+     "L5",
+     "L6"
+    ]
+   },
+   {
+    "id": "out7",
+    "name": "U1 pin 7 (tone out)",
+    "kind": "audio",
+    "pins": [
+     "u1.7",
+     "r11a.2",
+     "c7.1"
+    ],
+    "eli5": "The tone-shaped overdrive.",
+    "probe": "tone",
+    "layers": [
+     "L3",
+     "L4",
+     "L5",
+     "L6"
+    ]
+   },
+   {
+    "id": "c1r1",
+    "name": "C1 → R1",
+    "kind": "audio",
+    "pins": [
+     "c1.2",
+     "r1.1"
+    ],
+    "eli5": "The guitar with its DC blocked.",
+    "probe": "__input",
+    "layers": [
+     "L5",
+     "L6"
+    ]
+   },
+   {
+    "id": "q1b",
+    "name": "Q1 base",
+    "kind": "audio",
+    "pins": [
+     "r1.2",
+     "q1.B",
+     "r2.1"
+    ],
+    "eli5": "Q1's control pin, held at 4.5 V by R2.",
+    "probe": "__input",
+    "layers": [
+     "L5",
+     "L6"
+    ]
+   },
+   {
+    "id": "q1e",
+    "name": "Q1 emitter (buffered guitar)",
+    "kind": "audio",
+    "pins": [
+     "q1.E",
+     "r3.1",
+     "c2.1"
+    ],
+    "eli5": "The strong copy of the guitar, to the clipper and (L6) the dry switch.",
+    "probe": "inbuf",
+    "layers": [
+     "L5"
+    ]
+   },
+   {
+    "id": "q1e~L6",
+    "name": "Q1 emitter (buffered guitar)",
+    "kind": "audio",
+    "pins": [
+     "q1.E",
+     "r3.1",
+     "c2.1",
+     "c11a.1"
+    ],
+    "eli5": "The strong copy of the guitar, to the clipper and (L6) the dry switch.",
+    "probe": "inbuf",
+    "layers": [
+     "L6"
+    ]
+   },
+   {
+    "id": "q3b",
+    "name": "Q3 base",
+    "kind": "audio",
+    "pins": [
+     "c8.2",
+     "q3.B",
+     "r12.2"
+    ],
+    "eli5": "Into the output buffer, held at 4.5 V by R12.",
+    "probe": "out",
+    "layers": [
+     "L5",
+     "L6"
+    ]
+   },
+   {
+    "id": "q3e",
+    "name": "Q3 emitter",
+    "kind": "audio",
+    "pins": [
+     "q3.E",
+     "r13.1",
+     "rb.1"
+    ],
+    "eli5": "The output buffer's strong copy.",
+    "probe": "out",
+    "layers": [
+     "L5",
+     "L6"
+    ]
+   },
+   {
+    "id": "rbc9",
+    "name": "RB → C9",
+    "kind": "audio",
+    "pins": [
+     "rb.2",
+     "c9.+"
+    ],
+    "eli5": "Toward the output cap.",
+    "probe": "out",
+    "layers": [
+     "L5",
+     "L6"
+    ]
+   },
+   {
+    "id": "out",
+    "name": "OUT tip",
+    "kind": "audio",
+    "pins": [
+     "c9.-",
+     "rc.1",
+     "pOUT.p",
+     "xout.T"
+    ],
+    "eli5": "To the amp.",
+    "probe": "out",
+    "layers": [
+     "L5",
+     "L6"
+    ]
+   },
+   {
+    "id": "swout",
+    "name": "Switch output → C8",
+    "kind": "audio",
+    "pins": [
+     "jfa.S",
+     "jfb.S",
+     "c8.1",
+     "r17.1"
+    ],
+    "eli5": "Whichever switch is open: effect or dry.",
+    "probe": "out",
+    "layers": [
+     "L6"
+    ]
+   },
+   {
+    "id": "dry",
+    "name": "Dry path (switch B in)",
+    "kind": "audio",
+    "pins": [
+     "c11a.2",
+     "r18.1",
+     "jfb.D"
+    ],
+    "eli5": "The buffered guitar, waiting at switch B.",
+    "probe": "inbuf",
+    "layers": [
+     "L6"
+    ]
+   },
+   {
+    "id": "gA",
+    "name": "Switch A gate",
+    "kind": "control",
+    "pins": [
+     "jfa.G",
+     "d3.1"
+    ],
+    "eli5": "Switch A's control pin.",
+    "layers": [
+     "L6"
+    ]
+   },
+   {
+    "id": "ctlA",
+    "name": "Switch A control",
+    "kind": "control",
+    "pins": [
+     "d3.2",
+     "r16.1",
+     "c11b.1"
+    ],
+    "eli5": "The soft, slow control line for switch A.",
+    "layers": [
+     "L6"
+    ]
+   },
+   {
+    "id": "qA",
+    "name": "Toggle side A (Q6 collector)",
+    "kind": "control",
+    "pins": [
+     "r16.2",
+     "q6.C",
+     "r27.2",
+     "r40.1",
+     "c40.1",
+     "q7.B"
+    ],
+    "eli5": "High = effect on: it opens switch A and lights the LED.",
+    "layers": [
+     "L6"
+    ]
+   },
+   {
+    "id": "gB",
+    "name": "Switch B gate",
+    "kind": "control",
+    "pins": [
+     "jfb.G",
+     "d4.1"
+    ],
+    "eli5": "Switch B's control pin.",
+    "layers": [
+     "L6"
+    ]
+   },
+   {
+    "id": "ctlB",
+    "name": "Switch B control",
+    "kind": "control",
+    "pins": [
+     "d4.2",
+     "c12.1",
+     "r47.1",
+     "d11.1"
+    ],
+    "eli5": "The control line for switch B.",
+    "layers": [
+     "L6"
+    ]
+   },
+   {
+    "id": "qB",
+    "name": "Toggle side B (Q5 collector)",
+    "kind": "control",
+    "pins": [
+     "r47.2",
+     "d11.2",
+     "q5.C",
+     "r26.2",
+     "r41.1",
+     "c41.1"
+    ],
+    "eli5": "High = bypassed: it opens switch B.",
+    "layers": [
+     "L6"
+    ]
+   },
+   {
+    "id": "bA",
+    "name": "Q6 base",
+    "kind": "control",
+    "pins": [
+     "r41.2",
+     "c41.2",
+     "r28.1",
+     "c15.1",
+     "q6.B"
+    ],
+    "eli5": "Where the cross-link and the trigger meet Q6.",
+    "layers": [
+     "L6"
+    ]
+   },
+   {
+    "id": "bB",
+    "name": "Q5 base",
+    "kind": "control",
+    "pins": [
+     "r40.2",
+     "c40.2",
+     "r25.1",
+     "c14.1",
+     "q5.B"
+    ],
+    "eli5": "Where the cross-link and the trigger meet Q5.",
+    "layers": [
+     "L6"
+    ]
+   },
+   {
+    "id": "em",
+    "name": "Toggle emitters",
+    "kind": "control",
+    "pins": [
+     "q6.E",
+     "q5.E",
+     "q7.E",
+     "d6.1"
+    ],
+    "eli5": "The shared emitters of Q5, Q6 and Q7.",
+    "layers": [
+     "L6"
+    ]
+   },
+   {
+    "id": "d6r29",
+    "name": "D6 → R29",
+    "kind": "control",
+    "pins": [
+     "d6.2",
+     "r29.1"
+    ],
+    "eli5": "The emitters' path to ground.",
+    "layers": [
+     "L6"
+    ]
+   },
+   {
+    "id": "trig",
+    "name": "Trigger line",
+    "kind": "control",
+    "pins": [
+     "c15.2",
+     "c14.2",
+     "c13.1",
+     "r24.1",
+     "r23.2"
+    ],
+    "eli5": "Each press sends a quick dip here, to both bases.",
+    "layers": [
+     "L6"
+    ]
+   },
+   {
+    "id": "swl",
+    "name": "Footswitch line",
+    "kind": "control",
+    "pins": [
+     "r24.2",
+     "pSW.p",
+     "sw.1"
+    ],
+    "eli5": "To the soft button.",
+    "layers": [
+     "L6"
+    ]
+   },
+   {
+    "id": "div",
+    "name": "Trigger divider",
+    "kind": "control",
+    "pins": [
+     "r21.2",
+     "r22.1",
+     "r23.1"
+    ],
+    "eli5": "The trigger's resting voltage.",
+    "layers": [
+     "L6"
+    ]
+   },
+   {
+    "id": "ledk",
+    "name": "LED → R31",
+    "kind": "control",
+    "pins": [
+     "led.K",
+     "r31.1"
+    ],
+    "eli5": "The LED's current.",
+    "layers": [
+     "L6"
+    ]
+   },
+   {
+    "id": "zen",
+    "name": "R31 → Zener",
+    "kind": "control",
+    "pins": [
+     "r31.2",
+     "d7.2"
+    ],
+    "eli5": "Through the 4.7 V step.",
+    "layers": [
+     "L6"
+    ]
+   },
+   {
+    "id": "q7c",
+    "name": "Zener → Q7",
+    "kind": "control",
+    "pins": [
+     "d7.1",
+     "q7.C"
+    ],
+    "eli5": "Q7 completes the LED's path when the effect is on.",
+    "layers": [
+     "L6"
+    ]
+   }
+  ]
+ },
+ "layers": {
+  "full": "L6",
+  "minimal": "L0",
+  "default": "L6",
+  "fullLabel": "Full TS808",
+  "minimalLabel": "Minimal",
+  "hardware": [
+   "jin",
+   "jout",
+   "bat"
+  ],
+  "note": "Counts are physical parts on the board, including pots, the LED and the soft button, not the jacks or the battery.",
+  "rungs": [
+   {
+    "id": "L0",
+    "label": "L0",
+    "title": "Bare diode clipper",
+    "adds": [
+     "jin",
+     "jout",
+     "dd"
+    ],
+    "why": {
+     "eli5": "Two diodes from the guitar wire to ground already distort: any swing past about 0.6 V gets chopped flat. But it's quiet, thin and fizzy, because nothing boosts the guitar and the diodes drag on the pickup.",
+     "detail": "No battery, no gain. The diodes only touch the loudest peaks of a hot pickup, so most notes come through clean and small, and the loudest ones clip hard. They also load the pickup, which costs level and sparkle. Everything after this rung is about fixing those limits."
+    },
+    "hear": "yes",
+    "hearNote": "Quiet, thin, with fizzy hard clipping only on the loudest picks. No knobs yet.",
+    "pedals": [
+     {
+      "name": "No production pedal",
+      "note": "No real pedal stops this early: it can't boost, so it is a lesson, not a product. Try it live in Falstad.",
+      "link": {
+       "label": "Falstad: diode clipper you can poke",
+       "url": "https://www.falstad.com/circuit/circuitjs.html?startCircuit=diodeclip.txt"
+      }
+     }
+    ],
+    "effects": [
+     {
+      "stage": "clip",
+      "param": "curve",
+      "value": "diodeGround"
+     },
+     {
+      "stage": "clip",
+      "param": "drive",
+      "value": 2.2
+     },
+     {
+      "stage": "clip",
+      "param": "clean",
+      "value": 0
+     },
+     {
+      "stage": "clip",
+      "param": "hpFreq",
+      "value": 20
+     },
+     {
+      "stage": "clip",
+      "param": "clipLevel",
+      "value": 0.5
+     },
+     {
+      "stage": "clip",
+      "param": "level",
+      "value": 0.55
+     },
+     {
+      "stage": "tone",
+      "param": "freq",
+      "value": 3200
+     },
+     {
+      "stage": "out",
+      "param": "gain",
+      "value": 0.55
+     }
+    ],
+    "count": 2
+   },
+   {
+    "id": "L1",
+    "label": "L1",
+    "title": "Op-amp boost + diodes to ground",
+    "adds": [
+     "bat",
+     "r33",
+     "r32",
+     "c2",
+     "ra",
+     "r5",
+     "u1a",
+     "r4",
+     "c3",
+     "r6",
+     "p1",
+     "c7",
+     "r11b",
+     "p3"
+    ],
+    "why": {
+     "eli5": "An op-amp boosts the guitar up to 118 times before the diodes, so every note clips, not just the loud ones. Hard and harsh, but loud and with a Drive knob.",
+     "detail": "This is the MXR Distortion+ and DOD 250 recipe: one op-amp with 4.7k + 47 nF to ground in its gain leg, then diodes to ground. Those pedals put the gain pot in the gain leg; this ladder keeps the TS layout and turns the Drive pot in the feedback. The op-amp needs a middle to swing around, so the 4.5 V divider (R32, R33) arrives here, not at L4."
+    },
+    "hear": "yes",
+    "hearNote": "Loud, buzzy, square-ish clipping. Drive and Level work; there's no Tone knob yet.",
+    "pedals": [
+     {
+      "name": "MXR Distortion+",
+      "note": "One 741 op-amp, 4.7k + 47 nF gain leg, germanium diodes to ground, a Level pot. Almost exactly this rung.",
+      "link": {
+       "label": "ElectroSmash: MXR Distortion+ analysis (archive copy)",
+       "url": "https://electrosmash.mas-effects.com/mxr-distortion-plus-analysis.html"
+      }
+     },
+     {
+      "name": "DOD 250 Overdrive Preamp",
+      "note": "Same idea: one 741, the gain pot in the gain leg, a diode pair to ground after a resistor.",
+      "link": {
+       "label": "drdFX: DOD 250 circuit notes",
+       "url": "http://drdfx.hu/en/250/"
+      }
+     }
+    ],
+    "effects": [
+     {
+      "stage": "clip",
+      "param": "curve",
+      "value": "hard"
+     },
+     {
+      "stage": "clip",
+      "param": "clean",
+      "value": 0
+     },
+     {
+      "stage": "clip",
+      "param": "hpFreq",
+      "value": 300
+     },
+     {
+      "stage": "clip",
+      "param": "clipLevel",
+      "value": 0.55
+     },
+     {
+      "stage": "tone",
+      "param": "freq",
+      "value": 5200
+     }
+    ],
+    "count": 15
+   },
+   {
+    "id": "L2",
+    "label": "L2",
+    "title": "Diodes into the feedback: soft clipping",
+    "adds": [
+     "c4"
+    ],
+    "moves": [
+     "dd"
+    ],
+    "why": {
+     "eli5": "Move the same two diodes into the op-amp's feedback and the tops round off instead of chopping. Smooth, and the clean guitar always rides along underneath.",
+     "detail": "In the feedback, a diode that turns on lowers the gain toward 1× rather than pinning the voltage. The op-amp never drops below 1×, so some clean signal always gets through: that blend is half the Tube Screamer feel. Bass sees almost no boost (the 47 nF gain-leg door), so it stays clean while the mids clip: the start of the mid hump. C4 (51 pF) takes the edge off the fizz."
+    },
+    "hear": "yes",
+    "hearNote": "Smoother and less buzzy than L1, with clean bass under the clipped mids.",
+    "pedals": [
+     {
+      "name": "Boss OD-1 OverDrive",
+      "note": "The first pedal with diodes in the feedback loop (1977). It has Level and Drive, no Tone knob.",
+      "link": {
+       "label": "Aion FX: Corona (Boss OD-1 clone) build doc, with schematic",
+       "url": "https://aionfx.com/app/files/docs/corona_legacy_documentation.pdf"
+      },
+      "year": 1977
+     }
+    ],
+    "effects": [
+     {
+      "stage": "clip",
+      "param": "curve",
+      "value": "soft"
+     },
+     {
+      "stage": "tone",
+      "param": "freq",
+      "value": 3600
+     }
+    ],
+    "count": 16
+   },
+   {
+    "id": "L3",
+    "label": "L3",
+    "title": "Tone + volume stage",
+    "adds": [
+     "r7",
+     "c5",
+     "r9",
+     "u1b",
+     "p2",
+     "r8",
+     "c6",
+     "r11a"
+    ],
+    "why": {
+     "eli5": "A sieve trims the fizz after the clipping, and the second op-amp in the same chip runs a Tone knob. Now it's the Tube Screamer sound, mid hump and all.",
+     "detail": "ElectroSmash: R7 + C5 roll off above 723 Hz, the Tone pot sits between op-amp B's two inputs with R8 + C6 on its wiper, and the 100k Level pot sets the volume. Cutting bass before the clipper and treble after it is what makes the hump."
+    },
+    "hear": "yes",
+    "hearNote": "The Tone knob arrives: warm and round to bright and cutting.",
+    "pedals": [
+     {
+      "name": "No pedal stops exactly here",
+      "note": "This is the TS808's whole sound path. Every production TS also has the power and buffer parts from the next rungs.",
+      "link": {
+       "label": "ElectroSmash: Tube Screamer analysis (archive copy)",
+       "url": "https://electrosmash.mas-effects.com/tube-screamer-analysis.html"
+      }
+     }
+    ],
+    "effects": [],
+    "count": 23
+   },
+   {
+    "id": "L4",
+    "label": "L4",
+    "title": "Tank caps + guard diode",
+    "adds": [
+     "c16",
+     "c17",
+     "d8"
+    ],
+    "why": {
+     "eli5": "Why all these caps to 4.5 V? Tanks on the 9 V line and on the 4.5 V middle keep the supply calm, and a guard diode survives a backwards plug. You won't hear a difference here, but a real board without them hums, hisses or squeals.",
+     "detail": "ElectroSmash: C17 (100 µF) and C16 (47 µF) remove ripple; D8 protects against reverse polarity. Without C16, every stage shares a wobbly middle, and with high gain that shared wobble can feed back into a squeal or a 'motorboat' putt."
+    },
+    "hear": "no",
+    "hearNote": "Explain-only: the model has no hum, ripple or battery sag, so nothing changes.",
+    "pedals": [
+     {
+      "name": "Every pedal from here on",
+      "note": "No famous pedal is known for its tank caps. The MXR Distortion+ already filters its own reference with a cap.",
+      "link": {
+       "label": "ElectroSmash: MXR Distortion+ analysis (archive copy)",
+       "url": "https://electrosmash.mas-effects.com/mxr-distortion-plus-analysis.html"
+      }
+     }
+    ],
+    "effects": [],
+    "count": 26
+   },
+   {
+    "id": "L5",
+    "label": "L5",
+    "title": "Input + output buffers",
+    "adds": [
+     "c1",
+     "r1",
+     "r2",
+     "q1",
+     "r3",
+     "c8",
+     "r12",
+     "q3",
+     "r13",
+     "rb",
+     "c9",
+     "rc"
+    ],
+    "why": {
+     "eli5": "Two transistor 'polite listeners' sit at the ends: the guitar sees an easy load, and long cables after the pedal can't dull the highs. Tone suck is the problem they fix.",
+     "detail": "Q1 and Q3 are emitter followers: gain about 1, input about 446k, output about 1.2k (ElectroSmash). In a behavioral model with no pickup and no cable there is nothing to load, so the sound stays the same. This is also exactly ElectroSmash's true-bypass TS808: 38 parts plus a 3PDT."
+    },
+    "hear": "no",
+    "hearNote": "Explain-only: the sketch has no pickup or cable to load. On a real rig, they keep the sparkle with long cables.",
+    "pedals": [
+     {
+      "name": "True-bypass TS808 clones",
+      "note": "ElectroSmash's true-bypass TS808 keeps both buffers, swaps the JFET switching for a 3PDT, and lists 38 board parts.",
+      "link": {
+       "label": "ElectroSmash: Tube Screamer analysis (archive copy)",
+       "url": "https://electrosmash.mas-effects.com/tube-screamer-analysis.html"
+      }
+     }
+    ],
+    "effects": [],
+    "count": 38
+   },
+   {
+    "id": "L6",
+    "label": "L6",
+    "title": "JFET bypass + soft button: the full TS808",
+    "adds": [
+     "c11a",
+     "r18",
+     "jfa",
+     "jfb",
+     "r17",
+     "d3",
+     "d4",
+     "r16",
+     "c11b",
+     "r47",
+     "d11",
+     "c12",
+     "q6",
+     "q5",
+     "r27",
+     "r26",
+     "r40",
+     "r41",
+     "c40",
+     "c41",
+     "r28",
+     "r25",
+     "c15",
+     "c14",
+     "d6",
+     "r29",
+     "sw",
+     "r24",
+     "c13",
+     "r23",
+     "r21",
+     "r22",
+     "q7",
+     "d7",
+     "r31",
+     "led"
+    ],
+    "why": {
+     "eli5": "A soft button flips a two-transistor memory, which opens one JFET valve and shuts the other, and lights the LED. Click-free switching, and the buffers stay on even when bypassed.",
+     "detail": "ElectroSmash: Q5 and Q6 form a flip-flop that a momentary switch toggles through C13, C14 and C15; the 1M resistors and 47 nF caps slow the JFETs so they don't pop; D7 and R31 keep the LED from upsetting the toggle; mismatched speed-up caps make it always wake up bypassed. Ibanez did this because momentary switches are cheaper and more reliable than hand-wired 3PDTs, not for tone."
+    },
+    "hear": "some",
+    "hearNote": "Effect-on sounds the same as L5. The difference is bypass: here 'off' still runs through both buffers (try the footswitch). Pops and LED draw aren't modeled.",
+    "pedals": [
+     {
+      "name": "Ibanez TS808 Tube Screamer",
+      "note": "The real thing: 74 parts on ElectroSmash's schematic, counting the pots, the LED and the switch, but not the jacks or battery.",
+      "link": {
+       "label": "ElectroSmash: Tube Screamer analysis (archive copy)",
+       "url": "https://electrosmash.mas-effects.com/tube-screamer-analysis.html"
+      }
+     }
+    ],
+    "effects": [],
+    "count": 74
+   },
+   {
+    "id": "ts9",
+    "label": "TS9",
+    "branch": "L6",
+    "title": "TS9: the output resistors",
+    "adds": [],
+    "set": {
+     "rb": "470",
+     "rc": "100k"
+    },
+    "why": {
+     "eli5": "The TS9 is almost the same pedal: the main circuit change is two output resistors, 470 Ω instead of 100 Ω and 100k instead of 10k.",
+     "detail": "Singlecoil's 808 mod: swap R55 (470 Ω) for 100 Ω and R58 (100k) for 10k. The difference is subtle: a touch brighter and hotter into some amps. Chips and caps varied by year, which also gets credit."
+    },
+    "hear": "some",
+    "hearNote": "A small nudge in the model: a little louder and brighter. On a real rig, many people can't hear it.",
+    "pedals": [
+     {
+      "name": "Ibanez TS9",
+      "note": "Same core as the TS808, different output resistors.",
+      "link": {
+       "label": "Singlecoil: converting a TS9 into an 808 (PDF)",
+       "url": "https://www.singlecoil.com/docs/tubescreamer.pdf"
+      }
+     }
+    ],
+    "effects": [
+     {
+      "stage": "out",
+      "param": "gain",
+      "scale": 1.08
+     },
+     {
+      "stage": "tone",
+      "param": "freq",
+      "scale": 1.06
+     }
+    ],
+    "count": 74
+   },
+   {
+    "id": "klon",
+    "label": "Klon",
+    "branch": "L6",
+    "title": "What boutique pedals add next: Klon Centaur",
+    "adds": [],
+    "explainOnly": true,
+    "why": {
+     "eli5": "Boutique overdrives add things the TS doesn't have: the Klon Centaur blends clean signal back in through feedforward paths and a summing op-amp, and a charge pump turns 9 V into about 18 V for more headroom.",
+     "detail": "ElectroSmash: a TC1044 charge pump makes +18 V and −9 V from the battery; two 1N34A germanium diodes clip to ground (hard clipping, like the Distortion+); feedforward networks and a summing op-amp mix the clean and clipped paths. Not drawn here: it is a different circuit, not one more layer on this board."
+    },
+    "hear": "no",
+    "hearNote": "Explain-only: a different circuit, read the analysis.",
+    "pedals": [
+     {
+      "name": "Klon Centaur",
+      "note": "Clean blend (feedforward + summing op-amp), 18 V charge pump, germanium diodes to ground.",
+      "link": {
+       "label": "ElectroSmash: Klon Centaur analysis (archive copy)",
+       "url": "https://electrosmash.mas-effects.com/klon-centaur-analysis.html"
+      },
+      "year": 1994
+     }
+    ],
+    "effects": [],
+    "count": 74
+   }
+  ],
+  "fullCount": 74
+ }
+}
